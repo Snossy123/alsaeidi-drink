@@ -16,6 +16,8 @@ interface CartItem {
   barcode?: string;
 }
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const SalesInterface = () => {
   const [barcode, setBarcode] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -23,12 +25,37 @@ const SalesInterface = () => {
   const { toast } = useToast();
 
   // Mock products data
-  const mockProducts = [
-    { id: "1", name: "كوكا كولا", price: 2.5, barcode: "12345", stock: 50 },
-    { id: "2", name: "شيبس", price: 1.5, barcode: "67890", stock: 30 },
-    { id: "3", name: "شوكولاتة", price: 3.0, barcode: "11111", stock: 25 },
-    { id: "4", name: "عصير برتقال", price: 4.0, barcode: "22222", stock: 20 }
-  ];
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`${API_URL}/products`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        if (result.status === 'success' && Array.isArray(result.products)) {
+          setProducts(result.products);
+        } else {
+          throw new Error("Unexpected response format");
+        }
+      } catch (error: any) {
+        toast({
+          title: "فشل تحميل المنتجات",
+          description: error.message || "تحقق من اتصال الإنترنت أو السيرفر",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [toast]);
 
   const addToCart = (product: any) => {
     const existingItem = cart.find(item => item.id === product.id);
@@ -65,7 +92,7 @@ const SalesInterface = () => {
 
   const handleBarcodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const product = mockProducts.find(p => p.barcode === barcode);
+    const product = products.find(p => p.barcode === barcode);
     if (product) {
       addToCart(product);
       setBarcode("");
@@ -82,7 +109,7 @@ const SalesInterface = () => {
     return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (cart.length === 0) {
       toast({
         title: "السلة فارغة",
@@ -94,16 +121,51 @@ const SalesInterface = () => {
 
     const now = new Date();
     const invoiceNumber = `INV-${now.toISOString().slice(0, 10).replace(/-/g, '')}-${now.getTime().toString().slice(-4)}`;
+    const invoiceData = {
+      invoiceNumber,
+      date: now.toISOString().slice(0, 10),
+      // time: now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
+      time: now.toTimeString().slice(0, 8),
+      cashier: "البائع الرئيسي",
+      total: calculateTotal(),
+      items: cart
+    };
 
-    toast({
-      title: "تمت عملية البيع بنجاح",
-      description: `رقم الفاتورة: ${invoiceNumber} - المبلغ: ${calculateTotal().toFixed(2)} ريال`,
-    });
-    
-    setCart([]);
+    try {
+      const res = await fetch(API_URL + '/sales-invoices', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(invoiceData)
+      });
+
+      const result = await res.json();
+
+      if (result.status === 'success') {
+        toast({
+          title: "تمت عملية البيع بنجاح",
+          description: `رقم الفاتورة: ${invoiceNumber} - المبلغ: ${calculateTotal().toFixed(2)} ريال`,
+        });
+        setCart([]);
+      } else {
+        toast({
+          title: "فشل حفظ الفاتورة",
+          description: result.message,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "خطأ في الاتصال",
+        description: "تعذر حفظ الفاتورة. حاول لاحقًا",
+        variant: "destructive"
+      });
+    }
   };
 
-  const filteredProducts = mockProducts.filter(product =>
+
+  const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 

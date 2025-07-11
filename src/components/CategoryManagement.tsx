@@ -37,14 +37,16 @@ const CategoryManagement = ({ categories, onCategoriesUpdate }: CategoryManageme
     "#8B5CF6", "#06B6D4", "#84CC16", "#F97316"
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const API_URL = import.meta.env.VITE_API_URL + "/categories";
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name) {
       toast({
         title: "خطأ في البيانات",
         description: "يرجى إدخال اسم الفئة",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -53,27 +55,47 @@ const CategoryManagement = ({ categories, onCategoriesUpdate }: CategoryManageme
       id: editingCategory ? editingCategory.id : Date.now().toString(),
       name: formData.name,
       description: formData.description,
-      color: formData.color
+      color: formData.color,
     };
 
-    if (editingCategory) {
-      const updatedCategories = categories.map(c => c.id === editingCategory.id ? newCategory : c);
-      onCategoriesUpdate(updatedCategories);
-      toast({
-        title: "تم تحديث الفئة",
-        description: `تم تحديث فئة ${newCategory.name} بنجاح`,
+    try {
+      const response = await fetch(API_URL  , {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: editingCategory ? "update" : "add",
+          category: newCategory,
+        }),
       });
-    } else {
-      onCategoriesUpdate([...categories, newCategory]);
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast({
+          title: editingCategory ? "تم تحديث الفئة" : "تم إضافة الفئة",
+          description: data.message,
+        });
+
+        onCategoriesUpdate(data.categories); // تحديث الفئات المعروضة
+        setIsDialogOpen(false);
+        setEditingCategory(null);
+        setFormData({ name: "", description: "", color: "#3B82F6" });
+      } else {
+        toast({
+          title: "فشل العملية",
+          description: data.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
-        title: "تم إضافة الفئة",
-        description: `تم إضافة فئة ${newCategory.name} بنجاح`,
+        title: "خطأ في الاتصال",
+        description: "تعذر الاتصال بالخادم",
+        variant: "destructive",
       });
     }
-
-    setIsDialogOpen(false);
-    setEditingCategory(null);
-    setFormData({ name: "", description: "", color: "#3B82F6" });
   };
 
   const handleEdit = (category: Category) => {
@@ -86,13 +108,42 @@ const CategoryManagement = ({ categories, onCategoriesUpdate }: CategoryManageme
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    const updatedCategories = categories.filter(c => c.id !== id);
-    onCategoriesUpdate(updatedCategories);
-    toast({
-      title: "تم حذف الفئة",
-      description: "تم حذف الفئة بنجاح",
-    });
+  const handleDelete = async (id: string) => {
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "delete",
+          id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast({
+          title: "تم حذف الفئة",
+          description: data.message,
+        });
+
+        onCategoriesUpdate(data.categories); // تحديث الفئات المعروضة
+      } else {
+        toast({
+          title: "فشل الحذف",
+          description: data.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "خطأ في الاتصال",
+        description: "تعذر الاتصال بالخادم",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

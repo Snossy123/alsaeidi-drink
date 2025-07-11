@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,19 +28,8 @@ interface Product {
 }
 
 const ProductManagement = () => {
-  const [categories, setCategories] = useState<Category[]>([
-    { id: "1", name: "مشروبات", color: "#3B82F6" },
-    { id: "2", name: "وجبات خفيفة", color: "#10B981" },
-    { id: "3", name: "حلويات", color: "#F59E0B" }
-  ]);
-
-  const [products, setProducts] = useState<Product[]>([
-    { id: "1", name: "كوكا كولا", price: 2.5, stock: 50, barcode: "12345", category: "مشروبات" },
-    { id: "2", name: "شيبس", price: 1.5, stock: 30, barcode: "67890", category: "وجبات خفيفة" },
-    { id: "3", name: "شوكولاتة", price: 3.0, stock: 25, barcode: "11111", category: "حلويات" },
-    { id: "4", name: "عصير برتقال", price: 4.0, stock: 20, barcode: "22222", category: "مشروبات" }
-  ]);
-  
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -51,17 +40,45 @@ const ProductManagement = () => {
     barcode: "",
     category: ""
   });
-  
+
   const { toast } = useToast();
+  const API_PRODUCTS_URL = import.meta.env.VITE_API_URL + "/products";
+  const API_CATEGORIES_URL = import.meta.env.VITE_API_URL + "/categories";
 
   const generateBarcode = () => {
     const barcode = Math.floor(Math.random() * 1000000000).toString();
     setFormData({ ...formData, barcode });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // ✅ جلب المنتجات والفئات من السيرفر عند فتح الصفحة
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [resProducts, resCategories] = await Promise.all([
+          fetch(API_PRODUCTS_URL),
+          fetch(API_CATEGORIES_URL)
+        ]);
+
+        const productsData = await resProducts.json();
+        const categoriesData = await resCategories.json();
+
+        setProducts(productsData.products || []);
+        setCategories(categoriesData.categories || []);
+      } catch (error) {
+        toast({
+          title: "خطأ في الاتصال",
+          description: "تعذر تحميل البيانات من الخادم",
+          variant: "destructive"
+        });
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name || !formData.price) {
       toast({
         title: "خطأ في البيانات",
@@ -80,24 +97,62 @@ const ProductManagement = () => {
       category: formData.category
     };
 
-    if (editingProduct) {
-      setProducts(products.map(p => p.id === editingProduct.id ? newProduct : p));
-      toast({
-        title: "تم تحديث المنتج",
-        description: `تم تحديث ${newProduct.name} بنجاح`,
+    try {
+      const response = await fetch(API_PRODUCTS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: editingProduct ? "update" : "add",
+          product: newProduct
+        })
       });
-    } else {
-      setProducts([...products, newProduct]);
+
+      const data = await response.json();
+      if (data.success) {
+        toast({
+          title: editingProduct ? "تم تحديث المنتج" : "تم إضافة المنتج",
+          description: data.message
+        });
+        setProducts(data.products);
+        setIsDialogOpen(false);
+        setEditingProduct(null);
+        setFormData({ name: "", price: "", stock: "", barcode: "", category: "" });
+      } else {
+        toast({ title: "فشل العملية", description: data.message, variant: "destructive" });
+      }
+    } catch (error) {
       toast({
-        title: "تم إضافة المنتج",
-        description: `تم إضافة ${newProduct.name} بنجاح`,
+        title: "خطأ في الاتصال",
+        description: "تعذر الاتصال بالخادم",
+        variant: "destructive"
       });
     }
-
-    setIsDialogOpen(false);
-    setEditingProduct(null);
-    setFormData({ name: "", price: "", stock: "", barcode: "", category: "" });
   };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const response = await fetch(API_PRODUCTS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete", id })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        toast({ title: "تم حذف المنتج", description: data.message });
+        setProducts(data.products);
+      } else {
+        toast({ title: "فشل الحذف", description: data.message, variant: "destructive" });
+      }
+    } catch (error) {
+      toast({
+        title: "خطأ في الاتصال",
+        description: "تعذر الاتصال بالخادم",
+        variant: "destructive"
+      });
+    }
+  };
+
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
@@ -111,13 +166,6 @@ const ProductManagement = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    setProducts(products.filter(p => p.id !== id));
-    toast({
-      title: "تم حذف المنتج",
-      description: "تم حذف المنتج بنجاح",
-    });
-  };
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

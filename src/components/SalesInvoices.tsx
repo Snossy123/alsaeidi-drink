@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,37 +25,33 @@ interface SaleInvoice {
   cashier: string;
 }
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const SalesInvoices = () => {
+  const [invoices, setInvoices] = useState<SaleInvoice[]>([]);
   const [selectedInvoice, setSelectedInvoice] = useState<SaleInvoice | null>(null);
   const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
 
-  // Mock data - in a real app this would come from a database or API
-  const mockSalesInvoices: SaleInvoice[] = [
-    {
-      id: "1",
-      invoiceNumber: "INV-20241202-1234",
-      date: "2024-12-02",
-      time: "14:30",
-      items: [
-        { id: "1", name: "كوكا كولا", price: 2.5, quantity: 2 },
-        { id: "2", name: "شيبس", price: 1.5, quantity: 1 },
-      ],
-      total: 6.5,
-      cashier: "البائع الرئيسي"
-    },
-    {
-      id: "2",
-      invoiceNumber: "INV-20241202-1235",
-      date: "2024-12-02",
-      time: "15:45",
-      items: [
-        { id: "3", name: "شوكولاتة", price: 3.0, quantity: 3 },
-        { id: "4", name: "عصير برتقال", price: 4.0, quantity: 1 },
-      ],
-      total: 13.0,
-      cashier: "البائع الرئيسي"
-    }
-  ];
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      try {
+        const res = await fetch(API_URL + "/sales-invoices");
+        const data = await res.json();
+
+        if (data.status === "success" && Array.isArray(data.invoices)) {
+          setInvoices(data.invoices);
+        } else {
+          console.error("API Response Error:", data.message || "Unknown error");
+        }
+      } catch (error) {
+        console.error("API Error:", error);
+      }
+    };
+
+    fetchInvoices();
+  }, []);
+
+
 
   return (
     <div className="space-y-6">
@@ -67,7 +63,7 @@ const SalesInvoices = () => {
             فواتير المبيعات
           </CardTitle>
           <p className="text-sm text-gray-600">
-            إجمالي الفواتير: {mockSalesInvoices.length} فاتورة
+            إجمالي الفواتير: {invoices.length} فاتورة
           </p>
         </CardHeader>
       </Card>
@@ -77,11 +73,11 @@ const SalesInvoices = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-blue-800">
             <Receipt className="w-5 h-5" />
-            قائمة الفواتير ({mockSalesInvoices.length})
+            قائمة الفواتير ({invoices.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {mockSalesInvoices.length === 0 ? (
+          {invoices.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <Receipt className="w-12 h-12 mx-auto mb-4 text-gray-300" />
               <p>لا توجد فواتير مبيعات حتى الآن</p>
@@ -89,7 +85,7 @@ const SalesInvoices = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {mockSalesInvoices.map((invoice) => (
+              {invoices.map((invoice) => (
                 <Card key={invoice.id} className="border-blue-200 hover:shadow-md transition-all duration-200 cursor-pointer"
                       onClick={() => {
                         setSelectedInvoice(invoice);
@@ -119,7 +115,7 @@ const SalesInvoices = () => {
                       </div>
                       <div className="text-left">
                         <div className="text-lg font-bold text-blue-600">
-                          {invoice.total.toFixed(2)} ريال
+                          {Number(invoice.total).toFixed(2)} ريال
                         </div>
                         <Button variant="ghost" size="sm" className="mt-1">
                           عرض التفاصيل

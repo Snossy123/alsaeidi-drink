@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileText, Plus, Calendar, Building, Package, Receipt, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
 interface Category {
   id: string;
@@ -36,6 +37,28 @@ interface PurchaseInvoice {
   total: number;
 }
 
+const API_URL = import.meta.env.VITE_API_URL;
+
+const saveInvoice = async (invoiceData: any) => {
+  const response = await fetch(API_URL + '/save_invoice.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(invoiceData)
+  });
+
+  if (!response.ok) throw new Error('فشل في حفظ الفاتورة');
+
+  return await response.json();
+};
+
+const fetchInvoices = async () => {
+  const response = await fetch(API_URL + '/get_invoices.php');
+  if (!response.ok) throw new Error('فشل في جلب الفواتير');
+
+  return await response.json();
+};
+
+
 const PurchaseInvoices = () => {
   const [categories] = useState<Category[]>([
     { id: "1", name: "مشروبات", color: "#3B82F6" },
@@ -57,6 +80,20 @@ const PurchaseInvoices = () => {
       total: 130
     }
   ]);
+
+  useEffect(() => {
+    fetchInvoices()
+      .then((data) => setInvoices(data))
+      .catch((error) => {
+        console.error(error);
+        toast({
+          title: "خطأ",
+          description: "حدث خطأ أثناء تحميل الفواتير",
+          variant: "destructive"
+        });
+      });
+  }, []);
+
 
   const [selectedInvoice, setSelectedInvoice] = useState<PurchaseInvoice | null>(null);
   const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
@@ -93,7 +130,7 @@ const PurchaseInvoices = () => {
     return invoiceItems.reduce((total, item) => total + (item.quantity * item.purchasePrice), 0);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!invoiceData.invoiceNumber || !invoiceData.supplier || !invoiceData.date) {
@@ -116,24 +153,34 @@ const PurchaseInvoices = () => {
       return;
     }
 
-    const newInvoice: PurchaseInvoice = {
-      id: Date.now().toString(),
+    const newInvoice = {
       ...invoiceData,
       time: new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
       items: validItems,
       total: calculateTotal()
     };
 
-    setInvoices([newInvoice, ...invoices]);
-    
-    toast({
-      title: "تم إضافة الفاتورة",
-      description: `تم إضافة فاتورة الشراء ${invoiceData.invoiceNumber} بنجاح`,
-    });
+    try {
+      await saveInvoice(newInvoice);
+      const updatedInvoices = await fetchInvoices();
+      setInvoices(updatedInvoices);
+      
+      toast({
+        title: "تم إضافة الفاتورة",
+        description: `تم إضافة فاتورة الشراء ${invoiceData.invoiceNumber} بنجاح`,
+      });
 
-    setIsAddDialogOpen(false);
-    setInvoiceData({ invoiceNumber: "", supplier: "", date: "" });
-    setInvoiceItems([{ productName: "", barcode: "", quantity: 0, purchasePrice: 0, salePrice: 0, category: "" }]);
+      setIsAddDialogOpen(false);
+      setInvoiceData({ invoiceNumber: "", supplier: "", date: "" });
+      setInvoiceItems([{ productName: "", barcode: "", quantity: 0, purchasePrice: 0, salePrice: 0, category: "" }]);
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "خطأ",
+        description: "فشل حفظ الفاتورة، حاول مرة أخرى",
+        variant: "destructive"
+      });
+    }
   };
 
   const getCategoryColor = (categoryName: string) => {

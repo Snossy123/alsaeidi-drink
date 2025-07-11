@@ -9,63 +9,34 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { FileText, Calendar, TrendingUp, ShoppingCart, Package, DollarSign } from "lucide-react";
 
+
+const API_URL = import.meta.env.VITE_API_URL;
+
 const ReportsSection = () => {
   const [selectedReport, setSelectedReport] = useState("sales");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
   // Mock data for different reports
-  const salesReportData = [
-    { date: "2024-12-01", invoices: 25, total: 5420.50 },
-    { date: "2024-12-02", invoices: 18, total: 3280.75 },
-    { date: "2024-12-03", invoices: 32, total: 7150.25 },
-    { date: "2024-12-04", invoices: 28, total: 6340.80 },
-    { date: "2024-12-05", invoices: 35, total: 8920.40 }
-  ];
+  const [reportData, setReportData] = useState([]);
 
-  const purchaseReportData = [
-    { date: "2024-12-01", invoices: 5, total: 2150.00, items: 45 },
-    { date: "2024-12-02", invoices: 3, total: 1820.50, items: 32 },
-    { date: "2024-12-03", invoices: 7, total: 3240.75, items: 58 },
-    { date: "2024-12-04", invoices: 4, total: 1950.25, items: 38 },
-    { date: "2024-12-05", invoices: 6, total: 2780.90, items: 52 }
-  ];
+  const generateReport = async () => {
+    if (!dateFrom || !dateTo) {
+      alert("يرجى تحديد تاريخ البداية والنهاية");
+      return;
+    }
 
-  const profitReportData = [
-    { date: "2024-12-01", sales: 5420.50, purchases: 2150.00, profit: 3270.50 },
-    { date: "2024-12-02", sales: 3280.75, purchases: 1820.50, profit: 1460.25 },
-    { date: "2024-12-03", sales: 7150.25, purchases: 3240.75, profit: 3909.50 },
-    { date: "2024-12-04", sales: 6340.80, purchases: 1950.25, profit: 4390.55 },
-    { date: "2024-12-05", sales: 8920.40, purchases: 2780.90, profit: 6139.50 }
-  ];
-
-  const topSellingProducts = [
-    { name: "كوكا كولا", quantity: 125, revenue: 312.50 },
-    { name: "شيبس", quantity: 98, revenue: 147.00 },
-    { name: "شوكولاتة", quantity: 87, revenue: 261.00 },
-    { name: "عصير برتقال", quantity: 76, revenue: 304.00 },
-    { name: "قهوة", quantity: 65, revenue: 325.00 }
-  ];
-
-  const purchasedItems = [
-    { name: "كوكا كولا", quantity: 200, cost: 400.00 },
-    { name: "شيبس", quantity: 150, cost: 225.00 },
-    { name: "شوكولاتة", quantity: 120, cost: 240.00 },
-    { name: "عصير برتقال", quantity: 100, cost: 300.00 },
-    { name: "قهوة", quantity: 80, cost: 240.00 }
-  ];
-
-  const soldItems = [
-    { name: "كوكا كولا", quantity: 125, remaining: 75 },
-    { name: "شيبس", quantity: 98, remaining: 52 },
-    { name: "شوكولاتة", quantity: 87, remaining: 33 },
-    { name: "عصير برتقال", quantity: 76, remaining: 24 },
-    { name: "قهوة", quantity: 65, remaining: 15 }
-  ];
-
-  const generateReport = () => {
-    console.log(`Generating ${selectedReport} report from ${dateFrom} to ${dateTo}`);
+    try {
+      const response = await fetch(
+        `${API_URL}/reports.php?type=${selectedReport}&from=${dateFrom}&to=${dateTo}`
+      );
+      const data = await response.json();
+      setReportData(data);
+    } catch (error) {
+      console.error("فشل في جلب التقرير:", error);
+    }
   };
+
 
   const renderReportContent = () => {
     switch (selectedReport) {
@@ -91,7 +62,7 @@ const ReportsSection = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {salesReportData.map((item, index) => (
+                        {reportData.map((item, index) => (
                           <TableRow key={index}>
                             <TableCell>{item.date}</TableCell>
                             <TableCell>{item.invoices}</TableCell>
@@ -105,7 +76,7 @@ const ReportsSection = () => {
                   </div>
                   <div>
                     <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={salesReportData}>
+                      <BarChart data={reportData}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="date" />
                         <YAxis />
@@ -140,7 +111,7 @@ const ReportsSection = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {purchaseReportData.map((item, index) => (
+                  {reportData.map((item, index) => (
                     <TableRow key={index}>
                       <TableCell>{item.date}</TableCell>
                       <TableCell>{item.invoices}</TableCell>
@@ -176,7 +147,7 @@ const ReportsSection = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {profitReportData.map((item, index) => (
+                  {reportData.map((item, index) => (
                     <TableRow key={index}>
                       <TableCell>{item.date}</TableCell>
                       <TableCell className="text-blue-600">{item.sales.toFixed(2)} ريال</TableCell>
@@ -211,7 +182,7 @@ const ReportsSection = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {topSellingProducts.map((item, index) => (
+                  {reportData.map((item, index) => (
                     <TableRow key={index}>
                       <TableCell className="font-medium">{item.name}</TableCell>
                       <TableCell>{item.quantity}</TableCell>
@@ -245,7 +216,7 @@ const ReportsSection = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {purchasedItems.map((item, index) => (
+                  {reportData.map((item, index) => (
                     <TableRow key={index}>
                       <TableCell className="font-medium">{item.name}</TableCell>
                       <TableCell>{item.quantity}</TableCell>
@@ -279,7 +250,7 @@ const ReportsSection = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {soldItems.map((item, index) => (
+                  {reportData.map((item, index) => (
                     <TableRow key={index}>
                       <TableCell className="font-medium">{item.name}</TableCell>
                       <TableCell className="text-blue-600">{item.quantity}</TableCell>
