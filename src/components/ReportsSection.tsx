@@ -8,9 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { FileText, Calendar, TrendingUp, ShoppingCart, Package, DollarSign } from "lucide-react";
+import { API_BASE_URL } from "@/lib/constants";
 
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = API_BASE_URL;
 
 const ReportsSection = () => {
   const [selectedReport, setSelectedReport] = useState("sales");

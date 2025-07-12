@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Edit, Trash2, Tag, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { API_BASE_URL } from "@/lib/constants";
 
 interface Category {
   id: string;
@@ -37,7 +38,7 @@ const CategoryManagement = ({ categories, onCategoriesUpdate }: CategoryManageme
     "#8B5CF6", "#06B6D4", "#84CC16", "#F97316"
   ];
 
-  const API_URL = import.meta.env.VITE_API_URL + "/categories";
+  const API_URL = API_BASE_URL + "/categories";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

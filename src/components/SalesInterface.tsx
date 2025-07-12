@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Search, Barcode, Plus, Minus, Trash2, Printer, Receipt } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { API_BASE_URL } from "@/lib/constants";
 
 interface CartItem {
   id: string;
@@ -16,7 +17,7 @@ interface CartItem {
   barcode?: string;
 }
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = API_BASE_URL;
 
 const SalesInterface = () => {
   const [barcode, setBarcode] = useState("");

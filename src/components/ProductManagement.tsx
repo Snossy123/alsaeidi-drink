@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Package, Plus, Search, Edit, Trash2, Barcode } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import CategoryManagement from "./CategoryManagement";
+import { API_BASE_URL } from "@/lib/constants";
 
 interface Category {
   id: string;
@@ -42,8 +43,8 @@ const ProductManagement = () => {
   });
 
   const { toast } = useToast();
-  const API_PRODUCTS_URL = import.meta.env.VITE_API_URL + "/products";
-  const API_CATEGORIES_URL = import.meta.env.VITE_API_URL + "/categories";
+  const API_PRODUCTS_URL = API_BASE_URL + "/products";
+  const API_CATEGORIES_URL = API_BASE_URL + "/categories";
 
   const generateBarcode = () => {
     const barcode = Math.floor(Math.random() * 1000000000).toString();

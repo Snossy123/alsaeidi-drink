@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FileText, Plus, Calendar, Building, Package, Receipt, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
+import { API_BASE_URL } from "@/lib/constants";
 
 interface Category {
   id: string;
@@ -37,8 +38,8 @@ interface PurchaseInvoice {
   total: number;
 }
 
-const API_URL = import.meta.env.VITE_API_URL;
-const API_CATEGORIES_URL = import.meta.env.VITE_API_URL + "/categories";
+const API_URL = API_BASE_URL;
+const API_CATEGORIES_URL = API_BASE_URL + "/categories";
 
 const saveInvoice = async (invoiceData: any) => {
   const response = await fetch(API_URL + '/purchase-invoices', {

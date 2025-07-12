@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Receipt, FileText, Calendar, User, Printer } from "lucide-react";
+import { API_BASE_URL } from "@/lib/constants";
 
 interface CartItem {
   id: string;
@@ -25,7 +26,7 @@ interface SaleInvoice {
   cashier: string;
 }
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = API_BASE_URL;
 
 const SalesInvoices = () => {
   const [invoices, setInvoices] = useState<SaleInvoice[]>([]);
