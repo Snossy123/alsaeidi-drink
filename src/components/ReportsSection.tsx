@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +28,7 @@ const ReportsSection = () => {
 
     try {
       const response = await fetch(
-        `${API_URL}/reports.php?type=${selectedReport}&from=${dateFrom}&to=${dateTo}`
+        `${API_URL}/reports?type=${selectedReport}&from=${dateFrom}&to=${dateTo}`
       );
       const data = await response.json();
       setReportData(data);
@@ -37,6 +37,11 @@ const ReportsSection = () => {
     }
   };
 
+  useEffect(() => {
+    if (dateFrom && dateTo) {
+      generateReport();
+    }
+  }, [selectedReport]);
 
   const renderReportContent = () => {
     switch (selectedReport) {
@@ -64,10 +69,10 @@ const ReportsSection = () => {
                       <TableBody>
                         {reportData.map((item, index) => (
                           <TableRow key={index}>
-                            <TableCell>{item.date}</TableCell>
-                            <TableCell>{item.invoices}</TableCell>
-                            <TableCell className="font-semibold text-blue-600">
-                              {item.total.toFixed(2)} ريال
+                            <TableCell className="text-right">{item.date}</TableCell>
+                            <TableCell className="text-right">{item.invoices}</TableCell>
+                            <TableCell className="font-semibold text-blue-600 text-right">
+                              {Number(item.total).toFixed(2)} ريال
                             </TableCell>
                           </TableRow>
                         ))}
@@ -113,11 +118,11 @@ const ReportsSection = () => {
                 <TableBody>
                   {reportData.map((item, index) => (
                     <TableRow key={index}>
-                      <TableCell>{item.date}</TableCell>
-                      <TableCell>{item.invoices}</TableCell>
-                      <TableCell>{item.items}</TableCell>
-                      <TableCell className="font-semibold text-green-600">
-                        {item.total.toFixed(2)} ريال
+                      <TableCell className="text-right">{item.date}</TableCell>
+                      <TableCell className="text-right">{item.invoices}</TableCell>
+                      <TableCell className="text-right">{item.items}</TableCell>
+                      <TableCell className="font-semibold text-green-600 text-right">
+                        {Number(item.total).toFixed(2)} ريال
                       </TableCell>
                     </TableRow>
                   ))}
@@ -149,11 +154,11 @@ const ReportsSection = () => {
                 <TableBody>
                   {reportData.map((item, index) => (
                     <TableRow key={index}>
-                      <TableCell>{item.date}</TableCell>
-                      <TableCell className="text-blue-600">{item.sales.toFixed(2)} ريال</TableCell>
-                      <TableCell className="text-red-600">{item.purchases.toFixed(2)} ريال</TableCell>
-                      <TableCell className="font-semibold text-green-600">
-                        {item.profit.toFixed(2)} ريال
+                      <TableCell className="text-right">{item.date}</TableCell>
+                      <TableCell className="text-blue-600 text-right">{Number(item.sales).toFixed(2)} ريال</TableCell>
+                      <TableCell className="text-red-600 text-right">{Number(item.purchases).toFixed(2)} ريال</TableCell>
+                      <TableCell className="font-semibold text-green-600 text-right">
+                        {Number(item.profit).toFixed(2)} ريال
                       </TableCell>
                     </TableRow>
                   ))}
@@ -184,10 +189,10 @@ const ReportsSection = () => {
                 <TableBody>
                   {reportData.map((item, index) => (
                     <TableRow key={index}>
-                      <TableCell className="font-medium">{item.name}</TableCell>
-                      <TableCell>{item.quantity}</TableCell>
-                      <TableCell className="font-semibold text-blue-600">
-                        {item.revenue.toFixed(2)} ريال
+                      <TableCell className="font-medium text-right">{item.product_name}</TableCell>
+                      <TableCell className="text-right">{item.quantity}</TableCell>
+                      <TableCell className="font-semibold text-blue-600 text-right">
+                        {Number(item.revenue).toFixed(2)} ريال
                       </TableCell>
                     </TableRow>
                   ))}
@@ -218,10 +223,10 @@ const ReportsSection = () => {
                 <TableBody>
                   {reportData.map((item, index) => (
                     <TableRow key={index}>
-                      <TableCell className="font-medium">{item.name}</TableCell>
-                      <TableCell>{item.quantity}</TableCell>
-                      <TableCell className="font-semibold text-green-600">
-                        {item.cost.toFixed(2)} ريال
+                      <TableCell className="font-medium text-right">{item.product_name}</TableCell>
+                      <TableCell className="text-right">{item.quantity}</TableCell>
+                      <TableCell className="font-semibold text-green-600 text-right">
+                        {Number(item.cost).toFixed(2)} ريال
                       </TableCell>
                     </TableRow>
                   ))}
@@ -252,9 +257,9 @@ const ReportsSection = () => {
                 <TableBody>
                   {reportData.map((item, index) => (
                     <TableRow key={index}>
-                      <TableCell className="font-medium">{item.name}</TableCell>
-                      <TableCell className="text-blue-600">{item.quantity}</TableCell>
-                      <TableCell className="font-semibold text-orange-600">
+                      <TableCell className="font-medium text-right">{item.product_name}</TableCell>
+                      <TableCell className="text-blue-600 text-right">{item.quantity_sold}</TableCell>
+                      <TableCell className="font-semibold text-orange-600 text-right">
                         {item.remaining}
                       </TableCell>
                     </TableRow>

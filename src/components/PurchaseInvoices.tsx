@@ -19,17 +19,17 @@ interface Category {
 }
 
 interface InvoiceItem {
-  productName: string;
+  product_name: string;
   barcode: string;
   quantity: number;
-  purchasePrice: number;
-  salePrice: number;
+  purchase_price: number;
+  sale_price: number;
   category: string;
 }
 
 interface PurchaseInvoice {
   id: string;
-  invoiceNumber: string;
+  invoice_number: string;
   supplier: string;
   date: string;
   time: string;
@@ -38,9 +38,10 @@ interface PurchaseInvoice {
 }
 
 const API_URL = import.meta.env.VITE_API_URL;
+const API_CATEGORIES_URL = import.meta.env.VITE_API_URL + "/categories";
 
 const saveInvoice = async (invoiceData: any) => {
-  const response = await fetch(API_URL + '/save_invoice.php', {
+  const response = await fetch(API_URL + '/purchase-invoices', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(invoiceData)
@@ -52,7 +53,7 @@ const saveInvoice = async (invoiceData: any) => {
 };
 
 const fetchInvoices = async () => {
-  const response = await fetch(API_URL + '/get_invoices.php');
+  const response = await fetch(API_URL + '/purchase-invoices');
   if (!response.ok) throw new Error('فشل في جلب الفواتير');
 
   return await response.json();
@@ -60,30 +61,35 @@ const fetchInvoices = async () => {
 
 
 const PurchaseInvoices = () => {
-  const [categories] = useState<Category[]>([
-    { id: "1", name: "مشروبات", color: "#3B82F6" },
-    { id: "2", name: "وجبات خفيفة", color: "#10B981" },
-    { id: "3", name: "حلويات", color: "#F59E0B" }
-  ]);
+  const [categories, setCategories] = useState<Category[]>([]);
 
-  const [invoices, setInvoices] = useState<PurchaseInvoice[]>([
-    {
-      id: "1",
-      invoiceNumber: "INV-001",
-      supplier: "شركة التوزيع الشاملة",
-      date: "2024-01-15",
-      time: "10:30",
-      items: [
-        { productName: "كوكا كولا", barcode: "1234567890123", quantity: 50, purchasePrice: 2, salePrice: 2.5, category: "مشروبات" },
-        { productName: "شيبس", barcode: "1234567890124", quantity: 30, purchasePrice: 1, salePrice: 1.5, category: "وجبات خفيفة" }
-      ],
-      total: 130
-    }
-  ]);
+  const [invoices, setInvoices] = useState<PurchaseInvoice[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [resCategories] = await Promise.all([
+          fetch(API_CATEGORIES_URL)
+        ]);
+
+        const categoriesData = await resCategories.json();
+
+        setCategories(categoriesData.categories || []);
+      } catch (error) {
+        toast({
+          title: "خطأ في الاتصال",
+          description: "تعذر تحميل البيانات من الخادم",
+          variant: "destructive"
+        });
+      }
+    };
+
+    fetchData();
+  }, []);
 
   useEffect(() => {
     fetchInvoices()
-      .then((data) => setInvoices(data))
+      .then((data) => setInvoices(data.invoices))
       .catch((error) => {
         console.error(error);
         toast({
@@ -99,18 +105,18 @@ const PurchaseInvoices = () => {
   const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [invoiceData, setInvoiceData] = useState({
-    invoiceNumber: "",
+    invoice_number: "",
     supplier: "",
     date: ""
   });
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([
-    { productName: "", barcode: "", quantity: 0, purchasePrice: 0, salePrice: 0, category: "" }
+    { product_name: "", barcode: "", quantity: 0, purchase_price: 0, sale_price: 0, category: "" }
   ]);
 
   const { toast } = useToast();
 
   const addInvoiceItem = () => {
-    setInvoiceItems([...invoiceItems, { productName: "", barcode: "", quantity: 0, purchasePrice: 0, salePrice: 0, category: "" }]);
+    setInvoiceItems([...invoiceItems, { product_name: "", barcode: "", quantity: 0, purchase_price: 0, sale_price: 0, category: "" }]);
   };
 
   const updateInvoiceItem = (index: number, field: keyof InvoiceItem, value: any) => {
@@ -127,13 +133,13 @@ const PurchaseInvoices = () => {
   };
 
   const calculateTotal = () => {
-    return invoiceItems.reduce((total, item) => total + (item.quantity * item.purchasePrice), 0);
+    return invoiceItems.reduce((total, item) => total + (item.quantity * item.purchase_price), 0);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!invoiceData.invoiceNumber || !invoiceData.supplier || !invoiceData.date) {
+    if (!invoiceData.invoice_number || !invoiceData.supplier || !invoiceData.date) {
       toast({
         title: "خطأ في البيانات",
         description: "يرجى ملء جميع بيانات الفاتورة",
@@ -142,7 +148,7 @@ const PurchaseInvoices = () => {
       return;
     }
 
-    const validItems = invoiceItems.filter(item => item.productName && item.quantity > 0);
+    const validItems = invoiceItems.filter(item => item.product_name && item.quantity > 0);
     
     if (validItems.length === 0) {
       toast({
@@ -153,9 +159,11 @@ const PurchaseInvoices = () => {
       return;
     }
 
+    const now = new Date();
     const newInvoice = {
       ...invoiceData,
-      time: new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
+      // time: new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
+      time: now.toTimeString().slice(0, 8),
       items: validItems,
       total: calculateTotal()
     };
@@ -163,16 +171,16 @@ const PurchaseInvoices = () => {
     try {
       await saveInvoice(newInvoice);
       const updatedInvoices = await fetchInvoices();
-      setInvoices(updatedInvoices);
+      setInvoices(updatedInvoices.invoices);
       
       toast({
         title: "تم إضافة الفاتورة",
-        description: `تم إضافة فاتورة الشراء ${invoiceData.invoiceNumber} بنجاح`,
+        description: `تم إضافة فاتورة الشراء ${invoiceData.invoice_number} بنجاح`,
       });
 
       setIsAddDialogOpen(false);
-      setInvoiceData({ invoiceNumber: "", supplier: "", date: "" });
-      setInvoiceItems([{ productName: "", barcode: "", quantity: 0, purchasePrice: 0, salePrice: 0, category: "" }]);
+      setInvoiceData({ invoice_number: "", supplier: "", date: "" });
+      setInvoiceItems([{ product_name: "", barcode: "", quantity: 0, purchase_price: 0, sale_price: 0, category: "" }]);
     } catch (error) {
       console.error(error);
       toast({
@@ -218,11 +226,11 @@ const PurchaseInvoices = () => {
                   {/* Invoice Header */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <Label htmlFor="invoiceNumber">رقم الفاتورة *</Label>
+                      <Label htmlFor="invoice_number">رقم الفاتورة *</Label>
                       <Input
-                        id="invoiceNumber"
-                        value={invoiceData.invoiceNumber}
-                        onChange={(e) => setInvoiceData({ ...invoiceData, invoiceNumber: e.target.value })}
+                        id="invoice_number"
+                        value={invoiceData.invoice_number}
+                        onChange={(e) => setInvoiceData({ ...invoiceData, invoice_number: e.target.value })}
                         placeholder="INV-001"
                         required
                       />
@@ -266,8 +274,8 @@ const PurchaseInvoices = () => {
                             <div>
                               <Label>اسم المنتج</Label>
                               <Input
-                                value={item.productName}
-                                onChange={(e) => updateInvoiceItem(index, 'productName', e.target.value)}
+                                value={item.product_name}
+                                onChange={(e) => updateInvoiceItem(index, 'product_name', e.target.value)}
                                 placeholder="اسم المنتج"
                               />
                             </div>
@@ -317,8 +325,8 @@ const PurchaseInvoices = () => {
                               <Input
                                 type="number"
                                 step="0.01"
-                                value={item.purchasePrice}
-                                onChange={(e) => updateInvoiceItem(index, 'purchasePrice', parseFloat(e.target.value) || 0)}
+                                value={item.purchase_price}
+                                onChange={(e) => updateInvoiceItem(index, 'purchase_price', parseFloat(e.target.value) || 0)}
                                 placeholder="0.00"
                               />
                             </div>
@@ -327,8 +335,8 @@ const PurchaseInvoices = () => {
                               <Input
                                 type="number"
                                 step="0.01"
-                                value={item.salePrice}
-                                onChange={(e) => updateInvoiceItem(index, 'salePrice', parseFloat(e.target.value) || 0)}
+                                value={item.sale_price}
+                                onChange={(e) => updateInvoiceItem(index, 'sale_price', parseFloat(e.target.value) || 0)}
                                 placeholder="0.00"
                               />
                             </div>
@@ -401,7 +409,7 @@ const PurchaseInvoices = () => {
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <Badge variant="outline" className="text-blue-600 border-blue-300">
-                            {invoice.invoiceNumber}
+                            {invoice.invoice_number}
                           </Badge>
                           <span className="text-sm text-gray-600">
                             {invoice.items.length} منتج
@@ -420,7 +428,7 @@ const PurchaseInvoices = () => {
                       </div>
                       <div className="text-left">
                         <div className="text-lg font-bold text-blue-600">
-                          {invoice.total.toFixed(2)} ريال
+                          {Number(invoice.total).toFixed(2)} ريال
                         </div>
                         <Button variant="ghost" size="sm" className="mt-1">
                           عرض التفاصيل
@@ -441,7 +449,7 @@ const PurchaseInvoices = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="w-5 h-5" />
-              تفاصيل فاتورة الشراء {selectedInvoice?.invoiceNumber}
+              تفاصيل فاتورة الشراء {selectedInvoice?.invoice_number}
             </DialogTitle>
           </DialogHeader>
           
@@ -451,7 +459,7 @@ const PurchaseInvoices = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-blue-50 rounded-lg">
                 <div>
                   <span className="text-sm text-gray-600">رقم الفاتورة</span>
-                  <p className="font-semibold">{selectedInvoice.invoiceNumber}</p>
+                  <p className="font-semibold">{selectedInvoice.invoice_number}</p>
                 </div>
                 <div>
                   <span className="text-sm text-gray-600">التاريخ</span>
@@ -485,7 +493,7 @@ const PurchaseInvoices = () => {
                   <TableBody>
                     {selectedInvoice.items.map((item, index) => (
                       <TableRow key={index}>
-                        <TableCell className="font-medium">{item.productName}</TableCell>
+                        <TableCell className="font-medium">{item.product_name}</TableCell>
                         <TableCell className="text-sm text-gray-600">{item.barcode}</TableCell>
                         <TableCell>
                           {item.category && (
@@ -497,11 +505,11 @@ const PurchaseInvoices = () => {
                             </Badge>
                           )}
                         </TableCell>
-                        <TableCell>{item.purchasePrice.toFixed(2)} ريال</TableCell>
-                        <TableCell className="text-green-600 font-medium">{item.salePrice.toFixed(2)} ريال</TableCell>
+                        <TableCell>{Number(item.purchase_price).toFixed(2)} ريال</TableCell>
+                        <TableCell className="text-green-600 font-medium">{Number(item.sale_price).toFixed(2)} ريال</TableCell>
                         <TableCell>{item.quantity}</TableCell>
                         <TableCell className="font-semibold">
-                          {(item.purchasePrice * item.quantity).toFixed(2)} ريال
+                          {(Number(item.purchase_price) * item.quantity).toFixed(2)} ريال
                         </TableCell>
                       </TableRow>
                     ))}
@@ -513,7 +521,7 @@ const PurchaseInvoices = () => {
               <div className="border-t pt-4">
                 <div className="flex justify-between items-center text-xl font-bold">
                   <span>المبلغ الإجمالي:</span>
-                  <span className="text-blue-600">{selectedInvoice.total.toFixed(2)} ريال</span>
+                  <span className="text-blue-600">{Number(selectedInvoice.total).toFixed(2)} ريال</span>
                 </div>
               </div>
 
