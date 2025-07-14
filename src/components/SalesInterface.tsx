@@ -33,6 +33,15 @@ const SalesInterface = () => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
+        fetch("https://alsaeidi-drink.great-site.net/api/products", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          }
+        })
+          .then((res) => res.json())
+          .then((data) => console.log(data))
+          .catch((err) => console.error("Error:", err));
         const response = await fetch(`${API_URL}/products`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
