@@ -73,7 +73,7 @@ const ReportsSection = () => {
                             <TableCell className="text-right">{item.date}</TableCell>
                             <TableCell className="text-right">{item.invoices}</TableCell>
                             <TableCell className="font-semibold text-blue-600 text-right">
-                              {Number(item.total).toFixed(2)} ريال
+                              {Number(item.total).toFixed(2)} جنية
                             </TableCell>
                           </TableRow>
                         ))}
@@ -86,7 +86,7 @@ const ReportsSection = () => {
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="date" />
                         <YAxis />
-                        <Tooltip formatter={(value) => [`${value} ريال`, 'المبيعات']} />
+                        <Tooltip formatter={(value) => [`${value} جنية`, 'المبيعات']} />
                         <Bar dataKey="total" fill="#3B82F6" />
                       </BarChart>
                     </ResponsiveContainer>
@@ -123,7 +123,7 @@ const ReportsSection = () => {
                       <TableCell className="text-right">{item.invoices}</TableCell>
                       <TableCell className="text-right">{item.items}</TableCell>
                       <TableCell className="font-semibold text-green-600 text-right">
-                        {Number(item.total).toFixed(2)} ريال
+                        {Number(item.total).toFixed(2)} جنية
                       </TableCell>
                     </TableRow>
                   ))}
@@ -156,10 +156,10 @@ const ReportsSection = () => {
                   {reportData.map((item, index) => (
                     <TableRow key={index}>
                       <TableCell className="text-right">{item.date}</TableCell>
-                      <TableCell className="text-blue-600 text-right">{Number(item.sales).toFixed(2)} ريال</TableCell>
-                      <TableCell className="text-red-600 text-right">{Number(item.purchases).toFixed(2)} ريال</TableCell>
+                      <TableCell className="text-blue-600 text-right">{Number(item.sales).toFixed(2)} جنية</TableCell>
+                      <TableCell className="text-red-600 text-right">{Number(item.purchases).toFixed(2)} جنية</TableCell>
                       <TableCell className="font-semibold text-green-600 text-right">
-                        {Number(item.profit).toFixed(2)} ريال
+                        {Number(item.profit).toFixed(2)} جنية
                       </TableCell>
                     </TableRow>
                   ))}
@@ -193,7 +193,7 @@ const ReportsSection = () => {
                       <TableCell className="font-medium text-right">{item.product_name}</TableCell>
                       <TableCell className="text-right">{item.quantity}</TableCell>
                       <TableCell className="font-semibold text-blue-600 text-right">
-                        {Number(item.revenue).toFixed(2)} ريال
+                        {Number(item.revenue).toFixed(2)} جنية
                       </TableCell>
                     </TableRow>
                   ))}
@@ -227,7 +227,7 @@ const ReportsSection = () => {
                       <TableCell className="font-medium text-right">{item.product_name}</TableCell>
                       <TableCell className="text-right">{item.quantity}</TableCell>
                       <TableCell className="font-semibold text-green-600 text-right">
-                        {Number(item.cost).toFixed(2)} ريال
+                        {Number(item.cost).toFixed(2)} جنية
                       </TableCell>
                     </TableRow>
                   ))}

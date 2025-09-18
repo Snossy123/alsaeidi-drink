@@ -146,7 +146,7 @@ const SalesInterface = () => {
       if (result.status === 'success') {
         toast({
           title: "تمت عملية البيع بنجاح",
-          description: `رقم الفاتورة: ${invoiceNumber} - المبلغ: ${calculateTotal().toFixed(2)} ريال`,
+          description: `رقم الفاتورة: ${invoiceNumber} - المبلغ: ${calculateTotal().toFixed(2)} جنية`,
         });
         setCart([]);
       } else {
@@ -224,7 +224,7 @@ const SalesInterface = () => {
                   >
                     <CardContent className="p-4 text-center">
                       <h3 className="font-semibold text-gray-800 mb-2">{product.name}</h3>
-                      <p className="text-lg font-bold text-blue-600 mb-2">{product.price} ريال</p>
+                      <p className="text-lg font-bold text-blue-600 mb-2">{product.price} جنية</p>
                       <Badge variant="secondary" className="text-xs">
                         متوفر: {product.stock}
                       </Badge>
@@ -255,7 +255,7 @@ const SalesInterface = () => {
                       <div key={item.id} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
                         <div className="flex-1">
                           <h4 className="font-semibold text-gray-800">{item.name}</h4>
-                          <p className="text-sm text-blue-600">{item.price} ريال</p>
+                          <p className="text-sm text-blue-600">{item.price} جنية</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <Button
@@ -290,7 +290,7 @@ const SalesInterface = () => {
                   <div className="space-y-3">
                     <div className="flex justify-between items-center text-lg font-bold">
                       <span>الإجمالي:</span>
-                      <span className="text-blue-600">{calculateTotal().toFixed(2)} ريال</span>
+                      <span className="text-blue-600">{calculateTotal().toFixed(2)} جنية</span>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-2">

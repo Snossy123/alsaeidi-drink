@@ -326,7 +326,7 @@ const ProductManagement = () => {
             <CardContent className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">السعر:</span>
-                <span className="font-bold text-blue-600">{product.price} ريال</span>
+                <span className="font-bold text-blue-600">{product.price} جنية</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">المخزون:</span>

@@ -1,1 +1,1 @@
-export const API_BASE_URL = "https://alsaeidi-drink.great-site.net/api";
+export const API_BASE_URL = "http://localhost:8000/api"; // https://alsaeidi-drink.great-site.net/api

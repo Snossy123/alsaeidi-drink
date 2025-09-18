@@ -116,7 +116,7 @@ const SalesInvoices = () => {
                       </div>
                       <div className="text-left">
                         <div className="text-lg font-bold text-blue-600">
-                          {Number(invoice.total).toFixed(2)} ريال
+                          {Number(invoice.total).toFixed(2)} جنية
                         </div>
                         <Button variant="ghost" size="sm" className="mt-1">
                           عرض التفاصيل
@@ -179,10 +179,10 @@ const SalesInvoices = () => {
                     {selectedInvoice.items.map((item, index) => (
                       <TableRow key={index}>
                         <TableCell className="font-medium">{item.name}</TableCell>
-                        <TableCell>{Number(item.price).toFixed(2)} ريال</TableCell>
+                        <TableCell>{Number(item.price).toFixed(2)} جنية</TableCell>
                         <TableCell>{item.quantity}</TableCell>
                         <TableCell className="font-semibold">
-                          {(item.price * item.quantity).toFixed(2)} ريال
+                          {(item.price * item.quantity).toFixed(2)} جنية
                         </TableCell>
                       </TableRow>
                     ))}
@@ -194,7 +194,7 @@ const SalesInvoices = () => {
               <div className="border-t pt-4">
                 <div className="flex justify-between items-center text-xl font-bold">
                   <span>المبلغ الإجمالي:</span>
-                  <span className="text-blue-600">{Number(selectedInvoice.total).toFixed(2)} ريال</span>
+                  <span className="text-blue-600">{Number(selectedInvoice.total).toFixed(2)} جنية</span>
                 </div>
               </div>
 

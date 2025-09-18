@@ -362,7 +362,7 @@ const PurchaseInvoices = () => {
                   <div className="bg-gray-100 p-4 rounded-lg">
                     <div className="flex justify-between items-center text-lg font-bold">
                       <span>إجمالي الفاتورة:</span>
-                      <span className="text-blue-600">{calculateTotal().toFixed(2)} ريال</span>
+                      <span className="text-blue-600">{calculateTotal().toFixed(2)} جنية</span>
                     </div>
                   </div>
 
@@ -429,7 +429,7 @@ const PurchaseInvoices = () => {
                       </div>
                       <div className="text-left">
                         <div className="text-lg font-bold text-blue-600">
-                          {Number(invoice.total).toFixed(2)} ريال
+                          {Number(invoice.total).toFixed(2)} جنية
                         </div>
                         <Button variant="ghost" size="sm" className="mt-1">
                           عرض التفاصيل
@@ -506,11 +506,11 @@ const PurchaseInvoices = () => {
                             </Badge>
                           )}
                         </TableCell>
-                        <TableCell>{Number(item.purchase_price).toFixed(2)} ريال</TableCell>
-                        <TableCell className="text-green-600 font-medium">{Number(item.sale_price).toFixed(2)} ريال</TableCell>
+                        <TableCell>{Number(item.purchase_price).toFixed(2)} جنية</TableCell>
+                        <TableCell className="text-green-600 font-medium">{Number(item.sale_price).toFixed(2)} جنية</TableCell>
                         <TableCell>{item.quantity}</TableCell>
                         <TableCell className="font-semibold">
-                          {(Number(item.purchase_price) * item.quantity).toFixed(2)} ريال
+                          {(Number(item.purchase_price) * item.quantity).toFixed(2)} جنية
                         </TableCell>
                       </TableRow>
                     ))}
@@ -522,7 +522,7 @@ const PurchaseInvoices = () => {
               <div className="border-t pt-4">
                 <div className="flex justify-between items-center text-xl font-bold">
                   <span>المبلغ الإجمالي:</span>
-                  <span className="text-blue-600">{Number(selectedInvoice.total).toFixed(2)} ريال</span>
+                  <span className="text-blue-600">{Number(selectedInvoice.total).toFixed(2)} جنية</span>
                 </div>
               </div>
 
