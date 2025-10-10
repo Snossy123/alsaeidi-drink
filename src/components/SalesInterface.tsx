@@ -401,33 +401,53 @@ const SalesInterface = () => {
               />
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {filteredProducts.map((product) => (
-                  <Card
-                    key={product.id}
-                    className="cursor-pointer hover:shadow-lg transition-all duration-200 border-blue-100 hover:border-blue-300"
-                    onClick={() => handleProductClick(product)}
-                  >
-                    <CardContent className="p-4 text-center">
-                      <h3 className="font-semibold text-gray-800 mb-2">{product.name}</h3>
-                      {product.hasSizes ? (
-                        <div className="text-sm text-gray-600 space-y-1">
-                          <p>صغير: <span className="text-blue-600 font-semibold">{product.s_price} ج</span></p>
-                          <p>وسط: <span className="text-blue-600 font-semibold">{product.m_price} ج</span></p>
-                          <p>كبير: <span className="text-blue-600 font-semibold">{product.l_price} ج</span></p>
-                        </div>
-                      ) : (
-                        <p className="text-lg font-bold text-blue-600 mb-2">{product.price} ج</p>
-                      )}
-                      <Badge variant="secondary" className="text-xs">
-                        متوفر: {product.stock}
-                      </Badge>
-                    </CardContent>
-                  </Card>
+  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+    {filteredProducts.map((product) => (
+      <Card
+        key={product.id}
+        className="cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-200 border border-blue-100 rounded-2xl bg-white/70 backdrop-blur-sm"
+        onClick={() => handleProductClick(product)}
+      >
+        <CardContent className="p-4 text-center space-y-3">
+          <h3 className="font-bold text-gray-800 text-lg truncate">{product.name}</h3>
 
-                ))}
+          {product.hasSizes ? (
+            <div className="grid grid-cols-3 gap-2">
+              <div className="bg-blue-50 rounded-lg py-2">
+                <p className="text-xs text-gray-500">صغير</p>
+                <p className="text-blue-700 font-semibold text-sm">{product.s_price} ج</p>
               </div>
-            </CardContent>
+              <div className="bg-purple-50 rounded-lg py-2">
+                <p className="text-xs text-gray-500">وسط</p>
+                <p className="text-purple-700 font-semibold text-sm">{product.m_price} ج</p>
+              </div>
+              <div className="bg-green-50 rounded-lg py-2">
+                <p className="text-xs text-gray-500">كبير</p>
+                <p className="text-green-700 font-semibold text-sm">{product.l_price} ج</p>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-blue-50 rounded-lg py-3">
+              <p className="text-blue-700 font-bold text-lg">{product.price} ج</p>
+            </div>
+          )}
+
+          <div className="flex items-center justify-center gap-2">
+            <Badge variant="secondary" className="text-xs px-2 py-1">
+              {product.stock > 0 ? `متوفر: ${product.stock}` : "غير متوفر"}
+            </Badge>
+            {product.category_name && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                {product.category_name}
+              </span>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    ))}
+  </div>
+</CardContent>
+
           </Card>
         </div>
 
