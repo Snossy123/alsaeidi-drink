@@ -1,11 +1,11 @@
 import { useState, useEffect, FormEvent } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
-import { User, Plus, Briefcase, Calendar, Mail, Lock } from "lucide-react";
+import { User, Plus, Edit, Trash2, Briefcase, Calendar, Mail, Lock, Phone, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/lib/constants";
 
@@ -15,34 +15,37 @@ interface Employee {
   id: string;
   name: string;
   email: string;
-  position: string;
+  password?: string;
+  role: string;
   phone: string;
-  salary: number;
-  hire_date: string;
+  salary: string;
+  hiring_date: string;
+  active?: boolean;
 }
 
 const Employees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [employeeData, setEmployeeData] = useState({
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
-    position: "",
+    role: "",
     phone: "",
     salary: "",
-    hire_date: "",
+    hiring_date: "",
+    active: true,
   });
 
   const { toast } = useToast();
 
-  // 🟦 Fetch employees
+  // 🔹 Fetch Employees
   const fetchEmployees = async () => {
     try {
       const response = await fetch(API_URL);
-      if (!response.ok) throw new Error("فشل تحميل الموظفين");
       const data = await response.json();
-      setEmployees(data.employees || []);
+      if (data.success) setEmployees(data.employees);
     } catch {
       toast({
         title: "خطأ",
@@ -56,11 +59,11 @@ const Employees = () => {
     fetchEmployees();
   }, []);
 
-  // 🟩 Save new employee
-  const saveEmployee = async (e: FormEvent) => {
+  // 🔸 Handle Save (Add / Update)
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const { name, email, password, position, phone, salary, hire_date } = employeeData;
-    if (!name || !email || !password || !position || !phone || !salary || !hire_date) {
+
+    if (!formData.name || !formData.email || !formData.role || !formData.phone || !formData.salary || !formData.hiring_date) {
       toast({
         title: "خطأ في البيانات",
         description: "يرجى ملء جميع الحقول المطلوبة",
@@ -73,206 +76,273 @@ const Employees = () => {
       const response = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(employeeData),
+        body: JSON.stringify({
+          action: editingEmployee ? "update" : "add",
+          employee: editingEmployee ? { ...formData, id: editingEmployee.id } : formData,
+        }),
       });
 
-      if (!response.ok) throw new Error("فشل في حفظ الموظف");
-
-      await fetchEmployees();
-      setEmployeeData({ name: "", email: "", password: "", position: "", phone: "", salary: "", hire_date: "" });
-      setIsDialogOpen(false);
-
-      toast({
-        title: "تم الحفظ بنجاح",
-        description: `تمت إضافة الموظف ${name}`,
-      });
+      const data = await response.json();
+      if (data.success) {
+        toast({
+          title: editingEmployee ? "تم التحديث" : "تمت الإضافة",
+          description: data.message,
+        });
+        setEmployees(data.employees);
+        setIsDialogOpen(false);
+        setEditingEmployee(null);
+        resetForm();
+      } else {
+        toast({
+          title: "فشل العملية",
+          description: data.message,
+          variant: "destructive",
+        });
+      }
     } catch {
       toast({
         title: "خطأ",
-        description: "فشل حفظ بيانات الموظف، حاول مرة أخرى",
+        description: "فشل حفظ بيانات الموظف",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      email: "",
+      password: "",
+      role: "",
+      phone: "",
+      salary: "",
+      hiring_date: "",
+      active: true,
+    });
+  };
+
+  // 🔻 Handle Edit
+  const handleEdit = (emp: Employee) => {
+    setEditingEmployee(emp);
+    setFormData({
+      name: emp.name,
+      email: emp.email,
+      password: "",
+      role: emp.role,
+      phone: emp.phone,
+      salary: emp.salary,
+      hiring_date: emp.hiring_date,
+      active: emp.active ?? true,
+    });
+    setIsDialogOpen(true);
+  };
+
+  // 🔻 Handle Delete
+  const handleDelete = async (id: string) => {
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete", id }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        toast({
+          title: "تم الحذف",
+          description: data.message,
+        });
+        setEmployees(data.employees);
+      } else {
+        toast({
+          title: "فشل الحذف",
+          description: data.message,
+          variant: "destructive",
+        });
+      }
+    } catch {
+      toast({
+        title: "خطأ",
+        description: "تعذر الاتصال بالخادم",
         variant: "destructive",
       });
     }
   };
 
   return (
-    <div className="space-y-6" dir="rtl">
-      {/* Header */}
-      <Card className="bg-white/60 backdrop-blur-sm border-blue-100">
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle className="flex items-center gap-2 text-blue-800">
-                <User className="w-6 h-6" />
-                إدارة الموظفين
-              </CardTitle>
-              <p className="text-sm text-gray-600 mt-1">
-                عدد الموظفين: {employees.length}
-              </p>
-            </div>
-
-            {/* Add Employee Dialog */}
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
-                  <Plus className="w-4 h-4 mr-2" />
-                  إضافة موظف
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-lg" dir="rtl">
-                <DialogHeader>
-                  <DialogTitle>إضافة موظف جديد</DialogTitle>
-                </DialogHeader>
-
-                <form onSubmit={saveEmployee} className="space-y-4">
-                  <div>
-                    <Label>الاسم *</Label>
-                    <Input
-                      value={employeeData.name}
-                      onChange={(e) => setEmployeeData({ ...employeeData, name: e.target.value })}
-                      placeholder="اسم الموظف"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <Label>البريد الإلكتروني *</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                      <Input
-                        type="email"
-                        value={employeeData.email}
-                        onChange={(e) => setEmployeeData({ ...employeeData, email: e.target.value })}
-                        placeholder="example@email.com"
-                        className="pl-8"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label>كلمة المرور *</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                      <Input
-                        type="password"
-                        value={employeeData.password}
-                        onChange={(e) => setEmployeeData({ ...employeeData, password: e.target.value })}
-                        placeholder="********"
-                        className="pl-8"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label>الوظيفة *</Label>
-                    <Input
-                      value={employeeData.position}
-                      onChange={(e) => setEmployeeData({ ...employeeData, position: e.target.value })}
-                      placeholder="المسمى الوظيفي"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <Label>رقم الهاتف *</Label>
-                    <Input
-                      type="tel"
-                      value={employeeData.phone}
-                      onChange={(e) => setEmployeeData({ ...employeeData, phone: e.target.value })}
-                      placeholder="01xxxxxxxxx"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <Label>الراتب *</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={employeeData.salary}
-                      onChange={(e) => setEmployeeData({ ...employeeData, salary: e.target.value })}
-                      placeholder="0.00"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <Label>تاريخ التعيين *</Label>
-                    <Input
-                      type="date"
-                      value={employeeData.hire_date}
-                      onChange={(e) => setEmployeeData({ ...employeeData, hire_date: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="flex gap-2 pt-3">
-                    <Button type="submit" className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500">
-                      حفظ الموظف
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsDialogOpen(false)}
-                    >
-                      إلغاء
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </CardHeader>
-      </Card>
-
-      {/* Employee List */}
-      <Card className="bg-white/60 backdrop-blur-sm border-blue-100">
-        <CardHeader>
+    <Card className="bg-white/60 backdrop-blur-sm border-blue-100" dir="rtl">
+      <CardHeader>
+        <div className="flex justify-between items-center">
           <CardTitle className="flex items-center gap-2 text-blue-800">
             <Briefcase className="w-5 h-5" />
-            قائمة الموظفين
+            إدارة الموظفين
           </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {employees.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <User className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p>لا يوجد موظفون بعد</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>الاسم</TableHead>
-                  <TableHead>البريد الإلكتروني</TableHead>
-                  <TableHead>الوظيفة</TableHead>
-                  <TableHead>رقم الهاتف</TableHead>
-                  <TableHead>الراتب</TableHead>
-                  <TableHead>تاريخ التعيين</TableHead>
+
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button
+                size="sm"
+                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                onClick={() => {
+                  setEditingEmployee(null);
+                  resetForm();
+                }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                إضافة موظف
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md" dir="rtl">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingEmployee ? "تعديل بيانات الموظف" : "إضافة موظف جديد"}
+                </DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <Label>الاسم *</Label>
+                  <Input
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="اسم الموظف"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label>البريد الإلكتروني *</Label>
+                  <Input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="example@email.com"
+                    required
+                  />
+                </div>
+
+                {!editingEmployee && (
+                  <div>
+                    <Label>كلمة المرور *</Label>
+                    <Input
+                      type="password"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      placeholder="********"
+                      required
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <Label>الوظيفة *</Label>
+                  <Input
+                    value={formData.role}
+                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                    placeholder="المسمى الوظيفي"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label>رقم الهاتف *</Label>
+                  <Input
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    placeholder="01xxxxxxxxx"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label>الراتب *</Label>
+                  <Input
+                    type="number"
+                    value={formData.salary}
+                    onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label>تاريخ التعيين *</Label>
+                  <Input
+                    type="date"
+                    value={formData.hiring_date}
+                    onChange={(e) => setFormData({ ...formData, hiring_date: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-4">
+                  <Button type="submit" className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500">
+                    {editingEmployee ? "تحديث" : "إضافة"}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    إلغاء
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </CardHeader>
+
+      <CardContent>
+        {employees.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <User className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+            <p>لا يوجد موظفون بعد</p>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>الاسم</TableHead>
+                <TableHead>البريد الإلكتروني</TableHead>
+                <TableHead>الوظيفة</TableHead>
+                <TableHead>رقم الهاتف</TableHead>
+                <TableHead>الراتب</TableHead>
+                <TableHead>تاريخ التعيين</TableHead>
+                <TableHead>الإجراءات</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {employees.map((emp) => (
+                <TableRow key={emp.id}>
+                  <TableCell className="font-semibold">{emp.name}</TableCell>
+                  <TableCell>{emp.email}</TableCell>
+                  <TableCell>{emp.role}</TableCell>
+                  <TableCell>{emp.phone}</TableCell>
+                  <TableCell>{Number(emp.salary).toFixed(2)} جنيه</TableCell>
+                  <TableCell>{emp.hiring_date}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleEdit(emp)}
+                        className="h-6 w-6 p-0"
+                      >
+                        <Edit className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDelete(emp.id)}
+                        className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {employees.map((emp) => (
-                  <TableRow key={emp.id}>
-                    <TableCell className="font-semibold">{emp.name}</TableCell>
-                    <TableCell>{emp.email}</TableCell>
-                    <TableCell>{emp.position}</TableCell>
-                    <TableCell>{emp.phone}</TableCell>
-                    <TableCell>{Number(emp.salary).toFixed(2)} جنية</TableCell>
-                    <TableCell className="flex items-center gap-1 text-sm text-gray-700">
-                      <Calendar className="w-4 h-4" />
-                      {emp.hire_date}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
