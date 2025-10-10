@@ -109,17 +109,27 @@ const SalesInterface = () => {
   const handleBarcodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const product = products.find(p => p.barcode === barcode);
-    if (product) {
-      addToCart(product);
-      setBarcode("");
-    } else {
+    setBarcode("");
+
+    if (!product) {
       toast({
         title: "المنتج غير موجود",
         description: "لم يتم العثور على منتج بهذا الباركود",
         variant: "destructive"
       });
+      return;
+    }
+
+    // 🟦 If the product has sizes, open the same size dialog as when clicked
+    if (product.hasSizes) {
+      setSelectedProduct(product);
+      setShowSizeDialog(true);
+    } else {
+      // Otherwise, add normally
+      addToCart({ ...product, price: product.price });
     }
   };
+
 
   const calculateTotal = () => {
     return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
