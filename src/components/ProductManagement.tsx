@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,8 @@ import { Package, Plus, Search, Edit, Trash2, Barcode } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import CategoryManagement from "./CategoryManagement";
 import { API_BASE_URL } from "@/lib/constants";
+import { Switch } from "@/components/ui/switch";
+
 
 interface Category {
   id: string;
@@ -23,9 +25,14 @@ interface Product {
   id: string;
   name: string;
   price: number;
+  s_price: number;
+  m_price: number;
+  l_price: number;
+  hasSizes: boolean;
   stock: number;
   barcode?: string;
   category?: string;
+  category_id?: number;
 }
 
 const ProductManagement = () => {
@@ -36,10 +43,11 @@ const ProductManagement = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState({
     name: "",
-    price: "",
     stock: "",
     barcode: "",
-    category: ""
+    category: "",
+    hasSizes: false,
+    prices: { small: "", medium: "", large: "", default: "" }
   });
 
   const { toast } = useToast();
@@ -77,10 +85,12 @@ const ProductManagement = () => {
     fetchData();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.price) {
+    if (!formData.name || 
+       (!formData.hasSizes && !formData.prices.default) ||
+       (formData.hasSizes && !formData.prices.small && !formData.prices.medium && !formData.prices.large)) {
       toast({
         title: "خطأ في البيانات",
         description: "يرجى ملء جميع الحقول المطلوبة",
@@ -92,11 +102,16 @@ const ProductManagement = () => {
     const newProduct: Product = {
       id: editingProduct ? editingProduct.id : Date.now().toString(),
       name: formData.name,
-      price: parseFloat(formData.price),
-      stock: parseInt(formData.stock) || 0,
+      stock: parseFloat(formData.stock) || 0,
       barcode: formData.barcode,
-      category: formData.category
+      category: formData.category ? String(formData.category) : undefined,
+      hasSizes: formData.hasSizes,
+      price: formData.hasSizes ? 0 : parseFloat(formData.prices.default) || 0,
+      s_price: formData.hasSizes ? parseFloat(formData.prices.small) || 0 : 0,
+      m_price: formData.hasSizes ? parseFloat(formData.prices.medium) || 0 : 0,
+      l_price: formData.hasSizes ? parseFloat(formData.prices.large) || 0 : 0,
     };
+
 
     try {
       const response = await fetch(API_PRODUCTS_URL, {
@@ -104,10 +119,13 @@ const ProductManagement = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: editingProduct ? "update" : "add",
-          product: newProduct
+          product: {
+            ...newProduct,
+            category: Number(newProduct.category) || null, 
+          },
         })
       });
-
+      if (!response.ok) throw new Error("Server error");
       const data = await response.json();
       if (data.success) {
         toast({
@@ -117,7 +135,14 @@ const ProductManagement = () => {
         setProducts(data.products);
         setIsDialogOpen(false);
         setEditingProduct(null);
-        setFormData({ name: "", price: "", stock: "", barcode: "", category: "" });
+        setFormData({
+          name: "",
+          stock: "",
+          barcode: "",
+          category: "",
+          hasSizes: false,
+          prices: { small: "", medium: "", large: "", default: "" },
+        });
       } else {
         toast({ title: "فشل العملية", description: data.message, variant: "destructive" });
       }
@@ -137,7 +162,7 @@ const ProductManagement = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "delete", id })
       });
-
+      if (!response.ok) throw new Error("Server error");
       const data = await response.json();
       if (data.success) {
         toast({ title: "تم حذف المنتج", description: data.message });
@@ -159,22 +184,35 @@ const ProductManagement = () => {
     setEditingProduct(product);
     setFormData({
       name: product.name,
-      price: product.price.toString(),
       stock: product.stock.toString(),
       barcode: product.barcode || "",
-      category: product.category || ""
+      category: product.category_id ? String(product.category_id) : "",
+      hasSizes: product.hasSizes || false,
+      prices: product.hasSizes
+        ? {
+            small: product.s_price?.toString() || "",
+            medium: product.m_price?.toString() || "",
+            large: product.l_price?.toString() || "",
+            default: "",
+          }
+        : { small: "", medium: "", large: "", default: product.price.toString() },
     });
     setIsDialogOpen(true);
   };
 
 
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.category?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = products.filter((product) => {
+    const categoryName =
+      categories.find((c) => c.id === String(product.category))?.name || "";
+    return (
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      categoryName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
-  const getCategoryColor = (categoryName: string) => {
-    const category = categories.find(c => c.name === categoryName);
+
+  const getCategoryColor = (categoryId: number) => {
+    const category = categories.find(c => Number(c.id) === categoryId);
     return category?.color || "#6B7280";
   };
 
@@ -185,11 +223,11 @@ const ProductManagement = () => {
         <h2 className="text-2xl font-bold text-blue-800">إدارة المنتجات</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button 
+            <Button
               className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
               onClick={() => {
                 setEditingProduct(null);
-                setFormData({ name: "", price: "", stock: "", barcode: "", category: "" });
+                setFormData({ name: "", hasSizes: false, prices: { small: "", medium: "", large: "", default: "" }, stock: "", barcode: "", category: "" });
               }}
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -213,18 +251,72 @@ const ProductManagement = () => {
                   required
                 />
               </div>
-              <div>
-                <Label htmlFor="price" className="text-right">السعر *</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  placeholder="0.00"
-                  required
+              <div className="flex items-center gap-2">
+                <Label>هل للمنتج أحجام؟</Label>
+                <Switch
+                  checked={formData.hasSizes}
+                  onCheckedChange={(checked) => 
+                    setFormData({
+                      ...formData,
+                      hasSizes: checked,
+                      prices: { small: "", medium: "", large: "", default: "" },
+                    })
+                  }
                 />
               </div>
+              {formData.hasSizes ? (
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <Label>صغير</Label>
+                    <Input
+                      type="number"
+                      value={formData.prices.small}
+                      onChange={(e) =>
+                        setFormData({ ...formData, prices: { ...formData.prices, small: e.target.value } })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label>وسط</Label>
+                    <Input
+                      type="number"
+                      value={formData.prices.medium}
+                      onChange={(e) =>
+                        setFormData({ ...formData, prices: { ...formData.prices, medium: e.target.value } })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label>كبير</Label>
+                    <Input
+                      type="number"
+                      value={formData.prices.large}
+                      onChange={(e) =>
+                        setFormData({ ...formData, prices: { ...formData.prices, large: e.target.value } })
+                      }
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <Label>السعر</Label>
+                  <Input
+                    type="number"
+                    value={formData.prices.default}
+                    onChange={(e) =>
+                      setFormData({ ...formData, prices: {
+                        default: e.target.value,
+                        small: "",
+                        medium: "",
+                        large: ""
+                      } })
+                    }
+                    placeholder="0.00"
+                  />
+                </div>
+              )}
+
+
               <div>
                 <Label htmlFor="stock" className="text-right">الكمية المتوفرة</Label>
                 <Input
@@ -250,15 +342,19 @@ const ProductManagement = () => {
                   </Button>
                 </div>
               </div>
+
               <div>
                 <Label htmlFor="category" className="text-right mb-2 block">الفئة</Label>
-                <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) => setFormData({ ...formData, category: value })}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="اختر الفئة" />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.name}>
+                      <SelectItem key={category.id} value={String(category.id)}>
                         <div className="flex items-center gap-2">
                           <div
                             className="w-3 h-3 rounded-full"
@@ -270,6 +366,7 @@ const ProductManagement = () => {
                     ))}
                   </SelectContent>
                 </Select>
+
               </div>
               <div className="flex gap-2 pt-4">
                 <Button type="submit" className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500">
@@ -316,7 +413,7 @@ const ProductManagement = () => {
                   <Badge 
                     variant="secondary" 
                     className="text-xs text-white border-0"
-                    style={{ backgroundColor: getCategoryColor(product.category) }}
+                    style={{ backgroundColor: getCategoryColor(product.category_id) }}
                   >
                     {product.category}
                   </Badge>
@@ -324,16 +421,42 @@ const ProductManagement = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">السعر:</span>
-                <span className="font-bold text-blue-600">{product.price} جنية</span>
-              </div>
+              {/* 🧮 Prices Section */}
+              {product.hasSizes ? (
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  {[
+                    { label: "صغير", value: product.s_price, color: "from-blue-100 to-blue-50" },
+                    { label: "وسط", value: product.m_price, color: "from-purple-100 to-purple-50" },
+                    { label: "كبير", value: product.l_price, color: "from-emerald-100 to-emerald-50" },
+                  ].map((size, i) => (
+                    <div
+                      key={i}
+                      className={`rounded-xl py-2 bg-gradient-to-b ${size.color} border border-blue-100 hover:shadow-md transition-all`}
+                    >
+                      <div className="text-xs text-gray-500">{size.label}</div>
+                      <div className="text-sm font-bold text-blue-700">
+                        {size.value ? `${Number(size.value).toFixed(2)} ج` : "--"}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">السعر:</span>
+                  <span className="font-bold text-blue-600">{Number(product.price).toFixed(2)} ج</span>
+                </div>
+              )}
+
+
+              {/* 🏷️ Stock */}
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">المخزون:</span>
                 <Badge variant={product.stock > 10 ? "default" : "destructive"}>
                   {product.stock}
                 </Badge>
               </div>
+
+              {/* 🧾 Barcode */}
               {product.barcode && (
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">الباركود:</span>
@@ -342,6 +465,8 @@ const ProductManagement = () => {
                   </span>
                 </div>
               )}
+
+              {/* 🧰 Buttons */}
               <div className="flex gap-2 pt-2">
                 <Button
                   size="sm"

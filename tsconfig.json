@@ -5,6 +5,9 @@
     { "path": "./tsconfig.node.json" }
   ],
   "compilerOptions": {
+    "jsx": "react-jsx",               // 👈 this is required for React 17+
+    "lib": ["DOM", "ESNext"],         // 👈 enables DOM types like <div>, document, etc.
+    "types": ["react", "react-dom"],  // 👈 ensures JSX types are available
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]

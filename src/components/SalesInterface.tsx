@@ -8,6 +8,8 @@ import { Separator } from "@/components/ui/separator";
 import { Search, Barcode, Plus, Minus, Trash2, Printer, Receipt } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/lib/constants";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
 
 interface CartItem {
   id: string;
@@ -15,6 +17,7 @@ interface CartItem {
   price: number;
   quantity: number;
   barcode?: string;
+  size?: "s" | "m" | "l" | null;
 }
 
 const API_URL = API_BASE_URL;
@@ -58,37 +61,42 @@ const SalesInterface = () => {
     fetchProducts();
   }, [toast]);
 
-  const addToCart = (product: any) => {
-    const existingItem = cart.find(item => item.id === product.id);
-    
+   const addToCart = (product: any, size: string | null = null) => {
+    const price = Number(product.price);
+    const existingItem = cart.find(
+      (item) => item.id === product.id && item.price === price && item.size === size
+    );
+
     if (existingItem) {
-      setCart(cart.map(item => 
-        item.id === product.id 
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      ));
+      setCart(
+        cart.map((item) =>
+          item.id === product.id && item.price === price && item.size === size
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        )
+      );
     } else {
-      setCart([...cart, { ...product, quantity: 1 }]);
+      setCart([...cart, { ...product, price, quantity: 1, size }]);
     }
-    
+
     toast({
       title: "تم إضافة المنتج",
       description: `تم إضافة ${product.name} إلى السلة`,
     });
   };
 
-  const updateQuantity = (id: string, newQuantity: number) => {
+  const updateQuantity = (id: string, newQuantity: number, price: number) => {
     if (newQuantity <= 0) {
       setCart(cart.filter(item => item.id !== id));
     } else {
-      setCart(cart.map(item => 
-        item.id === id ? { ...item, quantity: newQuantity } : item
+      setCart(cart.map(item =>
+        (item.id === id && item.price === price) ? { ...item, quantity: newQuantity } : item
       ));
     }
   };
 
-  const removeFromCart = (id: string) => {
-    setCart(cart.filter(item => item.id !== id));
+  const removeFromCart = (id: string, price: number) => {
+    setCart(cart.filter(item => (item.id !== id && item.price !== price)));
   };
 
   const handleBarcodeSubmit = (e: React.FormEvent) => {
@@ -170,6 +178,33 @@ const SalesInterface = () => {
     product.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  const [showSizeDialog, setShowSizeDialog] = useState(false);
+
+  const handleProductClick = (product: any) => {
+    if (product.hasSizes) {
+      setSelectedProduct(product);
+      setShowSizeDialog(true);
+    } else {
+      addToCart({ ...product, price: product.price });
+    }
+  };
+
+  const handleSelectSize = (size: "s" | "m" | "l") => {
+    if (!selectedProduct) return;
+
+    const price =
+      size === "s"
+        ? selectedProduct.s_price
+        : size === "m"
+          ? selectedProduct.m_price
+          : selectedProduct.l_price;
+
+    addToCart({ ...selectedProduct, price}, size);
+    setShowSizeDialog(false);
+    setSelectedProduct(null);
+  };
+
   return (
     <div className="space-y-6">
       {/* Main Sales Interface */}
@@ -217,19 +252,28 @@ const SalesInterface = () => {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {filteredProducts.map((product) => (
-                  <Card 
+                  <Card
                     key={product.id}
                     className="cursor-pointer hover:shadow-lg transition-all duration-200 border-blue-100 hover:border-blue-300"
-                    onClick={() => addToCart(product)}
+                    onClick={() => handleProductClick(product)}
                   >
                     <CardContent className="p-4 text-center">
                       <h3 className="font-semibold text-gray-800 mb-2">{product.name}</h3>
-                      <p className="text-lg font-bold text-blue-600 mb-2">{product.price} جنية</p>
+                      {product.hasSizes ? (
+                        <div className="text-sm text-gray-600 space-y-1">
+                          <p>صغير: <span className="text-blue-600 font-semibold">{product.s_price} ج</span></p>
+                          <p>وسط: <span className="text-blue-600 font-semibold">{product.m_price} ج</span></p>
+                          <p>كبير: <span className="text-blue-600 font-semibold">{product.l_price} ج</span></p>
+                        </div>
+                      ) : (
+                        <p className="text-lg font-bold text-blue-600 mb-2">{product.price} ج</p>
+                      )}
                       <Badge variant="secondary" className="text-xs">
                         متوفر: {product.stock}
                       </Badge>
                     </CardContent>
                   </Card>
+
                 ))}
               </div>
             </CardContent>
@@ -252,16 +296,21 @@ const SalesInterface = () => {
                 <>
                   <div className="space-y-3 max-h-96 overflow-y-auto">
                     {cart.map((item) => (
-                      <div key={item.id} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                      <div key={`${item.id}-${item.price}`} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
                         <div className="flex-1">
-                          <h4 className="font-semibold text-gray-800">{item.name}</h4>
+                          <h4 className="font-semibold text-gray-800">
+                            {item.name}{" "}
+                            {item.size
+                              ? `(${item.size === 's' ? 'صغير' : item.size === 'm' ? 'وسط' : 'كبير'})`
+                              : ""}
+                          </h4>
                           <p className="text-sm text-blue-600">{item.price} جنية</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            onClick={() => updateQuantity(item.id, item.quantity - 1, item.price)}
                           >
                             <Minus className="w-3 h-3" />
                           </Button>
@@ -269,14 +318,14 @@ const SalesInterface = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            onClick={() => updateQuantity(item.id, item.quantity + 1, item.price)}
                           >
                             <Plus className="w-3 h-3" />
                           </Button>
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => removeFromCart(item.id)}
+                            onClick={() => removeFromCart(item.id, item.price)}
                           >
                             <Trash2 className="w-3 h-3" />
                           </Button>
@@ -284,24 +333,24 @@ const SalesInterface = () => {
                       </div>
                     ))}
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="space-y-3">
                     <div className="flex justify-between items-center text-lg font-bold">
                       <span>الإجمالي:</span>
                       <span className="text-blue-600">{calculateTotal().toFixed(2)} جنية</span>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-2">
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         className="border-blue-200 hover:bg-blue-50"
                       >
                         <Printer className="w-4 h-4 mr-2" />
                         طباعة
                       </Button>
-                      <Button 
+                      <Button
                         onClick={handleCheckout}
                         className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
                       >
@@ -315,6 +364,38 @@ const SalesInterface = () => {
           </Card>
         </div>
       </div>
+
+      <Dialog open={showSizeDialog} onOpenChange={setShowSizeDialog}>
+        <DialogContent className="max-w-sm text-center">
+          <DialogHeader>
+            <DialogTitle>اختر الحجم والسعر</DialogTitle>
+          </DialogHeader>
+
+          {selectedProduct && (
+            <div className="space-y-3">
+              <p className="font-semibold text-gray-700">{selectedProduct.name}</p>
+
+              <div className="grid grid-cols-3 gap-3 mt-4">
+                {selectedProduct.s_price > 0 && (
+                  <Button onClick={() => handleSelectSize("s")} className="bg-blue-500 hover:bg-blue-600">
+                    صغير <br /> {selectedProduct.s_price} ج
+                  </Button>
+                )}
+                {selectedProduct.m_price > 0 && (
+                  <Button onClick={() => handleSelectSize("m")} className="bg-blue-500 hover:bg-blue-600">
+                    وسط <br /> {selectedProduct.m_price} ج
+                  </Button>
+                )}
+                {selectedProduct.l_price > 0 && (
+                  <Button onClick={() => handleSelectSize("l")} className="bg-blue-500 hover:bg-blue-600">
+                    كبير <br /> {selectedProduct.l_price} ج
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
