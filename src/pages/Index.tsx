@@ -11,6 +11,7 @@ import ProductManagement from "@/components/ProductManagement";
 import PurchaseInvoices from "@/components/PurchaseInvoices";
 import ReportsSection from "@/components/ReportsSection";
 import SalesInvoices from "@/components/SalesInvoices";
+import Employees from "@/components/Employees";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("sales");
@@ -48,43 +49,56 @@ const Index = () => {
       <div className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           {/* Navigation Tabs - الترتيب من اليمين لليسار */}
-          <TabsList className="grid w-full grid-cols-5 bg-white/60 backdrop-blur-sm border border-blue-100 h-16" dir="rtl">
-            <TabsTrigger 
-              value="reports"
-              className="flex-col gap-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white"
+          <TabsList
+              className="
+                grid 
+                w-full 
+                grid-cols-6 
+                bg-white/70 
+                backdrop-blur-md 
+                border border-blue-100 
+                shadow-sm 
+                rounded-2xl 
+                h-16 
+                overflow-hidden
+              "
+              dir="rtl"
             >
-              <BarChart3 className="w-5 h-5" />
-              <span className="text-xs">التقارير</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="invoices"
-              className="flex-col gap-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white"
-            >
-              <FileText className="w-5 h-5" />
-              <span className="text-xs">فواتير الشراء</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="sales-invoices"
-              className="flex-col gap-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white"
-            >
-              <Receipt className="w-5 h-5" />
-              <span className="text-xs">فواتير المبيعات</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="products"
-              className="flex-col gap-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white"
-            >
-              <Package className="w-5 h-5" />
-              <span className="text-xs">المنتجات</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="sales" 
-              className="flex-col gap-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white"
-            >
-              <ShoppingCart className="w-5 h-5" />
-              <span className="text-xs">نقطة البيع</span>
-            </TabsTrigger>
-          </TabsList>
+              {[
+                { value: "reports", label: "التقارير", icon: BarChart3 },
+                { value: "employees", label: "الموظفين", icon: FileText },
+                { value: "invoices", label: "فواتير الشراء", icon: FileText },
+                { value: "sales-invoices", label: "فواتير المبيعات", icon: Receipt },
+                { value: "products", label: "المنتجات", icon: Package },
+                { value: "sales", label: "نقطة البيع", icon: ShoppingCart },
+              ].map(({ value, label, icon: Icon }) => (
+                <TabsTrigger
+                  key={value}
+                  value={value}
+                  className="
+                    flex 
+                    flex-col 
+                    items-center 
+                    justify-center 
+                    gap-1 
+                    text-gray-700 
+                    font-medium 
+                    transition-all 
+                    duration-300 
+                    hover:bg-blue-50 
+                    hover:text-blue-700 
+                    data-[state=active]:text-white 
+                    data-[state=active]:bg-gradient-to-r 
+                    data-[state=active]:from-blue-500 
+                    data-[state=active]:to-purple-500
+                  "
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="text-[13px]">{label}</span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+
 
           {/* Tab Content */}
           <TabsContent value="sales" className="m-0">
@@ -101,6 +115,10 @@ const Index = () => {
 
           <TabsContent value="invoices" className="m-0">
             <PurchaseInvoices />
+          </TabsContent>
+
+          <TabsContent value="employees" className="m-0">
+            <Employees />
           </TabsContent>
 
           <TabsContent value="reports" className="m-0">
