@@ -30,27 +30,33 @@ const SalesInterface = () => {
 
   // Mock products data
   const [products, setProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchProductsAndCategories = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`${API_URL}/products`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+        const [productsRes, categoriesRes] = await Promise.all([
+          fetch(`${API_URL}/products`),
+          fetch(`${API_URL}/categories`),
+        ]);
+
+        const productsData = await productsRes.json();
+        const categoriesData = await categoriesRes.json();
+
+        if (productsData.status === 'success') {
+          setProducts(productsData.products);
+        }
+        if (categoriesData.status === 'success') {
+          setCategories(categoriesData.categories);
         }
 
-        const result = await response.json();
-        if (result.status === 'success' && Array.isArray(result.products)) {
-          setProducts(result.products);
-        } else {
-          throw new Error("Unexpected response format");
-        }
       } catch (error: any) {
         toast({
-          title: "فشل تحميل المنتجات",
-          description: error.message || "تحقق من اتصال الإنترنت أو السيرفر",
+          title: "فشل التحميل",
+          description: error.message || "تحقق من الاتصال بالإنترنت",
           variant: "destructive",
         });
       } finally {
@@ -58,8 +64,9 @@ const SalesInterface = () => {
       }
     };
 
-    fetchProducts();
+    fetchProductsAndCategories();
   }, [toast]);
+
 
    const addToCart = (product: any, size: string | null = null) => {
     const price = Number(product.price);
@@ -175,7 +182,8 @@ const SalesInterface = () => {
 
 
   const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase())
+    product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    (!selectedCategory || product.category_id === selectedCategory)
   );
 
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
@@ -234,7 +242,33 @@ const SalesInterface = () => {
               </form>
             </CardContent>
           </Card>
-
+          {/* Categories Section */}
+          {categories.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              <Button
+                variant={selectedCategory === null ? "default" : "outline"}
+                onClick={() => setSelectedCategory(null)}
+                className="text-sm"
+              >
+                الكل
+              </Button>
+              {categories.map((cat) => (
+                <Button
+                  key={cat.id}
+                  variant={selectedCategory === cat.id ? "default" : "outline"}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className="text-sm flex items-center gap-1"
+                  style={{ borderColor: cat.color, color: cat.color }}
+                >
+                  <span
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: cat.color }}
+                  ></span>
+                  {cat.name}
+                </Button>
+              ))}
+            </div>
+          )}
           {/* Products Grid */}
           <Card className="bg-white/60 backdrop-blur-sm border-blue-100">
             <CardHeader>
