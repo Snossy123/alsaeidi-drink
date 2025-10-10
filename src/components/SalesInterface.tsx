@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,8 @@ import { Search, Barcode, Plus, Minus, Trash2, Printer, Receipt } from "lucide-r
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/lib/constants";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+
 
 
 interface CartItem {
@@ -28,30 +29,33 @@ const SalesInterface = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
-  // Mock products data
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showEmployeeDialog, setShowEmployeeDialog] = useState(false);
 
   useEffect(() => {
-    const fetchProductsAndCategories = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        const [productsRes, categoriesRes] = await Promise.all([
+        const [productsRes, categoriesRes, employeesRes] = await Promise.all([
           fetch(`${API_URL}/products`),
           fetch(`${API_URL}/categories`),
+          fetch(`${API_URL}/employees`)
         ]);
 
-        const productsData = await productsRes.json();
-        const categoriesData = await categoriesRes.json();
+        const [productsData, categoriesData, employeesData] = await Promise.all([
+          productsRes.json(),
+          categoriesRes.json(),
+          employeesRes.json()
+        ]);
 
-        if (productsData.status === 'success') {
-          setProducts(productsData.products);
-        }
-        if (categoriesData.status === 'success') {
-          setCategories(categoriesData.categories);
-        }
+        if (productsData.status === "success") setProducts(productsData.products);
+        if (categoriesData.status === "success") setCategories(categoriesData.categories);
+        if (employeesData.status === "success") setEmployees(employeesData.employees);
 
       } catch (error: any) {
         toast({
@@ -64,11 +68,11 @@ const SalesInterface = () => {
       }
     };
 
-    fetchProductsAndCategories();
+    fetchData();
   }, [toast]);
 
 
-   const addToCart = (product: any, size: string | null = null) => {
+  const addToCart = (product: any, size: string | null = null) => {
     const price = Number(product.price);
     const existingItem = cart.find(
       (item) => item.id === product.id && item.price === price && item.size === size
@@ -135,11 +139,27 @@ const SalesInterface = () => {
     return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
 
-  const handleCheckout = async () => {
+
+  // ✅ فتح نافذة اختيار الموظف قبل الحفظ
+  const openEmployeeDialog = () => {
     if (cart.length === 0) {
       toast({
         title: "السلة فارغة",
         description: "يرجى إضافة منتجات إلى السلة أولاً",
+        variant: "destructive"
+      });
+      return;
+    }
+    console.log("Opening employee dialog...", employees);
+    setShowEmployeeDialog(true);
+  };
+
+  // ✅ عند تأكيد اختيار الموظف يتم الحفظ فعليًا
+  const handleCheckout = async () => {
+    if (!selectedEmployee) {
+      toast({
+        title: "لم يتم اختيار الموظف",
+        description: "يرجى اختيار الموظف المسؤول قبل إتمام العملية",
         variant: "destructive"
       });
       return;
@@ -150,30 +170,29 @@ const SalesInterface = () => {
     const invoiceData = {
       invoiceNumber,
       date: now.toISOString().slice(0, 10),
-      // time: now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
       time: now.toTimeString().slice(0, 8),
-      cashier: "البائع الرئيسي",
+      employee_id: selectedEmployee,
       total: calculateTotal(),
       items: cart
     };
 
     try {
-      const res = await fetch(API_URL + '/sales-invoices', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+      const res = await fetch(`${API_URL}/sales-invoices`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(invoiceData)
       });
 
       const result = await res.json();
 
-      if (result.status === 'success') {
+      if (result.status === "success") {
         toast({
-          title: "تمت عملية البيع بنجاح",
+          title: "تمت عملية البيع بنجاح ✅",
           description: `رقم الفاتورة: ${invoiceNumber} - المبلغ: ${calculateTotal().toFixed(2)} جنية`,
         });
         setCart([]);
+        setSelectedEmployee("");
+        setShowEmployeeDialog(false);
       } else {
         toast({
           title: "فشل حفظ الفاتورة",
@@ -395,7 +414,7 @@ const SalesInterface = () => {
                         طباعة
                       </Button>
                       <Button
-                        onClick={handleCheckout}
+                        onClick={openEmployeeDialog}
                         className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
                       >
                         إتمام البيع
@@ -438,6 +457,39 @@ const SalesInterface = () => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+      {/* ✅ نافذة اختيار الموظف */}
+      <Dialog open={showEmployeeDialog} onOpenChange={setShowEmployeeDialog}>
+        <DialogContent className="max-w-sm text-center space-y-4">
+          <DialogHeader>
+            <DialogTitle>اختر الموظف المسؤول عن العملية</DialogTitle>
+          </DialogHeader>
+
+          <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="اختر الموظف" />
+            </SelectTrigger>
+            <SelectContent>
+              {employees.map((emp) => (
+                <SelectItem key={emp.id} value={emp.id.toString()}>
+                  {emp.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <div className="flex gap-2 mt-4">
+            <Button
+              className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+              onClick={handleCheckout}
+            >
+              تأكيد وإتمام البيع
+            </Button>
+            <Button variant="outline" className="flex-1" onClick={() => setShowEmployeeDialog(false)}>
+              إلغاء
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
