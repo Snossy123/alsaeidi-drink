@@ -3,10 +3,9 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
-import { User, Plus, Briefcase, Calendar, Phone } from "lucide-react";
+import { User, Plus, Briefcase, Calendar, Mail, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/lib/constants";
 
@@ -15,6 +14,7 @@ const API_URL = API_BASE_URL + "/employees";
 interface Employee {
   id: string;
   name: string;
+  email: string;
   position: string;
   phone: string;
   salary: number;
@@ -26,6 +26,8 @@ const Employees = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [employeeData, setEmployeeData] = useState({
     name: "",
+    email: "",
+    password: "",
     position: "",
     phone: "",
     salary: "",
@@ -34,14 +36,14 @@ const Employees = () => {
 
   const { toast } = useToast();
 
-  // 🟦 Fetch all employees
+  // 🟦 Fetch employees
   const fetchEmployees = async () => {
     try {
       const response = await fetch(API_URL);
       if (!response.ok) throw new Error("فشل تحميل الموظفين");
       const data = await response.json();
       setEmployees(data.employees || []);
-    } catch (err) {
+    } catch {
       toast({
         title: "خطأ",
         description: "تعذر تحميل بيانات الموظفين",
@@ -57,7 +59,8 @@ const Employees = () => {
   // 🟩 Save new employee
   const saveEmployee = async (e: FormEvent) => {
     e.preventDefault();
-    if (!employeeData.name || !employeeData.position || !employeeData.phone || !employeeData.salary || !employeeData.hire_date) {
+    const { name, email, password, position, phone, salary, hire_date } = employeeData;
+    if (!name || !email || !password || !position || !phone || !salary || !hire_date) {
       toast({
         title: "خطأ في البيانات",
         description: "يرجى ملء جميع الحقول المطلوبة",
@@ -76,14 +79,14 @@ const Employees = () => {
       if (!response.ok) throw new Error("فشل في حفظ الموظف");
 
       await fetchEmployees();
-      setEmployeeData({ name: "", position: "", phone: "", salary: "", hire_date: "" });
+      setEmployeeData({ name: "", email: "", password: "", position: "", phone: "", salary: "", hire_date: "" });
       setIsDialogOpen(false);
 
       toast({
         title: "تم الحفظ بنجاح",
-        description: `تمت إضافة الموظف ${employeeData.name}`,
+        description: `تمت إضافة الموظف ${name}`,
       });
-    } catch (err) {
+    } catch {
       toast({
         title: "خطأ",
         description: "فشل حفظ بيانات الموظف، حاول مرة أخرى",
@@ -93,7 +96,7 @@ const Employees = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir="rtl">
       {/* Header */}
       <Card className="bg-white/60 backdrop-blur-sm border-blue-100">
         <CardHeader>
@@ -123,7 +126,7 @@ const Employees = () => {
 
                 <form onSubmit={saveEmployee} className="space-y-4">
                   <div>
-                    <Label>اسم الموظف *</Label>
+                    <Label>الاسم *</Label>
                     <Input
                       value={employeeData.name}
                       onChange={(e) => setEmployeeData({ ...employeeData, name: e.target.value })}
@@ -131,6 +134,37 @@ const Employees = () => {
                       required
                     />
                   </div>
+
+                  <div>
+                    <Label>البريد الإلكتروني *</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                      <Input
+                        type="email"
+                        value={employeeData.email}
+                        onChange={(e) => setEmployeeData({ ...employeeData, email: e.target.value })}
+                        placeholder="example@email.com"
+                        className="pl-8"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>كلمة المرور *</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                      <Input
+                        type="password"
+                        value={employeeData.password}
+                        onChange={(e) => setEmployeeData({ ...employeeData, password: e.target.value })}
+                        placeholder="********"
+                        className="pl-8"
+                        required
+                      />
+                    </div>
+                  </div>
+
                   <div>
                     <Label>الوظيفة *</Label>
                     <Input
@@ -140,6 +174,7 @@ const Employees = () => {
                       required
                     />
                   </div>
+
                   <div>
                     <Label>رقم الهاتف *</Label>
                     <Input
@@ -150,6 +185,7 @@ const Employees = () => {
                       required
                     />
                   </div>
+
                   <div>
                     <Label>الراتب *</Label>
                     <Input
@@ -161,6 +197,7 @@ const Employees = () => {
                       required
                     />
                   </div>
+
                   <div>
                     <Label>تاريخ التعيين *</Label>
                     <Input
@@ -203,13 +240,13 @@ const Employees = () => {
             <div className="text-center py-8 text-gray-500">
               <User className="w-12 h-12 mx-auto mb-4 text-gray-300" />
               <p>لا يوجد موظفون بعد</p>
-              <p className="text-sm mt-2">قم بإضافة موظف جديد ليظهر هنا</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>الاسم</TableHead>
+                  <TableHead>البريد الإلكتروني</TableHead>
                   <TableHead>الوظيفة</TableHead>
                   <TableHead>رقم الهاتف</TableHead>
                   <TableHead>الراتب</TableHead>
@@ -220,6 +257,7 @@ const Employees = () => {
                 {employees.map((emp) => (
                   <TableRow key={emp.id}>
                     <TableCell className="font-semibold">{emp.name}</TableCell>
+                    <TableCell>{emp.email}</TableCell>
                     <TableCell>{emp.position}</TableCell>
                     <TableCell>{emp.phone}</TableCell>
                     <TableCell>{Number(emp.salary).toFixed(2)} جنية</TableCell>
