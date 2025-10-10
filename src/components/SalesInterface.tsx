@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/lib/constants";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 
 
@@ -36,6 +37,7 @@ const SalesInterface = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showEmployeeDialog, setShowEmployeeDialog] = useState(false);
+  const [kitchenNote, setKitchenNote] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -173,7 +175,8 @@ const SalesInterface = () => {
       time: now.toTimeString().slice(0, 8),
       employee_id: selectedEmployee,
       total: calculateTotal(),
-      items: cart
+      items: cart,
+      kitchen_note: kitchenNote,
     };
 
     try {
@@ -186,6 +189,10 @@ const SalesInterface = () => {
       const result = await res.json();
 
       if (result.status === "success") {
+        // Print both copies
+        printInvoice(invoiceData, false); // نسخة الزبون
+        printInvoice(invoiceData, true);  // نسخة المطبخ
+
         toast({
           title: "تمت عملية البيع بنجاح ✅",
           description: `رقم الفاتورة: ${invoiceNumber} - المبلغ: ${calculateTotal().toFixed(2)} جنية`,
@@ -240,6 +247,87 @@ const SalesInterface = () => {
     addToCart({ ...selectedProduct, price}, size);
     setShowSizeDialog(false);
     setSelectedProduct(null);
+  };
+
+  // 🖨️ طباعة الفاتورة
+  const printInvoice = (invoiceData: any, isKitchenCopy = false) => {
+    const printWindow = window.open("", "_blank", "width=600,height=800");
+
+    const employee = employees.find(e => e.id === Number(invoiceData.employee_id));
+    const cashierName = employee ? employee.name : "غير محدد";
+
+    const html = `
+      <html lang="ar" dir="rtl">
+        <head>
+          <meta charset="UTF-8">
+          <title>${isKitchenCopy ? "نسخة المطبخ" : "فاتورة مبيعات"}</title>
+          <style>
+            body { font-family: 'Tahoma', sans-serif; direction: rtl; padding: 20px; }
+            h1 { text-align: center; color: #333; }
+            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+            th { background: #f2f2f2; }
+            .footer { margin-top: 15px; text-align: center; font-size: 13px; }
+            .note { color: red; font-weight: bold; margin-top: 10px; text-align: center; }
+          </style>
+        </head>
+        <body>
+          <h1>${isKitchenCopy ? "نسخة المطبخ" : "فاتورة المبيعات"}</h1>
+          <p><strong>رقم الفاتورة:</strong> ${invoiceData.invoiceNumber}</p>
+          <p><strong>التاريخ:</strong> ${invoiceData.date} - ${invoiceData.time}</p>
+          <p><strong>الكاشير:</strong> ${cashierName}</p>
+          ${
+            isKitchenCopy && invoiceData.kitchen_note
+              ? `<p class="note">ملاحظة المطبخ: ${invoiceData.kitchen_note}</p>`
+              : ""
+          }
+
+          <table>
+            <thead>
+              <tr>
+                <th>المنتج</th>
+                <th>السعر</th>
+                <th>الكمية</th>
+                <th>الإجمالي</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${invoiceData.items
+                .map(
+                  (item: any) => `
+                  <tr>
+                    <td>${item.name}${item.size ? ` (${item.size})` : ""}</td>
+                    <td>${item.price}</td>
+                    <td>${item.quantity}</td>
+                    <td>${(item.price * item.quantity).toFixed(2)}</td>
+                  </tr>
+                `
+                )
+                .join("")}
+            </tbody>
+          </table>
+
+          <h3 style="text-align:center; margin-top:10px;">الإجمالي: ${invoiceData.total.toFixed(
+            2
+          )} ج</h3>
+
+          <div class="footer">
+            <p>${isKitchenCopy ? "⚠️ مخصصة للمطبخ فقط" : "شكراً لتعاملكم معنا ❤️"}</p>
+          </div>
+
+          <script>
+            window.print();
+            setTimeout(() => window.close(), 500);
+          </script>
+        </body>
+      </html>
+    `;
+
+    if (printWindow) {
+      printWindow.document.open();
+      printWindow.document.write(html);
+      printWindow.document.close();
+    }
   };
 
   return (
@@ -461,36 +549,44 @@ const SalesInterface = () => {
       </Dialog>
       {/* ✅ نافذة اختيار الموظف */}
       <Dialog open={showEmployeeDialog} onOpenChange={setShowEmployeeDialog}>
-        <DialogContent className="max-w-sm text-center space-y-4">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>اختر الموظف المسؤول عن العملية</DialogTitle>
+            <DialogTitle>اختيار الموظف وإضافة ملاحظة</DialogTitle>
           </DialogHeader>
 
-          <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="اختر الموظف" />
-            </SelectTrigger>
-            <SelectContent>
-              {employees.map((emp) => (
-                <SelectItem key={emp.id} value={emp.id.toString()}>
-                  {emp.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="space-y-4">
+            <div>
+              <Label>اختر الموظف</Label>
+              <select
+                className="w-full border rounded-md p-2 mt-1"
+                value={selectedEmployee}
+                onChange={(e) => setSelectedEmployee(e.target.value)}
+              >
+                <option value="">-- اختر الموظف --</option>
+                {employees.map((emp) => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <div className="flex gap-2 mt-4">
-            <Button
-              className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
-              onClick={handleCheckout}
-            >
-              تأكيد وإتمام البيع
-            </Button>
-            <Button variant="outline" className="flex-1" onClick={() => setShowEmployeeDialog(false)}>
-              إلغاء
+            <div>
+              <Label>ملاحظة خاصة (تظهر في نسخة المطبخ فقط)</Label>
+              <Input
+                type="text"
+                placeholder="مثال: بدون بصل - زيادة جبنة - حار جداً"
+                value={kitchenNote}
+                onChange={(e) => setKitchenNote(e.target.value)}
+              />
+            </div>
+
+            <Button className="w-full" onClick={handleCheckout}>
+              إتمام العملية
             </Button>
           </div>
         </DialogContent>
+
       </Dialog>
     </div>
   );
