@@ -1,46 +1,27 @@
-
 import { useState, useEffect, FormEvent } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Package, Plus, Search, Edit, Trash2, Barcode } from "lucide-react";
+import { Package, Plus, Search, Edit, Trash2, Barcode, ChevronRight, ChevronLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import CategoryManagement from "./CategoryManagement";
 import { API_BASE_URL } from "@/lib/constants";
 import { Switch } from "@/components/ui/switch";
 
-
-interface Category {
-  id: string;
-  name: string;
-  description?: string;
-  color: string;
-}
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  s_price: number;
-  m_price: number;
-  l_price: number;
-  hasSizes: boolean;
-  stock: number;
-  barcode?: string;
-  category?: string;
-  category_id?: number;
-}
+const ITEMS_PER_PAGE = 8; // عدد المنتجات في كل صفحة
 
 const ProductManagement = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
   const [formData, setFormData] = useState({
     name: "",
     stock: "",
@@ -54,12 +35,7 @@ const ProductManagement = () => {
   const API_PRODUCTS_URL = API_BASE_URL + "/products";
   const API_CATEGORIES_URL = API_BASE_URL + "/categories";
 
-  const generateBarcode = () => {
-    const barcode = Math.floor(Math.random() * 1000000000).toString();
-    setFormData({ ...formData, barcode });
-  };
-
-  // ✅ جلب المنتجات والفئات من السيرفر عند فتح الصفحة
+  // ✅ جلب البيانات
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -67,44 +43,49 @@ const ProductManagement = () => {
           fetch(API_PRODUCTS_URL),
           fetch(API_CATEGORIES_URL)
         ]);
-
         const productsData = await resProducts.json();
         const categoriesData = await resCategories.json();
-
         setProducts(productsData.products || []);
         setCategories(categoriesData.categories || []);
       } catch (error) {
-        toast({
-          title: "خطأ في الاتصال",
-          description: "تعذر تحميل البيانات من الخادم",
-          variant: "destructive"
-        });
+        toast({ title: "خطأ في الاتصال", variant: "destructive" });
       }
     };
-
     fetchData();
   }, []);
 
+  // 🔍 تصفية المنتجات بناءً على البحث
+  const filteredProducts = products.filter((product) => {
+    const categoryName = categories.find((c) => Number(c.id) === product.category_id)?.name || "";
+    return (
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      categoryName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
+
+  // 📑 حسابات Pagination
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = filteredProducts.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // إعادة التعيين لصفحة 1 عند البحث
+  useEffect(() => { setCurrentPage(1); }, [searchTerm]);
+
+  const generateBarcode = () => {
+    const barcode = Math.floor(Math.random() * 1000000000).toString();
+    setFormData({ ...formData, barcode });
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-
-    if (!formData.name || 
-       (!formData.hasSizes && !formData.prices.default) ||
-       (formData.hasSizes && !formData.prices.small && !formData.prices.medium && !formData.prices.large)) {
-      toast({
-        title: "خطأ في البيانات",
-        description: "يرجى ملء جميع الحقول المطلوبة",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const newProduct: Product = {
+    const newProduct = {
       id: editingProduct ? editingProduct.id : Date.now().toString(),
       name: formData.name,
       stock: parseFloat(formData.stock) || 0,
       barcode: formData.barcode,
-      category: formData.category ? String(formData.category) : undefined,
+      category: formData.category ? Number(formData.category) : null,
       hasSizes: formData.hasSizes,
       price: formData.hasSizes ? 0 : parseFloat(formData.prices.default) || 0,
       s_price: formData.hasSizes ? parseFloat(formData.prices.small) || 0 : 0,
@@ -112,73 +93,37 @@ const ProductManagement = () => {
       l_price: formData.hasSizes ? parseFloat(formData.prices.large) || 0 : 0,
     };
 
-
     try {
       const response = await fetch(API_PRODUCTS_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: editingProduct ? "update" : "add",
-          product: {
-            ...newProduct,
-            category: Number(newProduct.category) || null, 
-          },
-        })
+        body: JSON.stringify({ action: editingProduct ? "update" : "add", product: newProduct })
       });
-      if (!response.ok) throw new Error("Server error");
       const data = await response.json();
       if (data.success) {
-        toast({
-          title: editingProduct ? "تم تحديث المنتج" : "تم إضافة المنتج",
-          description: data.message
-        });
         setProducts(data.products);
         setIsDialogOpen(false);
-        setEditingProduct(null);
-        setFormData({
-          name: "",
-          stock: "",
-          barcode: "",
-          category: "",
-          hasSizes: false,
-          prices: { small: "", medium: "", large: "", default: "" },
-        });
-      } else {
-        toast({ title: "فشل العملية", description: data.message, variant: "destructive" });
+        toast({ title: "تم الحفظ بنجاح" });
       }
     } catch (error) {
-      toast({
-        title: "خطأ في الاتصال",
-        description: "تعذر الاتصال بالخادم",
-        variant: "destructive"
-      });
+      toast({ title: "خطأ في الاتصال", variant: "destructive" });
     }
   };
 
   const handleDelete = async (id: string) => {
+    if (!confirm("هل أنت متأكد من الحذف؟")) return;
     try {
       const response = await fetch(API_PRODUCTS_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "delete", id })
       });
-      if (!response.ok) throw new Error("Server error");
       const data = await response.json();
-      if (data.success) {
-        toast({ title: "تم حذف المنتج", description: data.message });
-        setProducts(data.products);
-      } else {
-        toast({ title: "فشل الحذف", description: data.message, variant: "destructive" });
-      }
+      if (data.success) setProducts(data.products);
     } catch (error) {
-      toast({
-        title: "خطأ في الاتصال",
-        description: "تعذر الاتصال بالخادم",
-        variant: "destructive"
-      });
+      toast({ title: "خطأ في الحذف", variant: "destructive" });
     }
   };
-
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
@@ -189,192 +134,66 @@ const ProductManagement = () => {
       category: product.category_id ? String(product.category_id) : "",
       hasSizes: product.hasSizes || false,
       prices: product.hasSizes
-        ? {
-            small: product.s_price?.toString() || "",
-            medium: product.m_price?.toString() || "",
-            large: product.l_price?.toString() || "",
-            default: "",
-          }
+        ? { small: product.s_price?.toString() || "", medium: product.m_price?.toString() || "", large: product.l_price?.toString() || "", default: "" }
         : { small: "", medium: "", large: "", default: product.price.toString() },
     });
     setIsDialogOpen(true);
   };
 
-
-  const filteredProducts = products.filter((product) => {
-    const categoryName =
-      categories.find((c) => c.id === String(product.category))?.name || "";
-    return (
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      categoryName.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
-
-
-  const getCategoryColor = (categoryId: number) => {
-    const category = categories.find(c => Number(c.id) === categoryId);
+  const getCategoryColor = (categoryId: any) => {
+    const category = categories.find(c => Number(c.id) === Number(categoryId));
     return category?.color || "#6B7280";
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-6 pb-10">
+      {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-2xl font-bold text-blue-800">إدارة المنتجات</h2>
+        <h2 className="text-3xl font-black text-blue-800 dark:text-blue-400">إدارة المنتجات</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button
-              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+              size="lg"
+              className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 shadow-xl text-lg font-bold"
               onClick={() => {
                 setEditingProduct(null);
                 setFormData({ name: "", hasSizes: false, prices: { small: "", medium: "", large: "", default: "" }, stock: "", barcode: "", category: "" });
               }}
             >
-              <Plus className="w-4 h-4 mr-2" />
-              إضافة منتج جديد
+              <Plus className="w-5 h-5 ml-2" /> إضافة منتج
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md" dir="rtl">
-            <DialogHeader>
-              <DialogTitle>
-                {editingProduct ? "تعديل المنتج" : "إضافة منتج جديد"}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="name" className="text-right">اسم المنتج *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="أدخل اسم المنتج"
-                  required
-                />
+          <DialogContent className="sm:max-w-lg dark:bg-slate-900 dark:border-slate-800" dir="rtl">
+            <DialogHeader><DialogTitle className="text-2xl dark:text-white">{editingProduct ? "تعديل" : "إضافة"} منتج</DialogTitle></DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+              {/* الحقول بنفس التنسيق الداكن */}
+              <div className="space-y-2">
+                <Label className="dark:text-slate-300">اسم المنتج *</Label>
+                <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="dark:bg-slate-800 dark:border-slate-700 h-11 dark:text-white" />
               </div>
-              <div className="flex items-center gap-2">
-                <Label>هل للمنتج أحجام؟</Label>
-                <Switch
-                  checked={formData.hasSizes}
-                  onCheckedChange={(checked) => 
-                    setFormData({
-                      ...formData,
-                      hasSizes: checked,
-                      prices: { small: "", medium: "", large: "", default: "" },
-                    })
-                  }
-                />
+              <div className="flex items-center gap-3 py-2">
+                <Switch checked={formData.hasSizes} onCheckedChange={(c) => setFormData({ ...formData, hasSizes: c })} />
+                <Label className="dark:text-slate-300">يوجد أحجام مختلفة</Label>
               </div>
-              {formData.hasSizes ? (
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <Label>صغير</Label>
-                    <Input
-                      type="number"
-                      value={formData.prices.small}
-                      onChange={(e) =>
-                        setFormData({ ...formData, prices: { ...formData.prices, small: e.target.value } })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label>وسط</Label>
-                    <Input
-                      type="number"
-                      value={formData.prices.medium}
-                      onChange={(e) =>
-                        setFormData({ ...formData, prices: { ...formData.prices, medium: e.target.value } })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label>كبير</Label>
-                    <Input
-                      type="number"
-                      value={formData.prices.large}
-                      onChange={(e) =>
-                        setFormData({ ...formData, prices: { ...formData.prices, large: e.target.value } })
-                      }
-                    />
-                  </div>
+              {/* تفاصيل الأسعار والباركود والكمية - مختصره للوضع الداكن */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="dark:text-slate-300">الكمية</Label>
+                  <Input type="number" value={formData.stock} onChange={(e) => setFormData({ ...formData, stock: e.target.value })} className="dark:bg-slate-800 dark:border-slate-700 h-11 dark:text-white" />
                 </div>
-              ) : (
-                <div>
-                  <Label>السعر</Label>
-                  <Input
-                    type="number"
-                    value={formData.prices.default}
-                    onChange={(e) =>
-                      setFormData({ ...formData, prices: {
-                        default: e.target.value,
-                        small: "",
-                        medium: "",
-                        large: ""
-                      } })
-                    }
-                    placeholder="0.00"
-                  />
-                </div>
-              )}
-
-
-              <div>
-                <Label htmlFor="stock" className="text-right">الكمية المتوفرة</Label>
-                <Input
-                  id="stock"
-                  type="number"
-                  value={formData.stock}
-                  onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                  placeholder="0"
-                />
-              </div>
-              <div>
-                <Label htmlFor="barcode" className="text-right">الباركود</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="barcode"
-                    value={formData.barcode}
-                    onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
-                    placeholder="الباركود"
-                    className="flex-1"
-                  />
-                  <Button type="button" variant="outline" onClick={generateBarcode}>
-                    <Barcode className="w-4 h-4" />
-                  </Button>
+                <div className="space-y-2">
+                  <Label className="dark:text-slate-300">الفئة</Label>
+                  <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
+                    <SelectTrigger className="dark:bg-slate-800 dark:border-slate-700 h-11 dark:text-white"><SelectValue placeholder="اختر" /></SelectTrigger>
+                    <SelectContent className="dark:bg-slate-900 dark:border-slate-800">
+                      {categories.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-
-              <div>
-                <Label htmlFor="category" className="text-right mb-2 block">الفئة</Label>
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) => setFormData({ ...formData, category: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="اختر الفئة" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={String(category.id)}>
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: category.color }}
-                          />
-                          {category.name}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-              </div>
-              <div className="flex gap-2 pt-4">
-                <Button type="submit" className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500">
-                  {editingProduct ? "تحديث" : "إضافة"}
-                </Button>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  إلغاء
-                </Button>
+              <div className="flex gap-3 pt-6">
+                <Button type="submit" className="flex-1 bg-blue-600 h-12 text-lg">حفظ المنتج</Button>
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="h-12 dark:border-slate-700">إلغاء</Button>
               </div>
             </form>
           </DialogContent>
@@ -382,107 +201,62 @@ const ProductManagement = () => {
       </div>
 
       {/* Category Management */}
-      <CategoryManagement 
-        categories={categories}
-        onCategoriesUpdate={setCategories}
-      />
+      <CategoryManagement categories={categories} onCategoriesUpdate={setCategories} />
 
-      {/* Search */}
-      <Card className="bg-white/60 backdrop-blur-sm border-blue-100">
-        <CardContent className="pt-6">
+      {/* Search Bar */}
+      <Card className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm border-blue-100 dark:border-slate-800 shadow-sm">
+        <CardContent className="p-3">
           <div className="relative">
-            <Search className="absolute right-3 top-3 w-4 h-4 text-gray-400" />
+            <Search className="absolute right-3 top-3 w-5 h-5 text-slate-400" />
             <Input
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="ابحث عن المنتجات..."
-              className="pr-10"
+              className="h-11 pr-10 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+              placeholder="ابحث باسم المنتج أو الفئة..."
             />
           </div>
         </CardContent>
       </Card>
 
       {/* Products Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {filteredProducts.map((product) => (
-          <Card key={product.id} className="bg-white/80 backdrop-blur-sm border-blue-100 hover:shadow-lg transition-all duration-200">
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-start">
-                <CardTitle className="text-lg text-gray-800">{product.name}</CardTitle>
-                {product.category && (
-                  <Badge 
-                    variant="secondary" 
-                    className="text-xs text-white border-0"
-                    style={{ backgroundColor: getCategoryColor(product.category_id) }}
-                  >
-                    {product.category}
-                  </Badge>
-                )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {paginatedProducts.map((product) => (
+          <Card key={product.id} className="bg-white dark:bg-slate-800/50 border-blue-50 dark:border-slate-800 hover:shadow-xl transition-all">
+            <CardHeader className="pb-2 flex flex-row items-center justify-between">
+              <div className="space-y-1 overflow-hidden">
+                <CardTitle className="text-base font-bold dark:text-slate-100 truncate">{product.name}</CardTitle>
+                <Badge variant="outline" className="text-[10px] font-bold" style={{ color: getCategoryColor(product.category_id), borderColor: getCategoryColor(product.category_id) }}>
+                  {categories.find(c => Number(c.id) === product.category_id)?.name || "بدون فئة"}
+                </Badge>
               </div>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {/* 🧮 Prices Section */}
+            <CardContent className="space-y-3 pb-3">
               {product.hasSizes ? (
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  {[
-                    { label: "صغير", value: product.s_price, color: "from-blue-100 to-blue-50" },
-                    { label: "وسط", value: product.m_price, color: "from-purple-100 to-purple-50" },
-                    { label: "كبير", value: product.l_price, color: "from-emerald-100 to-emerald-50" },
-                  ].map((size, i) => (
-                    <div
-                      key={i}
-                      className={`rounded-xl py-2 bg-gradient-to-b ${size.color} border border-blue-100 hover:shadow-md transition-all`}
-                    >
-                      <div className="text-xs text-gray-500">{size.label}</div>
-                      <div className="text-sm font-bold text-blue-700">
-                        {size.value ? `${Number(size.value).toFixed(2)} ج` : "--"}
-                      </div>
+                <div className="grid grid-cols-3 gap-1">
+                  {[{ l: "ص", v: product.s_price, c: "blue" }, { l: "و", v: product.m_price, c: "purple" }, { l: "ك", v: product.l_price, c: "green" }].map((s, i) => (
+                    <div key={i} className="text-center bg-slate-50 dark:bg-slate-900/50 p-1.5 rounded-lg border dark:border-slate-800">
+                      <p className="text-[9px] text-slate-400">{s.l}</p>
+                      <p className="text-[11px] font-black text-blue-600 dark:text-blue-400">{Number(s.v).toFixed(1)}</p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">السعر:</span>
-                  <span className="font-bold text-blue-600">{Number(product.price).toFixed(2)} ج</span>
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded-lg text-center border border-blue-100 dark:border-blue-900/30">
+                  <span className="text-lg font-black text-blue-700 dark:text-blue-400">{Number(product.price).toFixed(2)} ج</span>
                 </div>
               )}
 
-
-              {/* 🏷️ Stock */}
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">المخزون:</span>
-                <Badge variant={product.stock > 10 ? "default" : "destructive"}>
-                  {product.stock}
-                </Badge>
+              <div className="flex justify-between items-center text-xs px-1">
+                <span className="text-slate-500">المخزون:</span>
+                <span className={`font-bold ${product.stock < 5 ? 'text-red-500' : 'text-slate-700 dark:text-slate-300'}`}>{product.stock}</span>
               </div>
 
-              {/* 🧾 Barcode */}
-              {product.barcode && (
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">الباركود:</span>
-                  <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded">
-                    {product.barcode}
-                  </span>
-                </div>
-              )}
-
-              {/* 🧰 Buttons */}
               <div className="flex gap-2 pt-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleEdit(product)}
-                  className="flex-1"
-                >
-                  <Edit className="w-3 h-3 mr-1" />
-                  تعديل
+                <Button variant="ghost" size="sm" onClick={() => handleEdit(product)} className="flex-1 h-9 bg-slate-50 dark:bg-slate-900 dark:text-slate-300 hover:text-blue-600">
+                  <Edit className="w-4 h-4 ml-1" /> تعديل
                 </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => handleDelete(product.id)}
-                >
-                  <Trash2 className="w-3 h-3" />
+                <Button variant="ghost" size="sm" onClick={() => handleDelete(product.id)} className="h-9 w-10 text-slate-400 hover:text-red-500">
+                  <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
             </CardContent>
@@ -490,13 +264,29 @@ const ProductManagement = () => {
         ))}
       </div>
 
-      {filteredProducts.length === 0 && (
-        <Card className="bg-white/60 backdrop-blur-sm border-blue-100">
-          <CardContent className="text-center py-12">
-            <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">لا توجد منتجات متاحة</p>
-          </CardContent>
-        </Card>
+      {/* Pagination Footer */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-4 pt-6">
+          <Button
+            variant="outline"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(p => p - 1)}
+            className="dark:border-slate-700 dark:text-slate-300"
+          >
+            <ChevronRight className="w-5 h-5 ml-1" /> السابق
+          </Button>
+          <span className="text-sm font-bold dark:text-slate-400">
+            صفحة {currentPage} من {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(p => p + 1)}
+            className="dark:border-slate-700 dark:text-slate-300"
+          >
+            التالي <ChevronLeft className="w-5 h-5 mr-1" />
+          </Button>
+        </div>
       )}
     </div>
   );

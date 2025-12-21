@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Search, Barcode, Plus, Minus, Trash2, Printer, Receipt } from "lucide-react";
+import { Search, Barcode, Plus, Minus, Trash2, Printer, Receipt, ChevronLeft, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/lib/constants";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import CategoriesSidebar from "./CategoriesSidebar";
 
 
 
@@ -225,6 +226,20 @@ const SalesInterface = () => {
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [showSizeDialog, setShowSizeDialog] = useState(false);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6; // 3 * 3 grid
+
+  // Reset to page 1 when searching
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
+  // Pagination Calculations
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedProducts = filteredProducts.slice(startIndex, startIndex + itemsPerPage);
+
   const handleProductClick = (product: any) => {
     if (product.hasSizes) {
       setSelectedProduct(product);
@@ -249,74 +264,104 @@ const SalesInterface = () => {
     setSelectedProduct(null);
   };
 
-  // 🖨️ طباعة الفاتورة
+  // 🖨️ طباعة الفاتورة - توافق مع طابعات 80 مم
   const printInvoice = (invoiceData: any, isKitchenCopy = false) => {
-    const printWindow = window.open("", "_blank", "width=600,height=800");
+    const printWindow = window.open("", "_blank", "width=400,height=600");
 
     const employee = employees.find(e => e.id === Number(invoiceData.employee_id));
     const cashierName = employee ? employee.name : "غير محدد";
+
+    // تحويل الرموز إلى كلمات عربية للطباعة
+    const sizeMap: any = { s: "صغير", m: "وسط", l: "كبير" };
 
     const html = `
       <html lang="ar" dir="rtl">
         <head>
           <meta charset="UTF-8">
-          <title>${isKitchenCopy ? "نسخة المطبخ" : "فاتورة مبيعات"}</title>
           <style>
-            body { font-family: 'Tahoma', sans-serif; direction: rtl; padding: 20px; }
-            h1 { text-align: center; color: #333; }
-            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-            th { background: #f2f2f2; }
-            .footer { margin-top: 15px; text-align: center; font-size: 13px; }
-            .note { color: red; font-weight: bold; margin-top: 10px; text-align: center; }
+            @page { size: 80mm auto; margin: 0; }
+            body { 
+              font-family: 'Arial', sans-serif; 
+              width: 72mm; /* ترك هامش بسيط للحواف */
+              margin: 0 auto; 
+              padding: 5mm 2mm;
+              font-size: 12px;
+              line-height: 1.4;
+            }
+            .center { text-align: center; }
+            .bold { font-weight: bold; }
+            .header-title { font-size: 16px; margin-bottom: 5px; border-bottom: 1px dashed #000; padding-bottom: 5px; }
+            .info-table { width: 100%; margin: 5px 0; font-size: 11px; }
+            .items-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            .items-table th { border-bottom: 1px solid #000; text-align: right; padding: 4px 0; }
+            .items-table td { padding: 5px 0; vertical-align: top; border-bottom: 0.5px solid #eee; }
+            .total-section { margin-top: 10px; padding-top: 5px; border-top: 1px dashed #000; }
+            .kitchen-note { 
+              background: #000; color: #fff; padding: 5px; 
+              margin-top: 10px; text-align: center; font-size: 14px; 
+            }
+            .footer { margin-top: 15px; font-size: 10px; border-top: 1px solid #000; padding-top: 5px; }
+            .divider { border-top: 1px dashed #000; margin: 5px 0; }
           </style>
         </head>
         <body>
-          <h1>${isKitchenCopy ? "نسخة المطبخ" : "فاتورة المبيعات"}</h1>
-          <p><strong>رقم الفاتورة:</strong> ${invoiceData.invoiceNumber}</p>
-          <p><strong>التاريخ:</strong> ${invoiceData.date} - ${invoiceData.time}</p>
-          <p><strong>الكاشير:</strong> ${cashierName}</p>
+          <div class="center bold header-title">
+            ${isKitchenCopy ? "طلب مطبخ - Kitchen" : "فاتورة مبيعات"}
+          </div>
+          
+          <table class="info-table">
+            <tr><td>رقم الفاتورة:</td><td class="bold text-left">${invoiceData.invoiceNumber}</td></tr>
+            <tr><td>التاريخ:</td><td class="text-left">${invoiceData.date} ${invoiceData.time}</td></tr>
+            <tr><td>الكاشير:</td><td class="text-left">${cashierName}</td></tr>
+          </table>
+
           ${isKitchenCopy && invoiceData.kitchen_note
-        ? `<p class="note">ملاحظة المطبخ: ${invoiceData.kitchen_note}</p>`
+        ? `<div class="kitchen-note bold">⚠️ ملاحظة: ${invoiceData.kitchen_note}</div>`
         : ""
       }
 
-          <table>
+          <table class="items-table">
             <thead>
               <tr>
-                <th>المنتج</th>
-                <th>السعر</th>
-                <th>الكمية</th>
-                <th>الإجمالي</th>
+                <th width="45%">المنتج</th>
+                <th width="15%">سعر</th>
+                <th width="15%">كمية</th>
+                <th width="25%" style="text-align:left">إجمالي</th>
               </tr>
             </thead>
             <tbody>
-              ${invoiceData.items
-        .map(
-          (item: any) => `
-                  <tr>
-                    <td>${item.name}${item.size ? ` (${item.size})` : ""}</td>
-                    <td>${item.price}</td>
-                    <td>${item.quantity}</td>
-                    <td>${(item.price * item.quantity).toFixed(2)}</td>
-                  </tr>
-                `
-        )
-        .join("")}
+              ${invoiceData.items.map((item: any) => `
+                <tr>
+                  <td>
+                    <span class="bold">${item.name}</span>
+                    ${item.size ? `<br/><small>(${sizeMap[item.size] || item.size})</small>` : ""}
+                  </td>
+                  <td>${item.price}</td>
+                  <td class="center">${item.quantity}</td>
+                  <td style="text-align:left" class="bold">${(item.price * item.quantity).toFixed(2)}</td>
+                </tr>
+              `).join("")}
             </tbody>
           </table>
 
-          <h3 style="text-align:center; margin-top:10px;">الإجمالي: ${invoiceData.total.toFixed(
-          2
-        )} ج</h3>
+          <div class="total-section">
+            <div style="display: flex; justify-content: space-between; font-size: 16px;" class="bold">
+              <span>الإجمالي النهائي:</span>
+              <span>${invoiceData.total.toFixed(2)} ج</span>
+            </div>
+          </div>
 
-          <div class="footer">
-            <p>${isKitchenCopy ? "⚠️ مخصصة للمطبخ فقط" : "شكراً لتعاملكم معنا ❤️"}</p>
+          <div class="center footer">
+            ${isKitchenCopy ? "--- نسخة المطبخ ---" : "شكراً لزيارتكم! نرجو رؤيتكم قريباً"}
+            <br/>
+            ${new Date().toLocaleString('ar-EG')}
           </div>
 
           <script>
-            window.print();
-            setTimeout(() => window.close(), 500);
+            window.onload = function() {
+              window.print();
+              setTimeout(() => window.close(), 500);
+            }
           </script>
         </body>
       </html>
@@ -330,235 +375,300 @@ const SalesInterface = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Main Sales Interface */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Products Section */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Barcode Scanner */}
-          <Card className="bg-white/60 backdrop-blur-sm border-blue-100">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-blue-800">
+    <div className="flex flex-row-reverse gap-4 h-[calc(100vh-100px)] p-2 antialiased overflow-hidden">
+
+      {/* 1. Right Column: Categories (Narrow) */}
+      <div className="shrink-0">
+        <CategoriesSidebar
+          categories={categories}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+        />
+      </div>
+
+      {/* 2. Center Column: Barcode & Products (Wide) */}
+      <div className="flex-1 flex flex-col gap-4 overflow-hidden">
+
+        {/* Compact Barcode Scanner (Dark Mode Fixed) */}
+        <Card className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm border-blue-100 dark:border-slate-800 shrink-0 shadow-sm">
+          <CardContent className="p-3">
+            <form onSubmit={handleBarcodeSubmit} className="flex items-center gap-3">
+              {/* Icon and Label */}
+              <div className="flex items-center gap-2 text-blue-800 dark:text-blue-400 shrink-0">
                 <Barcode className="w-5 h-5" />
-                قارئ الباركود
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleBarcodeSubmit} className="flex gap-2">
-                <Input
-                  value={barcode}
-                  onChange={(e) => setBarcode(e.target.value)}
-                  placeholder="امسح الباركود أو اكتبه..."
-                  className="flex-1 text-center font-mono text-lg"
-                  autoFocus
-                />
-                <Button type="submit" className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
-                  إضافة
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-          {/* Categories Section */}
-          {categories.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3">
+                <span className="text-sm font-bold hidden sm:inline">الباركود:</span>
+              </div>
+
+              {/* Input Field */}
+              <Input
+                value={barcode}
+                onChange={(e) => setBarcode(e.target.value)}
+                placeholder="امسح الباركود..."
+                className="flex-1 font-mono text-base h-10 bg-white/50 dark:bg-slate-800 border-blue-200 dark:border-slate-700 dark:text-slate-100 dark:placeholder:text-slate-500 focus:ring-blue-500"
+                autoFocus
+              />
+
+              {/* Action Button */}
               <Button
-                variant={selectedCategory === null ? "default" : "outline"}
-                onClick={() => setSelectedCategory(null)}
-                className="text-sm"
+                type="submit"
+                size="sm"
+                className="h-10 px-6 bg-blue-600 dark:bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 text-white shadow-md active:scale-95 transition-all"
               >
-                الكل
+                إضافة
               </Button>
-              {categories.map((cat) => (
-                <Button
-                  key={cat.id}
-                  variant={selectedCategory === cat.id ? "default" : "outline"}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className="text-sm flex items-center gap-1"
-                  style={{ borderColor: cat.color, color: cat.color }}
-                >
-                  <span
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: cat.color }}
-                  ></span>
-                  {cat.name}
-                </Button>
-              ))}
-            </div>
-          )}
-          {/* Products Grid */}
-          <Card className="bg-white/60 backdrop-blur-sm border-blue-100">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-blue-800">
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* Product Grid Card */}
+        <Card className="flex-1 flex flex-col bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm border-blue-100 dark:border-slate-800 overflow-hidden">
+          <CardHeader className="py-3 px-4 shrink-0">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-400 text-lg">
                 <Search className="w-5 h-5" />
-                المنتجات المتاحة
+                المنتجات
               </CardTitle>
               <Input
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="ابحث عن المنتجات..."
-                className="mt-2"
+                onChange={handleSearchChange}
+                placeholder="ابحث هنا..."
+                className="max-w-[250px] h-9 bg-white/50 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
               />
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {filteredProducts.map((product) => (
-                  <Card
-                    key={product.id}
-                    className="cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-200 border border-blue-100 rounded-2xl bg-white/70 backdrop-blur-sm"
-                    onClick={() => handleProductClick(product)}
-                  >
-                    <CardContent className="p-4 text-center space-y-3">
-                      <h3 className="font-bold text-gray-800 text-lg truncate">{product.name}</h3>
+            </div>
+          </CardHeader>
 
-                      {product.hasSizes ? (
-                        <div className="grid grid-cols-3 gap-2">
-                          <div className="bg-blue-50 rounded-lg py-2">
-                            <p className="text-xs text-gray-500">صغير</p>
-                            <p className="text-blue-700 font-semibold text-sm">{product.s_price} ج</p>
-                          </div>
-                          <div className="bg-purple-50 rounded-lg py-2">
-                            <p className="text-xs text-gray-500">وسط</p>
-                            <p className="text-purple-700 font-semibold text-sm">{product.m_price} ج</p>
-                          </div>
-                          <div className="bg-green-50 rounded-lg py-2">
-                            <p className="text-xs text-gray-500">كبير</p>
-                            <p className="text-green-700 font-semibold text-sm">{product.l_price} ج</p>
-                          </div>
+          <CardContent className="flex-1 overflow-y-auto p-4 pt-0">
+            <div className="grid grid-cols-3 gap-3">
+              {paginatedProducts.map((product) => (
+                <Card
+                  key={product.id}
+                  className="cursor-pointer rounded-xl touch-manipulation active:scale-95 transition-all border-blue-50 dark:border-slate-800 dark:bg-slate-800/50 hover:border-blue-200 dark:hover:border-blue-500 shadow-sm"
+                  onClick={() => handleProductClick(product)}
+                >
+                  <CardContent className="p-3 text-center flex flex-col h-full justify-between gap-2">
+                    <h3 className="font-bold text-gray-800 dark:text-slate-100 text-sm line-clamp-2 leading-tight">
+                      {product.name}
+                    </h3>
+
+                    {product.hasSizes ? (
+                      <div className="grid grid-cols-3 gap-1">
+                        {/* الصغير */}
+                        <div className="bg-blue-50 dark:bg-blue-900/30 rounded-md py-1 border dark:border-blue-900/50">
+                          <p className="text-[9px] text-gray-500 dark:text-slate-400">ص</p>
+                          <p className="text-blue-700 dark:text-blue-400 font-bold text-[10px]">{product.s_price}ج</p>
                         </div>
-                      ) : (
-                        <div className="bg-blue-50 rounded-lg py-3">
-                          <p className="text-blue-700 font-bold text-lg">{product.price} ج</p>
+                        {/* الوسط */}
+                        <div className="bg-purple-50 dark:bg-purple-900/30 rounded-md py-1 border dark:border-purple-900/50">
+                          <p className="text-[9px] text-gray-500 dark:text-slate-400">و</p>
+                          <p className="text-purple-700 dark:text-purple-400 font-bold text-[10px]">{product.m_price}ج</p>
                         </div>
-                      )}
-
-                      <div className="flex items-center justify-center gap-2">
-                        <Badge variant="secondary" className="text-xs px-2 py-1">
-                          {product.stock > 0 ? `متوفر: ${product.stock}` : "غير متوفر"}
-                        </Badge>
-                        {product.category_name && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
-                            {product.category_name}
-                          </span>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-
-          </Card>
-        </div>
-
-        {/* Cart Section */}
-        <div className="space-y-4">
-          <Card className="bg-white/80 backdrop-blur-sm border-blue-100 sticky top-24">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-blue-800">
-                <Receipt className="w-5 h-5" />
-                سلة المشتريات
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {cart.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">السلة فارغة</p>
-              ) : (
-                <>
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {cart.map((item) => (
-                      <div key={`${item.id}-${item.price}`} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-gray-800">
-                            {item.name}{" "}
-                            {item.size
-                              ? `(${item.size === 's' ? 'صغير' : item.size === 'm' ? 'وسط' : 'كبير'})`
-                              : ""}
-                          </h4>
-                          <p className="text-sm text-blue-600">{item.price} جنية</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => updateQuantity(item.id, item.quantity - 1, item.price)}
-                          >
-                            <Minus className="w-3 h-3" />
-                          </Button>
-                          <span className="w-8 text-center font-semibold">{item.quantity}</span>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => updateQuantity(item.id, item.quantity + 1, item.price)}
-                          >
-                            <Plus className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => removeFromCart(item.id, item.price)}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
+                        {/* الكبير */}
+                        <div className="bg-green-50 dark:bg-green-900/30 rounded-md py-1 border dark:border-green-900/50">
+                          <p className="text-[9px] text-gray-500 dark:text-slate-400">ك</p>
+                          <p className="text-green-700 dark:text-green-400 font-bold text-[10px]">{product.l_price}ج</p>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    ) : (
+                      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-md py-2 border dark:border-blue-900/30">
+                        <p className="text-blue-700 dark:text-blue-400 font-bold text-base">{product.price} ج</p>
+                      </div>
+                    )}
 
-                  <Separator />
+                    <Badge
+                      variant={product.stock > 0 ? "secondary" : "destructive"}
+                      className="text-[9px] py-0 mx-auto dark:bg-slate-700 dark:text-slate-200"
+                    >
+                      {product.stock > 0 ? `مخزون: ${product.stock}` : "منتهي"}
+                    </Badge>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </CardContent>
 
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center text-lg font-bold">
-                      <span>الإجمالي:</span>
-                      <span className="text-blue-600">{calculateTotal().toFixed(2)} جنية</span>
-                    </div>
+          {/* Pagination Footer */}
+          <CardFooter className="py-3 border-t border-blue-50 dark:border-slate-800 flex justify-between shrink-0 px-4">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 rounded-full dark:border-slate-700 dark:text-slate-300"
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
 
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button
-                        variant="outline"
-                        className="border-blue-200 hover:bg-blue-50"
-                      >
-                        <Printer className="w-4 h-4 mr-2" />
-                        طباعة
-                      </Button>
-                      <Button
-                        onClick={openEmployeeDialog}
-                        className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
-                      >
-                        إتمام البيع
-                      </Button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+            <span className="text-xs font-bold text-blue-800 dark:text-blue-400">
+              {currentPage} من {totalPages || 1}
+            </span>
+
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 rounded-full dark:border-slate-700 dark:text-slate-300"
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages || totalPages === 0}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
 
+      {/* 3. Left Column: Cart (Dark Mode Fixed) */}
+      <div className="w-72 shrink-0 h-full">
+        <Card className="h-full flex flex-col bg-white dark:bg-slate-900 border-blue-100 dark:border-slate-800 shadow-xl rounded-2xl overflow-hidden">
+
+          {/* Header */}
+          <CardHeader className="py-3 px-4 bg-blue-50/30 dark:bg-blue-900/20 border-b dark:border-slate-800 shrink-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-blue-900 dark:text-blue-400 font-bold">
+                <Receipt className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <span className="text-sm">الفاتورة</span>
+              </div>
+              <Badge className="bg-blue-600 dark:bg-blue-500 text-white text-[10px] px-1.5 h-5 border-none">
+                {cart.length} أصناف
+              </Badge>
+            </div>
+          </CardHeader>
+
+          {/* Cart Items Container */}
+          <CardContent className="flex-1 overflow-y-auto p-2 space-y-2 bg-slate-50/20 dark:bg-slate-950/20">
+            {cart.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-600 gap-2 opacity-40">
+                <Receipt className="w-8 h-8" />
+                <p className="text-xs">السلة فارغة</p>
+              </div>
+            ) : (
+              cart.map((item) => (
+                <div
+                  key={`${item.id}-${item.price}`}
+                  className="bg-white dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl p-2 shadow-sm"
+                >
+                  {/* Row 1: Name & Trash */}
+                  <div className="flex justify-between items-start gap-1">
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-[13px] text-slate-800 dark:text-slate-100 truncate">
+                        {item.name}
+                      </h4>
+                      {item.size && (
+                        <span className="text-[10px] text-blue-500 dark:text-blue-400 font-bold">
+                          ({item.size === 's' ? 'صغير' : item.size === 'm' ? 'وسط' : 'كبير'})
+                        </span>
+                      )}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 shrink-0"
+                      onClick={() => removeFromCart(item.id, item.price)}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+
+                  {/* Row 2: Price & Quantity Controls */}
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-50 dark:border-slate-800">
+                    <span className="text-sm font-black text-blue-700 dark:text-blue-400">
+                      {(item.price * item.quantity).toFixed(2)} <span className="text-[9px]">ج</span>
+                    </span>
+
+                    <div className="flex items-center bg-slate-50 dark:bg-slate-900 rounded-lg p-0.5 border dark:border-slate-700">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-6 w-6 hover:bg-white dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"
+                        onClick={() => updateQuantity(item.id, item.quantity - 1, item.price)}
+                      >
+                        <Minus className="w-3 h-3" />
+                      </Button>
+                      <span className="text-xs font-bold w-6 text-center text-slate-700 dark:text-slate-200">
+                        {item.quantity}
+                      </span>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-6 w-6 hover:bg-white dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"
+                        onClick={() => updateQuantity(item.id, item.quantity + 1, item.price)}
+                      >
+                        <Plus className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </CardContent>
+
+          {/* Footer */}
+          <CardFooter className="flex flex-col p-4 bg-white dark:bg-slate-900 border-t border-blue-50 dark:border-slate-800 shrink-0">
+            <div className="flex justify-between items-center w-full mb-4">
+              <span className="text-slate-900 dark:text-slate-100 font-bold">الإجمالي:</span>
+              <div className="text-right">
+                <span className="text-2xl font-black text-blue-700 dark:text-blue-400 leading-none">
+                  {calculateTotal().toFixed(2)}
+                </span>
+                <span className="text-xs font-bold text-blue-700 dark:text-blue-400 mr-1">جنية</span>
+              </div>
+            </div>
+
+            <div className="flex gap-2 w-full">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-11 w-12 rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 shrink-0"
+              >
+                <Printer className="w-4 h-4" />
+              </Button>
+              <Button
+                onClick={openEmployeeDialog}
+                className="flex-1 h-11 rounded-xl bg-blue-600 dark:bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 shadow-md font-bold text-white transition-all active:scale-95 text-sm"
+              >
+                إتمام الطلب
+              </Button>
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
       <Dialog open={showSizeDialog} onOpenChange={setShowSizeDialog}>
-        <DialogContent className="max-w-sm text-center">
+        <DialogContent className="max-w-xl text-center rounded-3xl">
           <DialogHeader>
-            <DialogTitle>اختر الحجم والسعر</DialogTitle>
+            <DialogTitle className="text-2xl">اختر الحجم والسعر</DialogTitle>
           </DialogHeader>
 
           {selectedProduct && (
-            <div className="space-y-3">
-              <p className="font-semibold text-gray-700">{selectedProduct.name}</p>
+            <div className="space-y-4">
+              <p className="font-semibold text-gray-700 text-xl">{selectedProduct.name}</p>
 
-              <div className="grid grid-cols-3 gap-3 mt-4">
+              <div className="grid grid-cols-3 gap-4 mt-6">
                 {selectedProduct.s_price > 0 && (
-                  <Button onClick={() => handleSelectSize("s")} className="bg-blue-500 hover:bg-blue-600">
-                    صغير <br /> {selectedProduct.s_price} ج
+                  <Button
+                    onClick={() => handleSelectSize("s")}
+                    size="lg"
+                    className="h-28 text-xl rounded-2xl touch-manipulation active:scale-95"
+                  >
+                    <span>صغير</span>
+                    <span className="text-base font-bold">{selectedProduct.s_price} ج</span>
                   </Button>
                 )}
                 {selectedProduct.m_price > 0 && (
-                  <Button onClick={() => handleSelectSize("m")} className="bg-blue-500 hover:bg-blue-600">
-                    وسط <br /> {selectedProduct.m_price} ج
+                  <Button
+                    onClick={() => handleSelectSize("m")}
+                    size="lg"
+                    className="h-28 text-xl rounded-2xl touch-manipulation active:scale-95"
+                  >
+                    <span>وسط</span>
+                    <span className="text-base font-bold">{selectedProduct.m_price} ج</span>
                   </Button>
                 )}
                 {selectedProduct.l_price > 0 && (
-                  <Button onClick={() => handleSelectSize("l")} className="bg-blue-500 hover:bg-blue-600">
-                    كبير <br /> {selectedProduct.l_price} ج
+                  <Button
+                    onClick={() => handleSelectSize("l")}
+                    size="lg"
+                    className="h-28 text-xl rounded-2xl touch-manipulation active:scale-95"
+                  >
+                    <span>كبير</span>
+                    <span className="text-base font-bold">{selectedProduct.l_price} ج</span>
                   </Button>
                 )}
               </div>
@@ -568,16 +678,16 @@ const SalesInterface = () => {
       </Dialog>
       {/* ✅ نافذة اختيار الموظف */}
       <Dialog open={showEmployeeDialog} onOpenChange={setShowEmployeeDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>اختيار الموظف وإضافة ملاحظة</DialogTitle>
+            <DialogTitle className="text-2xl">اختيار الموظف وإضافة ملاحظة</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div>
-              <Label>اختر الموظف</Label>
+              <Label className="text-lg mb-2 block">اختر الموظف</Label>
               <select
-                className="w-full border rounded-md p-2 mt-1"
+                className="w-full border rounded-md p-4 mt-2 text-lg h-14"
                 value={selectedEmployee}
                 onChange={(e) => setSelectedEmployee(e.target.value)}
               >
@@ -591,16 +701,17 @@ const SalesInterface = () => {
             </div>
 
             <div>
-              <Label>ملاحظة خاصة (تظهر في نسخة المطبخ فقط)</Label>
+              <Label className="text-lg mb-2 block">ملاحظة خاصة (تظهر في نسخة المطبخ فقط)</Label>
               <Input
                 type="text"
                 placeholder="مثال: بدون بصل - زيادة جبنة - حار جداً"
                 value={kitchenNote}
                 onChange={(e) => setKitchenNote(e.target.value)}
+                className="h-14 text-lg"
               />
             </div>
 
-            <Button className="w-full" onClick={handleCheckout}>
+            <Button className="w-full h-14 text-lg touch-manipulation" size="lg" onClick={handleCheckout}>
               إتمام العملية
             </Button>
           </div>
