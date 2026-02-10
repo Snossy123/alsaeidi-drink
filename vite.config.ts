@@ -7,10 +7,12 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => {
   const isVercel = process.env.VERCEL === '1';
   const outDir = process.env.VITE_OUT_DIR || (isVercel ? 'dist' : '../sensu');
-  const base = process.env.VITE_BASE_PATH || '/';
-
+  
   return {
-    base,
+    // If we're on Vercel, use root. Otherwise, default to /sensu/ for Laragon.
+    // The CLI --base flag will override this when we run build:hostinger.
+    base: isVercel ? '/' : (outDir === '../sensu' ? '/sensu/' : '/'),
+
     server: {
       host: "::",
       port: 8080,
