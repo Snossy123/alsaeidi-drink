@@ -19,8 +19,9 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  base: '/sensu/',
   build: {
-    outDir: '../sensu',
+    outDir: 'dist',
     emptyOutDir: true,
   }
 }));
