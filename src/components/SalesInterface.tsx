@@ -4,15 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Search, Barcode, Plus, Minus, Trash2, Printer, Receipt, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Barcode, Plus, Minus, Trash2, Printer, Receipt, ChevronLeft, ChevronRight, Package, Calculator, ShoppingCart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/lib/constants";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import CategoriesSidebar from "./CategoriesSidebar";
-
-
 
 interface CartItem {
   id: string;
@@ -314,7 +312,7 @@ const SalesInterface = () => {
             <tr><td>التاريخ:</td><td class="text-left">${invoiceData.date} ${invoiceData.time}</td></tr>
             <tr><td>الكاشير:</td><td class="text-left">${cashierName}</td></tr>
           </table>
-
+          
           ${isKitchenCopy && invoiceData.kitchen_note
         ? `<div class="kitchen-note bold">⚠️ ملاحظة: ${invoiceData.kitchen_note}</div>`
         : ""
@@ -375,9 +373,9 @@ const SalesInterface = () => {
   };
 
   return (
-    <div className="flex flex-row-reverse gap-4 h-[calc(100vh-100px)] p-2 antialiased overflow-hidden">
+    <div className="flex flex-row-reverse gap-6 h-[calc(100vh-40px)] p-4 antialiased overflow-hidden bg-slate-50 dark:bg-slate-950" dir="rtl">
 
-      {/* 1. Right Column: Categories (Narrow) */}
+      {/* 1. Right Column: Categories (Refined) */}
       <div className="shrink-0">
         <CategoriesSidebar
           categories={categories}
@@ -386,213 +384,269 @@ const SalesInterface = () => {
         />
       </div>
 
-      {/* 2. Center Column: Barcode & Products (Wide) */}
-      <div className="flex-1 flex flex-col gap-4 overflow-hidden">
+      {/* 2. Center Column: Barcode & Products */}
+      <div className="flex-1 flex flex-col gap-6 overflow-hidden">
 
-        {/* Compact Barcode Scanner (Dark Mode Fixed) */}
-        <Card className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm border-blue-100 dark:border-slate-800 shrink-0 shadow-sm">
-          <CardContent className="p-3">
-            <form onSubmit={handleBarcodeSubmit} className="flex items-center gap-3">
-              {/* Icon and Label */}
-              <div className="flex items-center gap-2 text-blue-800 dark:text-blue-400 shrink-0">
-                <Barcode className="w-5 h-5" />
-                <span className="text-sm font-bold hidden sm:inline">الباركود:</span>
-              </div>
+        {/* Premium Barcode & Title Area */}
+        <div className="flex flex-col sm:flex-row items-center gap-4 bg-slate-900 rounded-[2.5rem] p-4 shadow-2xl relative overflow-hidden shrink-0">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/20 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2" />
+          
+          <div className="flex items-center gap-3 px-4 shrink-0 border-l border-white/10 ml-2">
+            <div className="bg-blue-600/20 p-2.5 rounded-2xl shadow-inner">
+              <Calculator className="w-5 h-5 text-blue-400" />
+            </div>
+            <div className="space-y-0.5">
+              <h1 className="text-lg font-black text-white leading-tight">نقطة البيع</h1>
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">السوق المركزي</p>
+            </div>
+          </div>
 
-              {/* Input Field */}
-              <Input
-                value={barcode}
-                onChange={(e) => setBarcode(e.target.value)}
-                placeholder="امسح الباركود..."
-                className="flex-1 font-mono text-base h-10 bg-white/50 dark:bg-slate-800 border-blue-200 dark:border-slate-700 dark:text-slate-100 dark:placeholder:text-slate-500 focus:ring-blue-500"
-                autoFocus
-              />
+          <form onSubmit={handleBarcodeSubmit} className="flex-1 flex items-center gap-3 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-1.5 focus-within:border-blue-500/50 transition-all">
+            <div className="flex items-center gap-2 pr-3 text-slate-400 group">
+              <Barcode className="w-5 h-5 group-hover:text-blue-400 transition-colors" />
+            </div>
 
-              {/* Action Button */}
-              <Button
-                type="submit"
-                size="sm"
-                className="h-10 px-6 bg-blue-600 dark:bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 text-white shadow-md active:scale-95 transition-all"
-              >
-                إضافة
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+            <Input
+              value={barcode}
+              onChange={(e) => setBarcode(e.target.value)}
+              placeholder="امسح الباركود أو ادخل الرقم يدوياً..."
+              className="flex-1 font-bold text-sm h-11 bg-transparent border-none text-white placeholder:text-slate-600 focus-visible:ring-0 focus-visible:ring-offset-0"
+              autoFocus
+            />
 
-        {/* Product Grid Card */}
-        <Card className="flex-1 flex flex-col bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm border-blue-100 dark:border-slate-800 overflow-hidden">
-          <CardHeader className="py-3 px-4 shrink-0">
+            <Button
+              type="submit"
+              size="sm"
+              className="h-11 px-8 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl shadow-lg shadow-blue-600/20 active:scale-95 transition-all ml-1"
+            >
+              إضافة
+            </Button>
+          </form>
+        </div>
+
+        {/* Product Grid Area */}
+        <div className="flex-1 flex flex-col bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/20 dark:border-slate-800 rounded-[2.5rem] overflow-hidden shadow-2xl relative">
+          <div className="absolute top-0 left-0 w-64 h-64 bg-purple-600/5 blur-[100px] rounded-full -translate-x-1/2 -translate-y-1/2" />
+          
+          <CardHeader className="py-5 px-8 shrink-0 relative z-10 border-b border-slate-100 dark:border-slate-800/50">
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-400 text-lg">
-                <Search className="w-5 h-5" />
-                المنتجات
-              </CardTitle>
-              <Input
-                value={searchTerm}
-                onChange={handleSearchChange}
-                placeholder="ابحث هنا..."
-                className="max-w-[250px] h-9 bg-white/50 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-              />
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-600/10 p-2 rounded-xl">
+                  <Package className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <CardTitle className="text-xl font-black text-slate-800 dark:text-white">قائمة المنتجات</CardTitle>
+              </div>
+              
+              <div className="relative w-72 group">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                <Input
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  placeholder="بحث سريع باسم المنتج..."
+                  className="h-11 pr-10 bg-slate-50 dark:bg-slate-950 border-none rounded-2xl focus-visible:ring-2 focus-visible:ring-blue-500/20 font-bold transition-all"
+                />
+              </div>
             </div>
           </CardHeader>
 
-          <CardContent className="flex-1 overflow-y-auto p-4 pt-0">
-            <div className="grid grid-cols-3 gap-3">
-              {paginatedProducts.map((product) => (
-                <Card
-                  key={product.id}
-                  className="cursor-pointer rounded-xl touch-manipulation active:scale-95 transition-all border-blue-50 dark:border-slate-800 dark:bg-slate-800/50 hover:border-blue-200 dark:hover:border-blue-500 shadow-sm"
-                  onClick={() => handleProductClick(product)}
-                >
-                  <CardContent className="p-3 text-center flex flex-col h-full justify-between gap-2">
-                    <h3 className="font-bold text-gray-800 dark:text-slate-100 text-sm line-clamp-2 leading-tight">
-                      {product.name}
-                    </h3>
+          <CardContent className="flex-1 overflow-y-auto p-6 relative z-10 scrollbar-hide">
+            {paginatedProducts.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center opacity-20 grayscale">
+                <Package className="w-20 h-20 mb-4" />
+                <p className="text-xl font-black">لا توجد منتجات</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {paginatedProducts.map((product) => (
+                  <div
+                    key={product.id}
+                    className="group relative bg-white dark:bg-slate-800 border-none rounded-[2rem] overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 cursor-pointer active:scale-[0.98]"
+                    onClick={() => handleProductClick(product)}
+                  >
+                    {/* Hover Glow */}
+                    <div className="absolute inset-0 bg-blue-600/0 group-hover:bg-blue-600/5 transition-colors duration-500" />
+                    
+                    {/* Image Holder */}
+                    <div className="aspect-[4/3] w-full bg-slate-50 dark:bg-slate-950 p-6 flex items-center justify-center group-hover:p-4 transition-all duration-500">
+                      {product.image ? (
+                        <img
+                          src={"https://greensolar-power.com/POS-API/" + product.image}
+                          alt={product.name}
+                          className="w-full h-full object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-110"
+                        />
+                      ) : (
+                        <Package className="w-12 h-12 text-slate-200 dark:text-slate-800" />
+                      )}
+                    </div>
 
-                    {product.hasSizes ? (
-                      <div className="grid grid-cols-3 gap-1">
-                        {/* الصغير */}
-                        <div className="bg-blue-50 dark:bg-blue-900/30 rounded-md py-1 border dark:border-blue-900/50">
-                          <p className="text-[9px] text-gray-500 dark:text-slate-400">ص</p>
-                          <p className="text-blue-700 dark:text-blue-400 font-bold text-[10px]">{product.s_price}ج</p>
-                        </div>
-                        {/* الوسط */}
-                        <div className="bg-purple-50 dark:bg-purple-900/30 rounded-md py-1 border dark:border-purple-900/50">
-                          <p className="text-[9px] text-gray-500 dark:text-slate-400">و</p>
-                          <p className="text-purple-700 dark:text-purple-400 font-bold text-[10px]">{product.m_price}ج</p>
-                        </div>
-                        {/* الكبير */}
-                        <div className="bg-green-50 dark:bg-green-900/30 rounded-md py-1 border dark:border-green-900/50">
-                          <p className="text-[9px] text-gray-500 dark:text-slate-400">ك</p>
-                          <p className="text-green-700 dark:text-green-400 font-bold text-[10px]">{product.l_price}ج</p>
+                    {/* Content */}
+                    <div className="p-5 flex flex-col gap-4">
+                      <div className="space-y-1">
+                        <h3 className="font-black text-slate-700 dark:text-slate-100 text-sm leading-tight group-hover:text-blue-600 transition-colors truncate">
+                          {product.name}
+                        </h3>
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${product.stock > 0 ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,44,44,0.5)]'}`} />
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                            {product.stock > 0 ? `متاح: ${product.stock}` : 'نفذ الكمية'}
+                          </span>
                         </div>
                       </div>
-                    ) : (
-                      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-md py-2 border dark:border-blue-900/30">
-                        <p className="text-blue-700 dark:text-blue-400 font-bold text-base">{product.price} ج</p>
-                      </div>
-                    )}
 
-                    <Badge
-                      variant={product.stock > 0 ? "secondary" : "destructive"}
-                      className="text-[9px] py-0 mx-auto dark:bg-slate-700 dark:text-slate-200"
-                    >
-                      {product.stock > 0 ? `مخزون: ${product.stock}` : "منتهي"}
-                    </Badge>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                      {product.hasSizes ? (
+                        <div className="grid grid-cols-3 gap-2">
+                          {/* S */}
+                          <div className="flex flex-col items-center bg-slate-50 dark:bg-slate-950/50 py-2 rounded-xl group/size hover:bg-blue-600 transition-colors duration-300">
+                            <span className="text-[9px] font-black text-slate-400 group-hover/size:text-blue-100 uppercase mb-0.5">ص</span>
+                            <span className="text-xs font-black text-slate-800 dark:text-white group-hover/size:text-white">{product.s_price}ج</span>
+                          </div>
+                          {/* M */}
+                          <div className="flex flex-col items-center bg-slate-50 dark:bg-slate-950/50 py-2 rounded-xl group/size hover:bg-purple-600 transition-colors duration-300">
+                            <span className="text-[9px] font-black text-slate-400 group-hover/size:text-purple-100 uppercase mb-0.5">و</span>
+                            <span className="text-xs font-black text-slate-800 dark:text-white group-hover/size:text-white">{product.m_price}ج</span>
+                          </div>
+                          {/* L */}
+                          <div className="flex flex-col items-center bg-slate-50 dark:bg-slate-950/50 py-2 rounded-xl group/size hover:bg-emerald-600 transition-colors duration-300">
+                            <span className="text-[9px] font-black text-slate-400 group-hover/size:text-emerald-100 uppercase mb-0.5">ك</span>
+                            <span className="text-xs font-black text-slate-800 dark:text-white group-hover/size:text-white">{product.l_price}ج</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="bg-blue-600/10 py-3 rounded-2xl flex items-center justify-center group-hover:bg-blue-600 transition-all duration-300">
+                          <span className="text-blue-700 dark:text-blue-400 font-black text-sm group-hover:text-white">
+                            {product.price} جنيه
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
 
-          {/* Pagination Footer */}
-          <CardFooter className="py-3 border-t border-blue-50 dark:border-slate-800 flex justify-between shrink-0 px-4">
+          {/* Premium Pagination Footer */}
+          <CardFooter className="py-5 px-8 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center shrink-0 bg-slate-50/50 dark:bg-slate-950/50 relative z-10">
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8 rounded-full dark:border-slate-700 dark:text-slate-300"
+              className="h-10 w-10 rounded-2xl bg-white dark:bg-slate-900 border-none shadow-md hover:shadow-lg active:scale-90 transition-all text-slate-400 disabled:opacity-30"
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-5 w-5" />
             </Button>
 
-            <span className="text-xs font-bold text-blue-800 dark:text-blue-400">
-              {currentPage} من {totalPages || 1}
-            </span>
+            <div className="flex items-center gap-4">
+              <div className="h-1 w-24 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-blue-600 transition-all duration-500" 
+                  style={{ width: `${(currentPage / (totalPages || 1)) * 100}%` }}
+                />
+              </div>
+              <span className="text-xs font-black text-slate-500">
+                صفحة {currentPage} من {totalPages || 1}
+              </span>
+            </div>
 
             <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 rounded-full dark:border-slate-700 dark:text-slate-300"
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages || totalPages === 0}
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 rounded-2xl bg-white dark:bg-slate-900 border-none shadow-md hover:shadow-lg active:scale-90 transition-all text-slate-400 disabled:opacity-30"
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages || totalPages === 0}
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-5 w-5" />
             </Button>
           </CardFooter>
-        </Card>
+        </div>
       </div>
 
-      {/* 3. Left Column: Cart (Dark Mode Fixed) */}
-      <div className="w-72 shrink-0 h-full">
-        <Card className="h-full flex flex-col bg-white dark:bg-slate-900 border-blue-100 dark:border-slate-800 shadow-xl rounded-2xl overflow-hidden">
+      {/* 3. Left Column: Cart (Premium Overhaul) */}
+      <div className="w-80 shrink-0 h-full relative">
+        <div className="absolute inset-0 bg-blue-600/5 blur-3xl rounded-full translate-y-1/2" />
+        
+        <Card className="h-full flex flex-col bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl border border-white/20 dark:border-slate-800 shadow-2xl rounded-[2.5rem] overflow-hidden relative z-10">
 
-          {/* Header */}
-          <CardHeader className="py-3 px-4 bg-blue-50/30 dark:bg-blue-900/20 border-b dark:border-slate-800 shrink-0">
+          {/* Cart Header */}
+          <CardHeader className="py-6 px-6 border-b border-slate-100 dark:border-slate-800/50 shrink-0">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-blue-900 dark:text-blue-400 font-bold">
-                <Receipt className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                <span className="text-sm">الفاتورة</span>
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-600/20">
+                  <ShoppingCart className="w-5 h-5 text-white" />
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-sm font-black text-slate-800 dark:text-white">الفاتورة الحالية</span>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{cart.length} أصناف في السلة</p>
+                </div>
               </div>
-              <Badge className="bg-blue-600 dark:bg-blue-500 text-white text-[10px] px-1.5 h-5 border-none">
-                {cart.length} أصناف
-              </Badge>
             </div>
           </CardHeader>
 
-          {/* Cart Items Container */}
-          <CardContent className="flex-1 overflow-y-auto p-2 space-y-2 bg-slate-50/20 dark:bg-slate-950/20">
+          {/* Cart Items */}
+          <CardContent className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide">
             {cart.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-600 gap-2 opacity-40">
-                <Receipt className="w-8 h-8" />
-                <p className="text-xs">السلة فارغة</p>
+              <div className="h-full flex flex-col items-center justify-center text-slate-300 dark:text-slate-700 gap-4 opacity-50">
+                <div className="w-16 h-16 rounded-full border-4 border-dashed border-current flex items-center justify-center">
+                  <Receipt className="w-8 h-8" />
+                </div>
+                <p className="text-sm font-black italic">السلة فارغة حالياً</p>
               </div>
             ) : (
               cart.map((item) => (
                 <div
                   key={`${item.id}-${item.price}`}
-                  className="bg-white dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl p-2 shadow-sm"
+                  className="group bg-white/50 dark:bg-slate-800/30 border border-slate-100/50 dark:border-slate-800/50 rounded-2xl p-3 shadow-sm hover:shadow-md transition-all duration-300"
                 >
-                  {/* Row 1: Name & Trash */}
-                  <div className="flex justify-between items-start gap-1">
-                    <div className="min-w-0">
-                      <h4 className="font-bold text-[13px] text-slate-800 dark:text-slate-100 truncate">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="space-y-1 min-w-0">
+                      <h4 className="font-black text-sm text-slate-700 dark:text-slate-200 truncate leading-tight group-hover:text-blue-600 transition-colors">
                         {item.name}
                       </h4>
                       {item.size && (
-                        <span className="text-[10px] text-blue-500 dark:text-blue-400 font-bold">
-                          ({item.size === 's' ? 'صغير' : item.size === 'm' ? 'وسط' : 'كبير'})
-                        </span>
+                        <Badge variant="outline" className="text-[9px] font-black h-4 px-1.5 border-blue-200 text-blue-600 bg-blue-50/50">
+                          {item.size === 's' ? 'صغير' : item.size === 'm' ? 'وسط' : 'كبير'}
+                        </Badge>
                       )}
                     </div>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6 text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 shrink-0"
+                      className="h-8 w-8 rounded-xl text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0"
                       onClick={() => removeFromCart(item.id, item.price)}
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
 
-                  {/* Row 2: Price & Quantity Controls */}
-                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-50 dark:border-slate-800">
-                    <span className="text-sm font-black text-blue-700 dark:text-blue-400">
-                      {(item.price * item.quantity).toFixed(2)} <span className="text-[9px]">ج</span>
-                    </span>
-
-                    <div className="flex items-center bg-slate-50 dark:bg-slate-900 rounded-lg p-0.5 border dark:border-slate-700">
+                  <div className="flex items-center justify-between mt-3">
+                    <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900 rounded-xl p-1 border border-slate-200/50 dark:border-slate-700/50">
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-6 w-6 hover:bg-white dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"
+                        className="h-7 w-7 rounded-lg hover:bg-white dark:hover:bg-slate-800 text-slate-500"
                         onClick={() => updateQuantity(item.id, item.quantity - 1, item.price)}
                       >
                         <Minus className="w-3 h-3" />
                       </Button>
-                      <span className="text-xs font-bold w-6 text-center text-slate-700 dark:text-slate-200">
+                      <span className="text-xs font-black min-w-[20px] text-center text-slate-800 dark:text-white">
                         {item.quantity}
                       </span>
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-6 w-6 hover:bg-white dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"
+                        className="h-7 w-7 rounded-lg hover:bg-white dark:hover:bg-slate-800 text-slate-500"
                         onClick={() => updateQuantity(item.id, item.quantity + 1, item.price)}
                       >
                         <Plus className="w-3 h-3" />
                       </Button>
+                    </div>
+
+                    <div className="text-left">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">السعر</p>
+                      <span className="text-sm font-black text-blue-600 dark:text-blue-400">
+                        {(item.price * item.quantity).toFixed(2)} <span className="text-[10px]">ج</span>
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -600,123 +654,158 @@ const SalesInterface = () => {
             )}
           </CardContent>
 
-          {/* Footer */}
-          <CardFooter className="flex flex-col p-4 bg-white dark:bg-slate-900 border-t border-blue-50 dark:border-slate-800 shrink-0">
-            <div className="flex justify-between items-center w-full mb-4">
-              <span className="text-slate-900 dark:text-slate-100 font-bold">الإجمالي:</span>
-              <div className="text-right">
-                <span className="text-2xl font-black text-blue-700 dark:text-blue-400 leading-none">
+          {/* Footer: Grand Total */}
+          <div className="p-6 space-y-6 bg-slate-900 dark:bg-black/40 relative overflow-hidden shrink-0 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            
+            <div className="flex justify-between items-end relative z-10">
+              <div className="space-y-1">
+                <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">الإجمالي النهائي</span>
+                <p className="text-[10px] text-blue-400 font-bold italic">شامل ضريبة القيمة المضافة</p>
+              </div>
+              <div className="text-left">
+                <span className="text-5xl font-black text-white tracking-tighter leading-none block">
                   {calculateTotal().toFixed(2)}
                 </span>
-                <span className="text-xs font-bold text-blue-700 dark:text-blue-400 mr-1">جنية</span>
+                <span className="text-sm font-black text-blue-500 uppercase ml-1 tracking-widest mt-1 block">جنيه مصري</span>
               </div>
             </div>
 
-            <div className="flex gap-2 w-full">
+            <div className="flex gap-3 relative z-10">
               <Button
                 variant="outline"
                 size="icon"
-                className="h-11 w-12 rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 shrink-0"
+                className="h-14 w-14 rounded-2xl border-white/5 bg-white/5 hover:bg-white/10 text-white shrink-0 active:scale-90 transition-all"
               >
-                <Printer className="w-4 h-4" />
+                <Printer className="w-5 h-5" />
               </Button>
               <Button
                 onClick={openEmployeeDialog}
-                className="flex-1 h-11 rounded-xl bg-blue-600 dark:bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 shadow-md font-bold text-white transition-all active:scale-95 text-sm"
+                className="flex-1 h-14 rounded-2xl bg-blue-600 hover:bg-blue-500 shadow-xl shadow-blue-600/20 font-black text-white tracking-wide active:scale-95 transition-all text-base"
               >
-                إتمام الطلب
+                إتمام العملية الآن
               </Button>
             </div>
-          </CardFooter>
+          </div>
         </Card>
       </div>
+
       <Dialog open={showSizeDialog} onOpenChange={setShowSizeDialog}>
-        <DialogContent className="max-w-xl text-center rounded-3xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl">اختر الحجم والسعر</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="max-w-2xl text-center rounded-[3rem] p-0 overflow-hidden border-none bg-white dark:bg-slate-900 shadow-[0_30px_100px_rgba(0,0,0,0.3)]" dir="rtl">
+          <div className="bg-slate-900 p-8 text-white relative">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/30 blur-[80px] rounded-full translate-x-1/2 -translate-y-1/2" />
+            <DialogHeader className="relative z-10">
+              <DialogTitle className="text-3xl font-black tracking-tight">تخصيص الحجم</DialogTitle>
+              <p className="text-slate-400 font-bold text-sm mt-1 uppercase tracking-widest">اختر المقاس المفضل للمنتج</p>
+            </DialogHeader>
+          </div>
 
-          {selectedProduct && (
-            <div className="space-y-4">
-              <p className="font-semibold text-gray-700 text-xl">{selectedProduct.name}</p>
+          <div className="p-8">
+            {selectedProduct && (
+              <div className="space-y-8">
+                <div className="flex flex-col items-center gap-6">
+                  {selectedProduct.image ? (
+                    <div className="w-64 h-48 rounded-[2rem] overflow-hidden shadow-2xl bg-slate-50 dark:bg-slate-800 p-4 border border-slate-100 dark:border-slate-800">
+                      <img src={"https://greensolar-power.com/POS-API/" + selectedProduct.image} alt={selectedProduct.name} className="w-full h-full object-contain" />
+                    </div>
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-blue-600/10 flex items-center justify-center">
+                      <Package className="w-10 h-10 text-blue-600" />
+                    </div>
+                  )}
+                  <h2 className="font-black text-2xl text-slate-800 dark:text-white tracking-tight">{selectedProduct.name}</h2>
+                </div>
 
-              <div className="grid grid-cols-3 gap-4 mt-6">
-                {selectedProduct.s_price > 0 && (
-                  <Button
-                    onClick={() => handleSelectSize("s")}
-                    size="lg"
-                    className="h-28 text-xl rounded-2xl touch-manipulation active:scale-95"
-                  >
-                    <span>صغير</span>
-                    <span className="text-base font-bold">{selectedProduct.s_price} ج</span>
-                  </Button>
-                )}
-                {selectedProduct.m_price > 0 && (
-                  <Button
-                    onClick={() => handleSelectSize("m")}
-                    size="lg"
-                    className="h-28 text-xl rounded-2xl touch-manipulation active:scale-95"
-                  >
-                    <span>وسط</span>
-                    <span className="text-base font-bold">{selectedProduct.m_price} ج</span>
-                  </Button>
-                )}
-                {selectedProduct.l_price > 0 && (
-                  <Button
-                    onClick={() => handleSelectSize("l")}
-                    size="lg"
-                    className="h-28 text-xl rounded-2xl touch-manipulation active:scale-95"
-                  >
-                    <span>كبير</span>
-                    <span className="text-base font-bold">{selectedProduct.l_price} ج</span>
-                  </Button>
-                )}
+                <div className="grid grid-cols-3 gap-6 mt-10">
+                  {selectedProduct.s_price > 0 && (
+                    <Button
+                      onClick={() => handleSelectSize("s")}
+                      className="h-32 flex flex-col items-center justify-center gap-3 rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-none hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-lg group active:scale-95"
+                    >
+                      <span className="text-xs font-black text-slate-400 group-hover:text-blue-100 uppercase tracking-widest">صغير (S)</span>
+                      <span className="text-2xl font-black">{selectedProduct.s_price} ج</span>
+                    </Button>
+                  )}
+                  {selectedProduct.m_price > 0 && (
+                    <Button
+                      onClick={() => handleSelectSize("m")}
+                      className="h-32 flex flex-col items-center justify-center gap-3 rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-none hover:bg-purple-600 hover:text-white transition-all duration-300 shadow-lg group active:scale-95"
+                    >
+                      <span className="text-xs font-black text-slate-400 group-hover:text-purple-100 uppercase tracking-widest">وسط (M)</span>
+                      <span className="text-2xl font-black">{selectedProduct.m_price} ج</span>
+                    </Button>
+                  )}
+                  {selectedProduct.l_price > 0 && (
+                    <Button
+                      onClick={() => handleSelectSize("l")}
+                      className="h-32 flex flex-col items-center justify-center gap-3 rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-none hover:bg-emerald-600 hover:text-white transition-all duration-300 shadow-lg group active:scale-95"
+                    >
+                      <span className="text-xs font-black text-slate-400 group-hover:text-emerald-100 uppercase tracking-widest">كبير (L)</span>
+                      <span className="text-2xl font-black">{selectedProduct.l_price} ج</span>
+                    </Button>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </DialogContent>
       </Dialog>
-      {/* ✅ نافذة اختيار الموظف */}
+
+      {/* ✅ Premium Employee Dialog */}
       <Dialog open={showEmployeeDialog} onOpenChange={setShowEmployeeDialog}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="text-2xl">اختيار الموظف وإضافة ملاحظة</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="max-w-xl p-0 overflow-hidden rounded-[3rem] border-none bg-white dark:bg-slate-900 shadow-2xl" dir="rtl">
+          <div className="bg-slate-900 p-8 text-white relative">
+            <div className="absolute top-0 left-0 w-32 h-32 bg-purple-600/30 blur-[80px] rounded-full -translate-x-1/2 -translate-y-1/2" />
+            <DialogHeader className="relative z-10 text-right">
+              <DialogTitle className="text-3xl font-black tracking-tight">تأكيد العملية</DialogTitle>
+              <p className="text-slate-400 font-bold text-sm mt-1 uppercase tracking-widest">خطوات نهائية لإصدار الفاتورة</p>
+            </DialogHeader>
+          </div>
 
-          <div className="space-y-5">
-            <div>
-              <Label className="text-lg mb-2 block">اختر الموظف</Label>
-              <select
-                className="w-full border rounded-md p-4 mt-2 text-lg h-14"
-                value={selectedEmployee}
-                onChange={(e) => setSelectedEmployee(e.target.value)}
-              >
-                <option value="">-- اختر الموظف --</option>
-                {employees.map((emp) => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.name}
-                  </option>
-                ))}
-              </select>
+          <div className="p-8 space-y-8">
+            <div className="space-y-3">
+              <Label className="text-sm font-black text-slate-500 uppercase tracking-widest mr-2">الموظف المسؤول</Label>
+              <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
+                <SelectTrigger className="w-full h-16 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl p-5 text-lg font-black text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500/20 transition-all">
+                  <SelectValue placeholder="-- اختر الموظف --" />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-2xl">
+                  {employees.map((emp) => (
+                    <SelectItem 
+                      key={emp.id} 
+                      value={emp.id.toString()} 
+                      className="font-bold py-3 focus:bg-blue-600 focus:text-white rounded-xl"
+                    >
+                      {emp.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            <div>
-              <Label className="text-lg mb-2 block">ملاحظة خاصة (تظهر في نسخة المطبخ فقط)</Label>
-              <Input
-                type="text"
-                placeholder="مثال: بدون بصل - زيادة جبنة - حار جداً"
-                value={kitchenNote}
-                onChange={(e) => setKitchenNote(e.target.value)}
-                className="h-14 text-lg"
-              />
+            <div className="space-y-3">
+              <Label className="text-sm font-black text-slate-500 uppercase tracking-widest mr-2">ملاحظات التحضير</Label>
+              <div className="relative group">
+                <Receipt className="absolute right-5 top-5 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                <Input
+                  type="text"
+                  placeholder="مثال: بدون سكر - زيادة ثلج..."
+                  value={kitchenNote}
+                  onChange={(e) => setKitchenNote(e.target.value)}
+                  className="h-16 pr-14 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl text-lg font-bold placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-blue-500/20 transition-all"
+                />
+              </div>
             </div>
 
-            <Button className="w-full h-14 text-lg touch-manipulation" size="lg" onClick={handleCheckout}>
-              إتمام العملية
+            <Button 
+                className="w-full h-16 text-lg font-black tracking-wide rounded-2xl bg-slate-900 dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 shadow-xl active:scale-[0.98] transition-all" 
+                size="lg" 
+                onClick={handleCheckout}
+            >
+              حفظ وطباعة الفاتورة
             </Button>
           </div>
         </DialogContent>
-
       </Dialog>
     </div>
   );

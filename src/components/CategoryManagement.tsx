@@ -140,25 +140,29 @@ const CategoryManagement = ({ categories, onCategoriesUpdate }: any) => {
         </div>
       </CardHeader>
 
-      <CardContent className="p-4">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <CardContent className="p-5">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
           {paginatedCategories.map((category) => (
             <div
               key={category.id}
-              className="p-3 bg-white dark:bg-slate-800/50 border border-blue-50 dark:border-slate-800 rounded-xl flex items-center justify-between group hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-500 transition-all"
+              className="relative p-3 bg-white dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center gap-2 group hover:shadow-xl hover:border-blue-400/50 dark:hover:border-blue-500/50 transition-all cursor-default overflow-hidden"
             >
-              <div className="flex items-center gap-2 overflow-hidden">
-                <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: category.color }} />
-                <div className="truncate">
-                  <p className="font-bold text-sm text-slate-800 dark:text-slate-200 truncate">{category.name}</p>
-                </div>
+              {/* Background Accent */}
+              <div className="absolute inset-0 opacity-5 bg-gradient-to-br from-transparent to-black pointer-events-none" style={{ backgroundColor: category.color }} />
+              
+              <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-inner relative overflow-hidden" style={{ backgroundColor: `${category.color}20` }}>
+                <div className="w-3 h-3 rounded-full shadow-lg" style={{ backgroundColor: category.color }} />
+                <div className="absolute inset-0 animate-ping opacity-20 pointer-events-none" style={{ backgroundColor: category.color }} />
               </div>
-              <div className="flex gap-1">
-                <Button size="icon" variant="ghost" onClick={() => handleEdit(category)} className="h-7 w-7 text-slate-400 hover:text-blue-500">
-                  <Edit className="w-3.5 h-3.5" />
+
+              <p className="font-black text-xs text-slate-700 dark:text-slate-200 text-center truncate w-full px-1">{category.name}</p>
+
+              <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity absolute top-1 right-1">
+                <Button size="icon" variant="ghost" onClick={() => handleEdit(category)} className="h-6 w-6 text-slate-400 hover:text-blue-500 rounded-full bg-white dark:bg-slate-950 shadow-sm border border-slate-100 dark:border-slate-800">
+                  <Edit className="w-3 h-3" />
                 </Button>
-                <Button size="icon" variant="ghost" onClick={() => handleDelete(category.id)} className="h-7 w-7 text-slate-400 hover:text-red-500">
-                  <Trash2 className="w-3.5 h-3.5" />
+                <Button size="icon" variant="ghost" onClick={() => handleDelete(category.id)} className="h-6 w-6 text-slate-400 hover:text-red-500 rounded-full bg-white dark:bg-slate-950 shadow-sm border border-slate-100 dark:border-slate-800">
+                  <Trash2 className="w-3 h-3" />
                 </Button>
               </div>
             </div>
