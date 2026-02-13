@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSwipeable } from "react-swipeable";
-import { Calculator, Moon, Sun } from "lucide-react";
+import { Calculator, Moon, Sun, LayoutDashboard, Settings, LogOut } from "lucide-react";
 
 import SalesInterface from "@/components/SalesInterface";
 import ProductManagement from "@/components/ProductManagement";
@@ -48,11 +48,11 @@ const CalculatorIconButton = () => {
     return (
         <button
             onClick={toggleSidebar}
-            className="h-12 w-12 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600
-                 flex items-center justify-center shadow-lg
-                 touch-manipulation active:scale-95 transition"
+            className="h-12 w-12 rounded-2xl bg-primary text-white
+                 flex items-center justify-center shadow-lg shadow-primary/20
+                 touch-manipulation border border-white/10 active:scale-95 transition-all"
         >
-            <Calculator className="text-white w-6 h-6" />
+            <Calculator className="w-6 h-6" />
         </button>
     );
 };
@@ -70,51 +70,48 @@ export function IndexLayout() {
     });
 
     const renderContent = () => {
-        switch (activeTab) {
-            case "sales": return <SalesInterface />;
-            case "products": return <ProductManagement />;
-            case "sales-invoices": return <SalesInvoices />;
-            case "invoices": return <PurchaseInvoices />;
-            case "employees": return <Employees />;
-            case "reports": return <ReportsSection />;
-            default: return <SalesInterface />;
-        }
+        const components: Record<string, React.ReactNode> = {
+            "sales": <SalesInterface />,
+            "products": <ProductManagement />,
+            "sales-invoices": <SalesInvoices />,
+            "invoices": <PurchaseInvoices />,
+            "employees": <Employees />,
+            "reports": <ReportsSection />,
+        };
+        
+        return components[activeTab] || <SalesInterface />;
     };
 
     return (
         <div
             {...swipeHandlers}
             dir="rtl"
-            className="flex min-h-svh w-full
-                 bg-slate-50 dark:bg-slate-950
-                 text-slate-900 dark:text-slate-100"
+            className="flex min-h-svh w-full mesh-bg overflow-hidden"
         >
             {/* Sidebar */}
             <Sidebar
                 side="right"
                 collapsible="icon"
-                className="bg-white dark:bg-slate-900 border-l"
+                className="glass border-l border-white/10 dark:border-white/5"
             >
-                <SidebarHeader className="p-4 flex items-center gap-3">
-                    <CalculatorIconButton />
-
-                    <button
-                        onClick={toggle}
-                        className="h-12 w-12 rounded-xl bg-slate-100 dark:bg-slate-800
-                       flex items-center justify-center touch-manipulation"
-                    >
-                        {dark ? <Sun /> : <Moon />}
-                    </button>
+                <SidebarHeader className="p-6 flex flex-row items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                        <CalculatorIconButton />
+                        <div className="group-data-[collapsible=icon]:hidden">
+                            <h2 className="text-lg font-display font-black tracking-tighter">سنسو POS</h2>
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">Smart Operations</p>
+                        </div>
+                    </div>
                 </SidebarHeader>
 
-                <SidebarContent className="p-3">
+                <SidebarContent className="p-4">
                     <SidebarGroup>
-                        <SidebarGroupLabel className="text-sm opacity-70">
-                            القوائم
+                        <SidebarGroupLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 mb-4 group-data-[collapsible=icon]:hidden">
+                            القائمة الرئيسية
                         </SidebarGroupLabel>
 
                         <SidebarGroupContent>
-                            <SidebarMenu className="gap-2">
+                            <SidebarMenu className="gap-3">
                                 {MENU_ITEMS.map(({ value, label, icon: Icon }) => (
                                     <SidebarMenuItem key={value}>
                                         <SidebarMenuButton
@@ -122,15 +119,17 @@ export function IndexLayout() {
                                             isActive={activeTab === value}
                                             onClick={() => setActiveTab(value)}
                                             className="
-                        h-14 text-lg gap-3 rounded-2xl
-                        touch-manipulation active:scale-95
-                        data-[active=true]:bg-gradient-to-r
-                        data-[active=true]:from-blue-600
-                        data-[active=true]:to-purple-600
+                        h-14 text-base font-bold gap-4 rounded-2xl
+                        transition-all duration-300
+                        hover:bg-primary/10 hover:text-primary
+                        data-[active=true]:bg-primary
                         data-[active=true]:text-white
+                        data-[active=true]:shadow-xl
+                        data-[active=true]:shadow-primary/30
+                        data-[active=true]:scale-[1.02]
                       "
                                         >
-                                            <Icon className="w-6 h-6" />
+                                            <Icon className="w-5 h-5" />
                                             <span>{label}</span>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
@@ -140,13 +139,30 @@ export function IndexLayout() {
                     </SidebarGroup>
                 </SidebarContent>
 
+                <div className="mt-auto p-4 border-t border-white/5 space-y-2">
+                    <button
+                        onClick={toggle}
+                        className="w-full h-12 rounded-xl flex items-center justify-center gap-3 text-muted-foreground hover:bg-white/5 transition-colors group-data-[collapsible=icon]:p-0"
+                    >
+                        {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                        <span className="group-data-[collapsible=icon]:hidden font-bold text-sm">{dark ? "الوضع النهاري" : "الوضع الليلي"}</span>
+                    </button>
+                    <button className="w-full h-12 rounded-xl flex items-center justify-center gap-3 text-red-500 hover:bg-red-500/10 transition-colors group-data-[collapsible=icon]:p-0">
+                        <LogOut className="w-5 h-5" />
+                        <span className="group-data-[collapsible=icon]:hidden font-bold text-sm">تسجيل الخروج</span>
+                    </button>
+                </div>
+
                 <SidebarRail />
             </Sidebar>
 
             {/* Main */}
-            <SidebarInset className="flex-1 overflow-hidden">
-                <main className="h-full overflow-auto p-6">
-                    {renderContent()}
+            <SidebarInset className="bg-transparent">
+                <main className="h-full overflow-auto p-0 md:p-6 lg:p-10 relative">
+                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 blur-[150px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+                    <div className="relative z-10 h-full">
+                        {renderContent()}
+                    </div>
                 </main>
             </SidebarInset>
         </div>
