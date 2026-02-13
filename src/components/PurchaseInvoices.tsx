@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Plus, Calendar, Building, Package, Receipt, User } from "lucide-react";
+import { FileText, Plus, Calendar, Building, Package, Receipt, User, Clock, Trash2, ShoppingBag, ChevronLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
 import { API_BASE_URL } from "@/lib/constants";
@@ -63,8 +63,8 @@ const fetchInvoices = async () => {
 
 const PurchaseInvoices = () => {
   const [categories, setCategories] = useState<Category[]>([]);
-
   const [invoices, setInvoices] = useState<PurchaseInvoice[]>([]);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -74,7 +74,6 @@ const PurchaseInvoices = () => {
         ]);
 
         const categoriesData = await resCategories.json();
-
         setCategories(categoriesData.categories || []);
       } catch (error) {
         toast({
@@ -86,7 +85,7 @@ const PurchaseInvoices = () => {
     };
 
     fetchData();
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     fetchInvoices()
@@ -99,7 +98,7 @@ const PurchaseInvoices = () => {
           variant: "destructive"
         });
       });
-  }, []);
+  }, [toast]);
 
 
   const [selectedInvoice, setSelectedInvoice] = useState<PurchaseInvoice | null>(null);
@@ -113,8 +112,6 @@ const PurchaseInvoices = () => {
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([
     { product_name: "", barcode: "", quantity: 0, purchase_price: 0, sale_price: 0, category: "" }
   ]);
-
-  const { toast } = useToast();
 
   const addInvoiceItem = () => {
     setInvoiceItems([...invoiceItems, { product_name: "", barcode: "", quantity: 0, purchase_price: 0, sale_price: 0, category: "" }]);
@@ -163,7 +160,6 @@ const PurchaseInvoices = () => {
     const now = new Date();
     const newInvoice = {
       ...invoiceData,
-      // time: new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
       time: now.toTimeString().slice(0, 8),
       items: validItems,
       total: calculateTotal()
@@ -198,113 +194,131 @@ const PurchaseInvoices = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <Card className="bg-white/60 backdrop-blur-sm border-blue-100">
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle className="flex items-center gap-2 text-blue-800">
-                <FileText className="w-6 h-6" />
-                فواتير الشراء
-              </CardTitle>
-              <p className="text-sm text-gray-600 mt-1">
-                إجمالي الفواتير: {invoices.length} فاتورة
-              </p>
+    <div className="space-y-6 antialiased" dir="rtl">
+      {/* Premium Dashboard Header */}
+      <div className="relative overflow-hidden bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl border border-white/5">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/20 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-600/10 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/2" />
+        
+        <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+          <div className="flex items-center gap-4">
+            <div className="bg-purple-600/20 p-4 rounded-[2rem] shadow-inner backdrop-blur-md border border-white/10">
+              <ShoppingBag className="w-8 h-8 text-purple-400" />
             </div>
+            <div>
+              <h1 className="text-3xl font-black text-white tracking-tight">فواتير المشتريات</h1>
+              <p className="text-purple-400/60 font-bold uppercase tracking-widest text-xs mt-1">Acquisition & Supply Ledger</p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-4 px-6 min-w-[120px]">
+              <div className="flex items-center gap-3 mb-1">
+                <Receipt className="w-4 h-4 text-slate-400" />
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">الفواتير</span>
+              </div>
+              <p className="text-2xl font-black text-white">{invoices.length}</p>
+            </div>
+            
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
-                  <Plus className="w-4 h-4 mr-2" />
-                  إضافة فاتورة شراء
+                <Button className="h-16 px-8 rounded-2xl bg-purple-600 hover:bg-purple-500 shadow-xl shadow-purple-600/20 font-black text-white tracking-wide active:scale-95 transition-all text-base gap-3">
+                  <Plus className="w-5 h-5" />
+                  إرساء فاتورة جديدة
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" dir="rtl">
-                <DialogHeader>
-                  <DialogTitle>إضافة فاتورة شراء جديدة</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Invoice Header */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <Label htmlFor="invoice_number">رقم الفاتورة *</Label>
+              <DialogContent className="max-w-6xl p-0 overflow-hidden rounded-[3rem] border-none bg-white dark:bg-slate-900 shadow-[0_30px_100px_rgba(0,0,0,0.3)]" dir="rtl">
+                <div className="bg-slate-900 p-8 text-white relative">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/20 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2" />
+                  <DialogHeader className="text-right relative z-10">
+                    <DialogTitle className="text-3xl font-black tracking-tight">إضافة فاتورة شراء</DialogTitle>
+                    <p className="text-slate-400 font-bold text-sm mt-1 uppercase tracking-widest">Registering New Supply Invoice</p>
+                  </DialogHeader>
+                </div>
+                
+                <form onSubmit={handleSubmit} className="p-8 space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-black text-slate-400 tracking-widest mr-2 uppercase">رقم الفاتورة</Label>
                       <Input
-                        id="invoice_number"
                         value={invoiceData.invoice_number}
                         onChange={(e) => setInvoiceData({ ...invoiceData, invoice_number: e.target.value })}
-                        placeholder="INV-001"
+                        placeholder="مثال: INV-2024-001"
+                        className="h-14 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl font-bold px-5 focus-visible:ring-2 focus-visible:ring-purple-500/20"
                         required
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="supplier">المورد *</Label>
-                      <Input
-                        id="supplier"
-                        value={invoiceData.supplier}
-                        onChange={(e) => setInvoiceData({ ...invoiceData, supplier: e.target.value })}
-                        placeholder="اسم المورد"
-                        required
-                      />
+                    <div className="space-y-2">
+                      <Label className="text-xs font-black text-slate-400 tracking-widest mr-2 uppercase">المورد</Label>
+                      <div className="relative">
+                        <Building className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <Input
+                          value={invoiceData.supplier}
+                          onChange={(e) => setInvoiceData({ ...invoiceData, supplier: e.target.value })}
+                          placeholder="اسم الشركة أو المورد"
+                          className="h-14 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl font-bold px-5 pl-12 focus-visible:ring-2 focus-visible:ring-purple-500/20"
+                          required
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <Label htmlFor="date">تاريخ الفاتورة *</Label>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-black text-slate-400 tracking-widest mr-2 uppercase">تاريخ التحرير</Label>
                       <Input
-                        id="date"
                         type="date"
                         value={invoiceData.date}
                         onChange={(e) => setInvoiceData({ ...invoiceData, date: e.target.value })}
+                        className="h-14 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl font-bold px-5 focus-visible:ring-2 focus-visible:ring-purple-500/20"
                         required
                       />
                     </div>
                   </div>
 
-                  {/* Invoice Items */}
-                  <div>
-                    <div className="flex justify-between items-center mb-4">
-                      <Label className="text-lg font-semibold">بنود الفاتورة</Label>
-                      <Button type="button" variant="outline" onClick={addInvoiceItem}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        إضافة بند
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-950/50 p-4 rounded-3xl border border-slate-100 dark:border-slate-800/50">
+                      <h3 className="text-md font-black text-slate-800 dark:text-white flex items-center gap-2">
+                        <Package className="w-5 h-5 text-purple-600" />
+                        بنود المنتجات التحصيلية
+                      </h3>
+                      <Button type="button" onClick={addInvoiceItem} className="h-10 px-4 rounded-xl bg-purple-600/10 text-purple-600 hover:bg-purple-600 hover:text-white border-none transition-all font-black text-xs gap-2">
+                        <Plus className="w-4 h-4" />
+                        إضافة صنف جديد
                       </Button>
                     </div>
                     
-                    <div className="space-y-4">
+                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-hide">
                       {invoiceItems.map((item, index) => (
-                        <Card key={index} className="p-4 bg-blue-50 border-blue-200">
-                          <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
-                            <div>
-                              <Label>اسم المنتج</Label>
+                        <Card key={index} className="relative group bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
+                          <div className="p-6 grid grid-cols-1 md:grid-cols-6 lg:grid-cols-12 gap-5">
+                            <div className="lg:col-span-3 space-y-1.5">
+                              <Label className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">اسم المنتج</Label>
                               <Input
                                 value={item.product_name}
                                 onChange={(e) => updateInvoiceItem(index, 'product_name', e.target.value)}
-                                placeholder="اسم المنتج"
+                                className="h-11 bg-slate-50 dark:bg-slate-950 border-none rounded-xl font-bold text-sm"
                               />
                             </div>
-                            <div>
-                              <Label>الباركود</Label>
+                            <div className="lg:col-span-2 space-y-1.5">
+                              <Label className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">الباركود</Label>
                               <Input
                                 value={item.barcode}
                                 onChange={(e) => updateInvoiceItem(index, 'barcode', e.target.value)}
-                                placeholder="1234567890123"
+                                className="h-11 bg-slate-50 dark:bg-slate-950 border-none rounded-xl font-bold text-sm"
                               />
                             </div>
-                            <div>
-                              <Label>الفئة</Label>
+                            <div className="lg:col-span-2 space-y-1.5">
+                              <Label className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">الفئة</Label>
                               <Select 
                                 value={item.category} 
                                 onValueChange={(value) => updateInvoiceItem(index, 'category', value)}
                               >
-                                <SelectTrigger>
+                                <SelectTrigger className="h-11 bg-slate-50 dark:bg-slate-950 border-none rounded-xl font-bold text-sm">
                                   <SelectValue placeholder="اختر الفئة" />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="rounded-2xl">
                                   {categories.map((category) => (
-                                    <SelectItem key={category.id} value={category.name}>
+                                    <SelectItem key={category.id} value={category.name} className="font-bold">
                                       <div className="flex items-center gap-2">
-                                        <div
-                                          className="w-3 h-3 rounded-full"
-                                          style={{ backgroundColor: category.color }}
-                                        />
+                                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: category.color }} />
                                         {category.name}
                                       </div>
                                     </SelectItem>
@@ -312,44 +326,43 @@ const PurchaseInvoices = () => {
                                 </SelectContent>
                               </Select>
                             </div>
-                            <div>
-                              <Label>الكمية</Label>
+                            <div className="lg:col-span-1 space-y-1.5">
+                              <Label className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">الكمية</Label>
                               <Input
                                 type="number"
                                 value={item.quantity}
                                 onChange={(e) => updateInvoiceItem(index, 'quantity', parseInt(e.target.value) || 0)}
-                                placeholder="0"
+                                className="h-11 bg-slate-50 dark:bg-slate-950 border-none rounded-xl font-black text-center"
                               />
                             </div>
-                            <div>
-                              <Label>سعر الشراء</Label>
-                              <Input
-                                type="number"
-                                step="0.01"
-                                value={item.purchase_price}
-                                onChange={(e) => updateInvoiceItem(index, 'purchase_price', parseFloat(e.target.value) || 0)}
-                                placeholder="0.00"
-                              />
+                            <div className="lg:col-span-2 lg:col-start-9 lg:col-end-11 space-y-1.5">
+                              <Label className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">شراء / بيع</Label>
+                              <div className="flex gap-2">
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  value={item.purchase_price}
+                                  onChange={(e) => updateInvoiceItem(index, 'purchase_price', parseFloat(e.target.value) || 0)}
+                                  className="h-11 bg-purple-50 dark:bg-purple-900/20 border-none rounded-xl font-black text-purple-600 text-xs text-center"
+                                />
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  value={item.sale_price}
+                                  onChange={(e) => updateInvoiceItem(index, 'sale_price', parseFloat(e.target.value) || 0)}
+                                  className="h-11 bg-emerald-50 dark:bg-emerald-900/20 border-none rounded-xl font-black text-emerald-600 text-xs text-center"
+                                />
+                              </div>
                             </div>
-                            <div>
-                              <Label>سعر البيع</Label>
-                              <Input
-                                type="number"
-                                step="0.01"
-                                value={item.sale_price}
-                                onChange={(e) => updateInvoiceItem(index, 'sale_price', parseFloat(e.target.value) || 0)}
-                                placeholder="0.00"
-                              />
-                            </div>
-                            <div className="flex items-end">
+                            <div className="lg:col-span-1 flex items-end justify-end">
                               <Button
                                 type="button"
-                                variant="destructive"
-                                size="sm"
+                                variant="ghost"
+                                size="icon"
                                 onClick={() => removeInvoiceItem(index)}
-                                disabled={invoiceItems.length === 1}
+                                className="h-11 w-11 rounded-xl text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors"
                               >
-                                حذف
+                                <Trash2 className="w-5 h-5" />
                               </Button>
                             </div>
                           </div>
@@ -358,182 +371,212 @@ const PurchaseInvoices = () => {
                     </div>
                   </div>
 
-                  {/* Total */}
-                  <div className="bg-gray-100 p-4 rounded-lg">
-                    <div className="flex justify-between items-center text-lg font-bold">
-                      <span>إجمالي الفاتورة:</span>
-                      <span className="text-blue-600">{calculateTotal().toFixed(2)} جنية</span>
+                  <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <div className="bg-slate-900 dark:bg-black/40 p-5 px-8 rounded-3xl flex items-center gap-8 shadow-xl">
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">إجمالي الفاتورة</span>
+                        <p className="text-xs text-purple-400 font-bold italic">Total Payable Amount</p>
+                      </div>
+                      <div className="text-left">
+                        <span className="text-3xl font-black text-white tracking-tighter block">{calculateTotal().toFixed(2)}</span>
+                        <span className="text-[10px] font-black text-purple-500 uppercase tracking-widest block text-left">جنيه مصري</span>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Submit Buttons */}
-                  <div className="flex gap-2">
-                    <Button type="submit" className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500">
-                      حفظ الفاتورة
-                    </Button>
-                    <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                      إلغاء
-                    </Button>
+                    <div className="flex gap-4 w-full md:w-auto">
+                      <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)} className="h-16 px-10 rounded-2xl border-slate-200 dark:border-slate-700 font-black text-slate-500 transition-all hover:bg-slate-50 dark:hover:bg-slate-800">
+                        إلغاء
+                      </Button>
+                      <Button type="submit" className="flex-1 md:flex-none h-16 px-12 rounded-2xl bg-slate-900 dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 shadow-xl font-black text-lg transition-all active:scale-[0.98]">
+                        حفظ الفاتورة النهائية
+                      </Button>
+                    </div>
                   </div>
                 </form>
               </DialogContent>
             </Dialog>
           </div>
-        </CardHeader>
-      </Card>
+        </div>
+      </div>
 
-      {/* Purchase Invoices List */}
-      <Card className="bg-white/60 backdrop-blur-sm border-blue-100">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-blue-800">
-            <Receipt className="w-5 h-5" />
-            قائمة فواتير الشراء ({invoices.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {invoices.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p>لا توجد فواتير شراء حتى الآن</p>
-              <p className="text-sm mt-2">قم بإضافة فاتورة شراء جديدة لتظهر هنا</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {invoices.map((invoice) => (
-                <Card key={invoice.id} className="border-blue-200 hover:shadow-md transition-all duration-200 cursor-pointer"
-                      onClick={() => {
-                        setSelectedInvoice(invoice);
-                        setIsInvoiceDialogOpen(true);
-                      }}>
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-blue-600 border-blue-300">
-                            {invoice.invoice_number}
-                          </Badge>
-                          <span className="text-sm text-gray-600">
-                            {invoice.items.length} منتج
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-gray-600">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
-                            {invoice.date} - {invoice.time}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Building className="w-4 h-4" />
-                            {invoice.supplier}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-left">
-                        <div className="text-lg font-bold text-blue-600">
-                          {Number(invoice.total).toFixed(2)} جنية
-                        </div>
-                        <Button variant="ghost" size="sm" className="mt-1">
-                          عرض التفاصيل
-                        </Button>
-                      </div>
+      {/* Grid List */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {invoices.length === 0 ? (
+          <div className="col-span-full h-64 flex flex-col items-center justify-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-md rounded-[3rem] border border-dashed border-slate-200 dark:border-slate-800">
+            <FileText className="w-16 h-16 text-slate-300 mb-4 opacity-50" />
+            <p className="text-lg font-black text-slate-400">لا توجد سجلات مشتريات حتى الآن</p>
+          </div>
+        ) : (
+          invoices.map((invoice) => (
+            <Card 
+              key={invoice.id} 
+              className="group relative bg-white dark:bg-slate-900/50 backdrop-blur-xl border-none shadow-xl hover:shadow-2xl transition-all duration-500 cursor-pointer overflow-hidden rounded-[2.5rem] active:scale-[0.98]"
+              onClick={() => {
+                setSelectedInvoice(invoice);
+                setIsInvoiceDialogOpen(true);
+              }}
+            >
+              <div className="absolute top-0 right-0 w-full h-1 bg-gradient-to-l from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              
+              <CardContent className="p-7">
+                <div className="flex justify-between items-start mb-6">
+                  <div className="space-y-1">
+                    <Badge className="bg-purple-600/10 text-purple-600 dark:text-purple-400 hover:bg-purple-600/20 border-none font-black text-xs px-3 py-1 rounded-lg">
+                      {invoice.invoice_number}
+                    </Badge>
+                    <div className="flex items-center gap-2 text-slate-400 font-bold text-[10px] uppercase tracking-wider">
+                      <Building className="w-3 h-3 text-purple-500" />
+                      {invoice.supplier}
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                  </div>
+                  <div className="text-left">
+                    <div className="text-2xl font-black text-slate-800 dark:text-white group-hover:text-purple-600 transition-colors">
+                      {Number(invoice.total).toFixed(2)}
+                      <span className="text-xs mr-1 text-slate-400">ج</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4 text-xs font-bold text-slate-500 bg-slate-50 dark:bg-slate-950/50 p-3 rounded-2xl border border-slate-100 dark:border-slate-800/50">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-3.5 h-3.5 text-blue-500" />
+                      {invoice.date}
+                    </div>
+                    <div className="flex items-center gap-2 border-r pr-4 border-slate-200 dark:border-slate-800">
+                      <Clock className="w-3.5 h-3.5 text-purple-500" />
+                      {invoice.time}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                        <Package className="w-4 h-4" />
+                      </div>
+                      <span className="text-xs font-black text-slate-500">{invoice.items.length} صنف مسجل</span>
+                    </div>
+                    
+                    <Button variant="ghost" className="h-10 px-4 rounded-xl text-xs font-black text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all gap-2 group-hover:translate-x-1 duration-300">
+                      مراجعة البيانات
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
 
       {/* Invoice Details Dialog */}
       <Dialog open={isInvoiceDialogOpen} onOpenChange={setIsInvoiceDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" dir="rtl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              تفاصيل فاتورة الشراء {selectedInvoice?.invoice_number}
-            </DialogTitle>
-          </DialogHeader>
-          
-          {selectedInvoice && (
-            <div className="space-y-6">
-              {/* Invoice Header */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-blue-50 rounded-lg">
-                <div>
-                  <span className="text-sm text-gray-600">رقم الفاتورة</span>
-                  <p className="font-semibold">{selectedInvoice.invoice_number}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">التاريخ</span>
-                  <p className="font-semibold">{selectedInvoice.date}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">الوقت</span>
-                  <p className="font-semibold">{selectedInvoice.time}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">المورد</span>
-                  <p className="font-semibold">{selectedInvoice.supplier}</p>
-                </div>
-              </div>
-
-              {/* Invoice Items */}
+        <DialogContent className="max-w-5xl p-0 overflow-hidden rounded-[3rem] border-none bg-white dark:bg-slate-900 shadow-[0_30px_100px_rgba(0,0,0,0.3)]" dir="rtl">
+          <div className="bg-slate-900 p-8 text-white relative">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/20 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2" />
+            <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
               <div>
-                <h3 className="text-lg font-semibold mb-4">تفاصيل المنتجات</h3>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-right">المنتج</TableHead>
-                      <TableHead className="text-right">الباركود</TableHead>
-                      <TableHead className="text-right">الفئة</TableHead>
-                      <TableHead className="text-right">سعر الشراء</TableHead>
-                      <TableHead className="text-right">سعر البيع</TableHead>
-                      <TableHead className="text-right">الكمية</TableHead>
-                      <TableHead className="text-right">الإجمالي</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {selectedInvoice.items.map((item, index) => (
-                      <TableRow key={index}>
-                        <TableCell className="font-medium">{item.product_name}</TableCell>
-                        <TableCell className="text-sm text-gray-600">{item.barcode}</TableCell>
-                        <TableCell>
-                          {item.category && (
-                            <Badge 
-                              className="text-white text-xs"
-                              style={{ backgroundColor: getCategoryColor(item.category) }}
-                            >
-                              {item.category}
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>{Number(item.purchase_price).toFixed(2)} جنية</TableCell>
-                        <TableCell className="text-green-600 font-medium">{Number(item.sale_price).toFixed(2)} جنية</TableCell>
-                        <TableCell>{item.quantity}</TableCell>
-                        <TableCell className="font-semibold">
-                          {(Number(item.purchase_price) * item.quantity).toFixed(2)} جنية
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <DialogHeader className="text-right">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="bg-purple-600 p-2.5 rounded-2xl shadow-lg">
+                      <FileText className="w-6 h-6" />
+                    </div>
+                    <Badge variant="outline" className="text-purple-400 border-purple-400/30 px-3 py-1 font-black">فاتورة تحصيل</Badge>
+                  </div>
+                  <DialogTitle className="text-3xl font-black tracking-tight">تفاصيل فاتورة المشتريات {selectedInvoice?.invoice_number}</DialogTitle>
+                </DialogHeader>
               </div>
-
-              {/* Invoice Total */}
-              <div className="border-t pt-4">
-                <div className="flex justify-between items-center text-xl font-bold">
-                  <span>المبلغ الإجمالي:</span>
-                  <span className="text-blue-600">{Number(selectedInvoice.total).toFixed(2)} جنية</span>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-2 pt-4">
-                <Button variant="outline" onClick={() => setIsInvoiceDialogOpen(false)} className="flex-1">
-                  إغلاق
-                </Button>
+              
+              <div className="text-left bg-white/5 backdrop-blur-xl p-4 rounded-3xl border border-white/10 min-w-[200px]">
+                <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest mb-1">إجمالي مشتريات الفاتورة</p>
+                <div className="text-3xl font-black text-white">{Number(selectedInvoice?.total).toFixed(2)} <span className="text-sm">جنية</span></div>
               </div>
             </div>
-          )}
+          </div>
+          
+          <div className="p-8 space-y-8">
+            {selectedInvoice && (
+              <div className="space-y-8">
+                {/* Meta Grid */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                  {[
+                    { label: "رقم المرجع", value: selectedInvoice.invoice_number, icon: Receipt, color: "text-blue-500" },
+                    { label: "المورد", value: selectedInvoice.supplier, icon: Building, color: "text-purple-500" },
+                    { label: "التاريخ", value: selectedInvoice.date, icon: Calendar, color: "text-emerald-500" },
+                    { label: "وقت التسجيل", value: selectedInvoice.time, icon: Clock, color: "text-orange-500" },
+                  ].map((stat, i) => (
+                    <div key={i} className="bg-slate-50 dark:bg-slate-950/50 p-4 rounded-3xl border border-slate-100 dark:border-slate-800/50 group">
+                      <div className="flex items-center gap-3 mb-2">
+                        <stat.icon className={`w-4 h-4 ${stat.color} opacity-60 group-hover:opacity-100 transition-opacity`} />
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{stat.label}</span>
+                      </div>
+                      <p className="font-black text-slate-800 dark:text-white truncate">{stat.value}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="bg-white dark:bg-slate-950 rounded-[2.5rem] overflow-hidden border border-slate-100 dark:border-slate-800 shadow-xl">
+                  <div className="p-6 border-b border-slate-50 dark:border-slate-800/50 flex justify-between items-center bg-slate-50/50 dark:bg-slate-950/50">
+                    <h3 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
+                       <Package className="w-5 h-5 text-purple-500" />
+                       المنتجات المضافة في هذه الفاتورة
+                    </h3>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
+                        <TableRow className="border-slate-100 dark:border-slate-800">
+                          <TableHead className="text-right py-5 px-6 font-black text-slate-500 text-xs uppercase">المنتج والباركود</TableHead>
+                          <TableHead className="text-right py-5 px-4 font-black text-slate-500 text-xs uppercase">الفئة</TableHead>
+                          <TableHead className="text-right py-5 px-4 font-black text-slate-500 text-xs uppercase">سعر الشراء</TableHead>
+                          <TableHead className="text-right py-5 px-4 font-black text-slate-500 text-xs uppercase">سعر البيع</TableHead>
+                          <TableHead className="text-center py-5 px-4 font-black text-slate-500 text-xs uppercase">الكمية</TableHead>
+                          <TableHead className="text-left py-5 px-6 font-black text-slate-500 text-xs uppercase">الإجمالي</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {selectedInvoice.items.map((item, index) => (
+                          <TableRow key={index} className="border-slate-50 dark:border-slate-800/50 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
+                            <TableCell className="py-5 px-6">
+                              <div className="font-black text-slate-700 dark:text-slate-200">{item.product_name}</div>
+                              <div className="text-[10px] font-bold text-slate-400 mt-0.5 tracking-widest">{item.barcode}</div>
+                            </TableCell>
+                            <TableCell className="py-5 px-4">
+                              {item.category && (
+                                <Badge 
+                                  className="text-white text-[10px] font-black px-2 shadow-sm border-none"
+                                  style={{ backgroundColor: getCategoryColor(item.category) }}
+                                >
+                                  {item.category}
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="py-5 px-4 font-bold text-purple-600">{Number(item.purchase_price).toFixed(2)} ج</TableCell>
+                            <TableCell className="py-5 px-4 font-bold text-emerald-600">{Number(item.sale_price).toFixed(2)} ج</TableCell>
+                            <TableCell className="py-5 px-4 text-center">
+                              <Badge variant="outline" className="rounded-lg px-2 py-0.5 border-slate-200 dark:border-slate-800 font-black">{item.quantity}</Badge>
+                            </TableCell>
+                            <TableCell className="py-5 px-6 text-left font-black text-slate-800 dark:text-white">
+                              {(Number(item.purchase_price) * item.quantity).toFixed(2)} <span className="text-[10px] text-slate-400">ج</span>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-4">
+                  <Button 
+                    onClick={() => setIsInvoiceDialogOpen(false)} 
+                    className="h-16 px-16 rounded-2xl bg-slate-900 dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 shadow-xl font-black text-lg transition-all"
+                  >
+                    إغلاق المراجعة
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
