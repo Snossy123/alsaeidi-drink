@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/lib/constants";
 import CategoriesSidebar from "./CategoriesSidebar";
@@ -41,9 +41,30 @@ const SalesInterface = () => {
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [kitchenNote, setKitchenNote] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Constants
-  const itemsPerPage = 10; // Adjusted to show exactly 2 rows on 5-column desktop
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      // Matching grid-cols from ProductGrid.tsx:
+      // grid-cols-1 (<640) -> 2 items
+      // sm:grid-cols-2 (>=640) -> 4 items
+      // md:grid-cols-2 (>=768) -> 4 items
+      // lg:grid-cols-3 (>=1024) -> 6 items
+      // xl:grid-cols-4 (>=1280) -> 8 items
+      // 2xl:grid-cols-5 (>=1536) -> 10 items
+      
+      if (width < 640) setItemsPerPage(2);
+      else if (width < 1024) setItemsPerPage(4);
+      else if (width < 1280) setItemsPerPage(6);
+      else if (width < 1536) setItemsPerPage(8);
+      else setItemsPerPage(10);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   /**
    * Handlers
