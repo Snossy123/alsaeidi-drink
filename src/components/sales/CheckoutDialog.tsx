@@ -4,13 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Employee } from "@/hooks/useSalesData";
 
 interface CheckoutDialogProps {
   showEmployeeDialog: boolean;
   setShowEmployeeDialog: (open: boolean) => void;
   selectedEmployee: string;
   setSelectedEmployee: (value: string) => void;
-  employees: any[];
+  employees: Employee[];
   kitchenNote: string;
   setKitchenNote: (value: string) => void;
   handleCheckout: () => void;

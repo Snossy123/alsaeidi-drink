@@ -3,19 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 
-interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  barcode?: string;
-  size?: "s" | "m" | "l" | null;
-}
+import { CartItem } from "@/hooks/useCart";
 
 interface CartSectionProps {
   cart: CartItem[];
-  removeFromCart: (id: string, price: number) => void;
-  updateQuantity: (id: string, newQuantity: number, price: number) => void;
+  removeFromCart: (id: string | number, price: number) => void;
+  updateQuantity: (id: string | number, newQuantity: number, price: number) => void;
   calculateTotal: () => number;
   openEmployeeDialog: () => void;
 }

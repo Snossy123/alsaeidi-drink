@@ -2,11 +2,15 @@ import { Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { API_BASE_URL } from "@/lib/constants";
+import { Product } from "@/hooks/useSalesData";
+
+// Derive image base URL from API_BASE_URL (removing /public/api)
+const IMAGE_BASE_URL = API_BASE_URL.replace("/public/api", "");
 
 interface SizeSelectionDialogProps {
   showSizeDialog: boolean;
   setShowSizeDialog: (open: boolean) => void;
-  selectedProduct: any;
+  selectedProduct: Product | null;
   handleSelectSize: (size: "s" | "m" | "l") => void;
 }
 
@@ -33,7 +37,7 @@ export const SizeSelectionDialog = ({
               <div className="flex flex-col items-center gap-6">
                 {selectedProduct.image ? (
                   <div className="w-64 h-48 rounded-[2rem] overflow-hidden shadow-2xl bg-slate-50 dark:bg-slate-800 p-4 border border-slate-100 dark:border-slate-800">
-                    <img src={"https://greensolar-power.com/POS-API/" + selectedProduct.image} alt={selectedProduct.name} className="w-full h-full object-contain" />
+                    <img src={IMAGE_BASE_URL + "/" + selectedProduct.image} alt={selectedProduct.name} className="w-full h-full object-contain" />
                   </div>
                 ) : (
                   <div className="w-20 h-20 rounded-full bg-blue-600/10 flex items-center justify-center">
