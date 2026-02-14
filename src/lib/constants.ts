@@ -1,1 +1,1 @@
-export const API_BASE_URL = "https://greensolar-power.com/POS-API/api"; // http://localhost:8000/api
+export const API_BASE_URL = "https://greensolar-power.com/POS-API/public/api"; // http://localhost:8000/api
