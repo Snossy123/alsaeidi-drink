@@ -49,11 +49,11 @@ const CalculatorIconButton = () => {
     return (
         <button
             onClick={toggleSidebar}
-            className="h-12 w-12 rounded-2xl bg-primary text-white
-                 flex items-center justify-center shadow-lg shadow-primary/20
-                 touch-manipulation border border-white/10 active:scale-95 transition-all"
+            className="h-10 w-10 rounded-xl bg-sidebar-primary text-sidebar-primary-foreground
+                 flex items-center justify-center touch-manipulation
+                 active:scale-95 transition-all mx-auto"
         >
-            <Calculator className="w-6 h-6" />
+            <Calculator className="w-5 h-5" />
         </button>
     );
 };
@@ -106,10 +106,10 @@ export function IndexLayout() {
                 <Sidebar
                     side="right"
                     collapsible="icon"
-                    className="glass border-l border-white/10 dark:border-white/5"
+                    className="bg-sidebar border-l border-sidebar-border"
                 >
-                    <SidebarHeader className="p-4 lg:p-6 flex flex-row items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
+                    <SidebarHeader className="p-2 group-data-[collapsible=icon]:p-2 flex flex-row items-center justify-center group-data-[collapsible=icon]:justify-center gap-3">
+                        <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
                             <CalculatorIconButton />
                             <div className="group-data-[collapsible=icon]:hidden">
                                 <h2 className="text-lg font-display font-black tracking-tighter">سنسو POS</h2>
@@ -118,33 +118,32 @@ export function IndexLayout() {
                         </div>
                     </SidebarHeader>
 
-                    <SidebarContent className="p-4">
+                    <SidebarContent className="p-2 group-data-[collapsible=icon]:px-1">
                         <SidebarGroup>
-                            <SidebarGroupLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 mb-4 group-data-[collapsible=icon]:hidden">
+                            <SidebarGroupLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 mb-2 group-data-[collapsible=icon]:hidden">
                                 القائمة الرئيسية
                             </SidebarGroupLabel>
 
                             <SidebarGroupContent>
-                                <SidebarMenu className="gap-2 2xl:gap-3">
+                                <SidebarMenu className="gap-1.5">
                                     {MENU_ITEMS.map(({ value, label, icon: Icon }) => (
                                         <SidebarMenuItem key={value}>
                                             <SidebarMenuButton
                                                 size="lg"
                                                 isActive={activeTab === value}
                                                 onClick={() => setActiveTab(value)}
+                                                tooltip={label}
                                                 className="
-                        h-11 lg:h-12 2xl:h-14 text-base font-bold gap-4 rounded-2xl
-                        transition-all duration-300
-                        hover:bg-primary/10 hover:text-primary
-                        data-[active=true]:bg-primary
-                        data-[active=true]:text-white
-                        data-[active=true]:shadow-xl
-                        data-[active=true]:shadow-primary/30
-                        data-[active=true]:scale-[1.02]
+                        h-11 text-sm font-bold gap-3 rounded-xl
+                        transition-colors
+                        hover:bg-sidebar-accent hover:text-sidebar-accent-foreground
+                        group-data-[collapsible=icon]:!h-10 group-data-[collapsible=icon]:!w-10 group-data-[collapsible=icon]:!p-0 group-data-[collapsible=icon]:justify-center
+                        data-[active=true]:bg-sidebar-primary
+                        data-[active=true]:text-sidebar-primary-foreground
                       "
                                             >
-                                                <Icon className="w-5 h-5" />
-                                                <span>{label}</span>
+                                                <Icon className="w-5 h-5 shrink-0" />
+                                                <span className="group-data-[collapsible=icon]:hidden">{label}</span>
                                             </SidebarMenuButton>
                                         </SidebarMenuItem>
                                     ))}
@@ -153,15 +152,15 @@ export function IndexLayout() {
                         </SidebarGroup>
                     </SidebarContent>
 
-                    <div className="mt-auto p-4 border-t border-white/5 space-y-2">
+                    <div className="mt-auto p-2 border-t border-sidebar-border space-y-1">
                         <button
                             onClick={toggle}
-                            className="w-full h-12 rounded-xl flex items-center justify-center gap-3 text-muted-foreground hover:bg-white/5 transition-colors group-data-[collapsible=icon]:p-0"
+                            className="w-full h-10 rounded-xl flex items-center justify-center gap-3 text-muted-foreground hover:bg-sidebar-accent transition-colors group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:p-0"
                         >
                             {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                             <span className="group-data-[collapsible=icon]:hidden font-bold text-sm">{dark ? "الوضع النهاري" : "الوضع الليلي"}</span>
                         </button>
-                        <button className="w-full h-12 rounded-xl flex items-center justify-center gap-3 text-red-500 hover:bg-red-500/10 transition-colors group-data-[collapsible=icon]:p-0">
+                        <button className="w-full h-10 rounded-xl flex items-center justify-center gap-3 text-red-500 hover:bg-red-500/10 transition-colors group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:p-0">
                             <LogOut className="w-5 h-5" />
                             <span className="group-data-[collapsible=icon]:hidden font-bold text-sm">تسجيل الخروج</span>
                         </button>
@@ -173,7 +172,7 @@ export function IndexLayout() {
 
             {/* Main */}
             <SidebarInset className="bg-transparent overflow-hidden w-full flex-1 h-svh min-h-0">
-                <main className={`h-full min-h-0 relative ${isSalesTab ? "overflow-hidden p-0" : "overflow-y-auto p-0 md:p-4 lg:p-6"}`}>
+                <main className={`h-full min-h-0 relative ${isSalesTab ? "overflow-hidden p-0" : "overflow-y-auto p-0 md:p-3 lg:p-4"}`}>
                     {!isSalesTab && (
                         <div className="lg:hidden sticky top-0 z-20 flex items-center gap-3 p-3 bg-background/80 backdrop-blur-md border-b border-border/50">
                             <SidebarTrigger className="h-10 w-10 shrink-0" />
@@ -183,7 +182,7 @@ export function IndexLayout() {
                     {!isSalesTab && (
                         <div className="absolute top-0 right-0 w-[150px] h-[150px] lg:w-[400px] lg:h-[400px] bg-primary/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
                     )}
-                    <div className={`relative z-10 ${isSalesTab ? "h-full" : "min-h-0"}`}>
+                    <div className={`relative z-10 ${isSalesTab ? "h-full" : "h-full min-h-0 flex flex-col"}`}>
                         {renderContent()}
                     </div>
                 </main>

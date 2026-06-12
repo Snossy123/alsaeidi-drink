@@ -1,4 +1,4 @@
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect, useRef, FormEvent } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/lib/constants";
 import { Category, Product } from "@/types";
@@ -9,11 +9,12 @@ import ProductFilters from "./product-management/ProductFilters";
 import ProductCard from "./product-management/ProductCard";
 import ProductPagination from "./product-management/ProductPagination";
 import { Package } from "lucide-react";
-import { useGridColumns } from "@/hooks/useGridColumns";
+import { useProductGridItemsPerPage } from "@/hooks/useProductGridItemsPerPage";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ProductManagement = () => {
-  const { itemsPerPage } = useGridColumns();
+  const gridRef = useRef<HTMLDivElement>(null);
+  const itemsPerPage = useProductGridItemsPerPage(gridRef);
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -68,6 +69,12 @@ const ProductManagement = () => {
   );
 
   useEffect(() => { setCurrentPage(1); }, [searchTerm]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -144,33 +151,33 @@ const ProductManagement = () => {
   };
 
   return (
-    <div className="space-y-4 pb-4">
-      <div className="relative overflow-hidden rounded-2xl bg-slate-900 px-5 py-5 shadow-xl">
-        <div className="relative flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+    <div className="flex flex-col h-full min-h-0 gap-2">
+      <div className="relative overflow-hidden rounded-2xl bg-slate-900 px-4 py-3 shadow-xl shrink-0">
+        <div className="relative flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
           <div>
-            <h2 className="text-xl font-black text-white tracking-tight">إدارة المنتجات</h2>
-            <p className="text-slate-400 text-sm">تحكم في المخزون والفئات</p>
+            <h2 className="text-lg font-black text-white tracking-tight">إدارة المنتجات</h2>
+            <p className="text-slate-400 text-xs">تحكم في المخزون والفئات</p>
           </div>
 
           <div className="grid grid-cols-3 gap-2 w-full lg:w-auto">
-            <div className="bg-white/5 border border-white/10 p-3 rounded-xl min-w-0">
+            <div className="bg-white/5 border border-white/10 p-2 rounded-xl min-w-0">
               <p className="text-white/50 text-[9px] font-bold uppercase mb-0.5">المنتجات</p>
-              <p className="text-lg font-black text-white">{products.length}</p>
+              <p className="text-base font-black text-white">{products.length}</p>
             </div>
-            <div className="bg-white/5 border border-white/10 p-3 rounded-xl min-w-0">
+            <div className="bg-white/5 border border-white/10 p-2 rounded-xl min-w-0">
               <p className="text-white/50 text-[9px] font-bold uppercase mb-0.5">الفئات</p>
-              <p className="text-lg font-black text-white">{categories.length}</p>
+              <p className="text-base font-black text-white">{categories.length}</p>
             </div>
-            <div className="bg-blue-600/20 border border-blue-500/30 p-3 rounded-xl min-w-0">
+            <div className="bg-blue-600/20 border border-blue-500/30 p-2 rounded-xl min-w-0">
               <p className="text-blue-400 text-[9px] font-bold uppercase mb-0.5">نقص المخزون</p>
-              <p className="text-lg font-black text-blue-400">{products.filter(p => p.stock < 5).length}</p>
+              <p className="text-base font-black text-blue-400">{products.filter(p => p.stock < 5).length}</p>
             </div>
           </div>
         </div>
       </div>
 
-      <Tabs defaultValue="products" dir="rtl" className="w-full">
-        <TabsList className="w-full h-11 rounded-xl bg-slate-100 dark:bg-slate-900 p-1">
+      <Tabs defaultValue="products" dir="rtl" className="flex flex-col flex-1 min-h-0 w-full">
+        <TabsList className="w-full h-10 rounded-xl bg-slate-100 dark:bg-slate-900 p-1 shrink-0">
           <TabsTrigger value="products" className="flex-1 rounded-lg font-bold text-sm">
             المنتجات ({products.length})
           </TabsTrigger>
@@ -179,7 +186,7 @@ const ProductManagement = () => {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="categories" className="mt-3">
+        <TabsContent value="categories" className="flex-1 min-h-0 mt-2 data-[state=inactive]:hidden">
           <CategoryManagement
             categories={categories}
             onCategoriesUpdate={setCategories}
@@ -187,8 +194,8 @@ const ProductManagement = () => {
           />
         </TabsContent>
 
-        <TabsContent value="products" className="mt-3 space-y-3">
-          <div className="flex flex-col md:flex-row gap-3 items-center justify-between bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
+        <TabsContent value="products" className="flex flex-col flex-1 min-h-0 mt-2 data-[state=inactive]:hidden">
+          <div className="flex flex-col md:flex-row gap-2 items-center justify-between bg-white dark:bg-slate-900 p-2 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm shrink-0">
             <div className="flex-1 w-full">
               <ProductFilters searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
             </div>
@@ -204,35 +211,35 @@ const ProductManagement = () => {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2">
-            {paginatedProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                categories={categories}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                getCategoryColor={getCategoryColor}
-              />
-            ))}
+          <div ref={gridRef} className="flex-1 min-h-0 mt-2">
+            {paginatedProducts.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-center bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
+                <Package className="w-10 h-10 mb-2 text-slate-300" />
+                <h3 className="text-sm font-bold text-slate-400">لا توجد منتجات مطابقة للبحث</h3>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2 h-full content-start">
+                {paginatedProducts.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    categories={categories}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    getCategoryColor={getCategoryColor}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
-          {paginatedProducts.length === 0 && (
-            <div className="text-center py-12 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
-              <Package className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-              <h3 className="text-base font-bold text-slate-400">لا توجد منتجات مطابقة للبحث</h3>
-            </div>
-          )}
-
-          {totalPages > 1 && (
-            <div className="flex justify-center pt-2">
-              <ProductPagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
-            </div>
-          )}
+          <div className="shrink-0">
+            <ProductPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </div>
         </TabsContent>
       </Tabs>
     </div>

@@ -4,5 +4,14 @@ export const IMAGE_BASE_URL = API_BASE_URL.replace("/public/api", "");
 
 export function getProductImageUrl(imagePath?: string | null): string | null {
   if (!imagePath) return null;
-  return `${IMAGE_BASE_URL}/${imagePath}`;
+  if (
+    imagePath.startsWith("data:") ||
+    imagePath.startsWith("http://") ||
+    imagePath.startsWith("https://")
+  ) {
+    return imagePath;
+  }
+  const base = IMAGE_BASE_URL.replace(/\/$/, "");
+  const path = imagePath.replace(/^\//, "");
+  return `${base}/${path}`;
 }
