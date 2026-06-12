@@ -10,7 +10,7 @@ import CategoriesSidebar from "./CategoriesSidebar";
 import { useSalesData } from "@/hooks/useSalesData";
 import { useCart } from "@/hooks/useCart";
 import { printInvoice } from "@/lib/invoicePrinter";
-import type { PaymentMethod } from "@/types/salesInvoice";
+import type { OrderType, PaymentMethod, PaymentStatus } from "@/types/salesInvoice";
 
 import { BarcodeScanner } from "./sales/BarcodeScanner";
 import { ProductGrid } from "./sales/ProductGrid";
@@ -53,6 +53,8 @@ const SalesInterface = ({
   const [showCloseShiftDialog, setShowCloseShiftDialog] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [kitchenNote, setKitchenNote] = useState("");
+  const [orderType, setOrderType] = useState<OrderType>("takeaway");
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("paid");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [amountPaid, setAmountPaid] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -117,9 +119,12 @@ const SalesInterface = ({
     }
 
     const total = calculateTotal();
-    const paid = paymentMethod === "cash" ? parseFloat(amountPaid) || total : total;
+    const isPaid = paymentStatus === "paid";
+    const paid = isPaid
+      ? (paymentMethod === "cash" ? parseFloat(amountPaid) || total : total)
+      : 0;
 
-    if (paymentMethod === "cash" && paid < total) {
+    if (isPaid && paymentMethod === "cash" && paid < total) {
       toast({ title: "المبلغ المدفوع أقل من الإجمالي", variant: "destructive" });
       return;
     }
@@ -145,8 +150,9 @@ const SalesInterface = ({
       employee_id: selectedEmployee,
       payment_method: paymentMethod,
       amount_paid: paid,
-      change_given: Math.max(0, paid - total),
-      payment_status: "paid",
+      change_given: isPaid ? Math.max(0, paid - total) : 0,
+      payment_status: paymentStatus,
+      order_type: orderType,
     };
 
     const finishSuccess = () => {
@@ -157,6 +163,8 @@ const SalesInterface = ({
       if (user?.type !== "employee") setSelectedEmployee("");
       setShowEmployeeDialog(false);
       setKitchenNote("");
+      setOrderType("takeaway");
+      setPaymentStatus("paid");
       setPaymentMethod("cash");
     };
 
@@ -295,6 +303,10 @@ const SalesInterface = ({
         employees={employees}
         kitchenNote={kitchenNote}
         setKitchenNote={setKitchenNote}
+        orderType={orderType}
+        setOrderType={setOrderType}
+        paymentStatus={paymentStatus}
+        setPaymentStatus={setPaymentStatus}
         paymentMethod={paymentMethod}
         setPaymentMethod={setPaymentMethod}
         amountPaid={amountPaid}

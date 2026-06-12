@@ -1,3 +1,6 @@
+import type { OrderType, PaymentStatus } from "@/types/salesInvoice";
+import { orderTypeLabels } from "@/types/salesInvoice";
+
 export interface InvoiceData {
   invoiceNumber: string;
   date: string;
@@ -6,13 +9,23 @@ export interface InvoiceData {
   total: number;
   items: any[];
   kitchen_note?: string;
+  order_type?: OrderType;
+  payment_status?: PaymentStatus;
 }
+
+const paymentStatusLabels: Record<string, string> = {
+  paid: "مدفوع",
+  unpaid: "غير مدفوع",
+  partial: "مدفوع جزئياً",
+};
 
 export const printInvoice = (data: InvoiceData, isKitchenCopy = false) => {
   const printWindow = window.open("", "_blank", "width=400,height=600");
   if (!printWindow) return;
 
   const sizeMap: any = { s: "صغير", m: "وسط", l: "كبير" };
+  const orderLabel = data.order_type ? orderTypeLabels[data.order_type] : "تيك اوي";
+  const paymentLabel = data.payment_status ? paymentStatusLabels[data.payment_status] : "مدفوع";
 
   const html = `
     <html lang="ar" dir="rtl">
@@ -52,6 +65,8 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false) => {
           <tr><td>رقم الفاتورة:</td><td class="bold">${data.invoiceNumber}</td></tr>
           <tr><td>التاريخ:</td><td>${data.date} ${data.time}</td></tr>
           <tr><td>الكاشير:</td><td>${data.employeeName}</td></tr>
+          <tr><td>نوع الطلب:</td><td class="bold">${orderLabel}</td></tr>
+          ${!isKitchenCopy ? `<tr><td>حالة الدفع:</td><td class="bold">${paymentLabel}</td></tr>` : ""}
         </table>
         
         ${isKitchenCopy && data.kitchen_note

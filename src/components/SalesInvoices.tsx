@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { printInvoice } from "@/lib/invoicePrinter";
 import type { SaleInvoice, InvoiceStatus, PaymentStatus } from "@/types/salesInvoice";
+import { orderTypeLabels } from "@/types/salesInvoice";
 
 const statusLabels: Record<InvoiceStatus, string> = {
   completed: "مكتملة",
@@ -122,6 +123,8 @@ const SalesInvoices = () => {
         total: selectedInvoice.total,
         items: selectedInvoice.items,
         kitchen_note: selectedInvoice.kitchen_note,
+        order_type: selectedInvoice.order_type,
+        payment_status: selectedInvoice.payment_status,
       }, false);
       toast({ title: "تمت الطباعة" });
     } catch (error: any) {
@@ -189,6 +192,7 @@ const SalesInvoices = () => {
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge>{statusLabels[invoice.status || "completed"]}</Badge>
                     <Badge variant="outline">{paymentLabels[invoice.payment_status || "paid"]}</Badge>
+                    <Badge variant="secondary">{orderTypeLabels[invoice.order_type || "takeaway"]}</Badge>
                   </div>
                   <h3 className="font-black text-lg">{invoice.invoiceNumber}</h3>
                   <div className="flex gap-4 text-sm text-muted-foreground">
@@ -208,47 +212,50 @@ const SalesInvoices = () => {
       </div>
 
       <Dialog open={isInvoiceDialogOpen} onOpenChange={setIsInvoiceDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90dvh] overflow-y-auto rounded-[2rem]" dir="rtl">
+        <DialogContent className="max-w-4xl max-h-[90dvh] flex flex-col overflow-hidden rounded-[2rem]" dir="rtl">
           {selectedInvoice && (
-            <div className="space-y-6">
-              <DialogHeader>
-                <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-6 min-h-0 flex-1">
+              <DialogHeader className="shrink-0">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Badge>{statusLabels[selectedInvoice.status || "completed"]}</Badge>
                   <Badge variant="outline">{paymentLabels[selectedInvoice.payment_status || "paid"]}</Badge>
+                  <Badge variant="secondary">{orderTypeLabels[selectedInvoice.order_type || "takeaway"]}</Badge>
                 </div>
                 <DialogTitle className="text-2xl font-black">تفاصيل الفاتورة {selectedInvoice.invoiceNumber}</DialogTitle>
               </DialogHeader>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm shrink-0">
                 <div><p className="text-muted-foreground">التاريخ</p><p className="font-bold">{selectedInvoice.date}</p></div>
                 <div><p className="text-muted-foreground">الوقت</p><p className="font-bold">{selectedInvoice.time}</p></div>
                 <div><p className="text-muted-foreground">البائع</p><p className="font-bold">{selectedInvoice.cashier}</p></div>
                 <div><p className="text-muted-foreground">الإجمالي</p><p className="font-bold">{Number(selectedInvoice.total).toFixed(2)} ج</p></div>
               </div>
 
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-right">المنتج</TableHead>
-                    <TableHead className="text-right">السعر</TableHead>
-                    <TableHead className="text-center">الكمية</TableHead>
-                    <TableHead className="text-left">الإجمالي</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {selectedInvoice.items.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{item.name}</TableCell>
-                      <TableCell>{Number(item.price).toFixed(2)}</TableCell>
-                      <TableCell className="text-center">{item.quantity}</TableCell>
-                      <TableCell>{(item.price * item.quantity).toFixed(2)}</TableCell>
+              <div className="min-h-0 max-h-[40dvh] overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                <Table>
+                  <TableHeader className="sticky top-0 z-10 bg-background">
+                    <TableRow>
+                      <TableHead className="text-right">المنتج</TableHead>
+                      <TableHead className="text-right">السعر</TableHead>
+                      <TableHead className="text-center">الكمية</TableHead>
+                      <TableHead className="text-left">الإجمالي</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {selectedInvoice.items.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{item.name}</TableCell>
+                        <TableCell>{Number(item.price).toFixed(2)}</TableCell>
+                        <TableCell className="text-center">{item.quantity}</TableCell>
+                        <TableCell>{(item.price * item.quantity).toFixed(2)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
 
               {isManagerOrAbove && selectedInvoice.status !== "void" && (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 shrink-0">
                   <Button variant="destructive" onClick={handleVoid}>إلغاء الفاتورة</Button>
                   <Button variant="outline" onClick={togglePaymentStatus}>
                     {selectedInvoice.payment_status === "paid" ? "تعيين غير مدفوعة" : "تعيين مدفوعة"}
@@ -266,7 +273,7 @@ const SalesInvoices = () => {
                 </div>
               )}
 
-              <div className="flex gap-3">
+              <div className="flex gap-3 shrink-0">
                 <Button className="flex-1 gap-2" onClick={handleReprint}>
                   <Printer className="w-4 h-4" /> إعادة طباعة
                 </Button>

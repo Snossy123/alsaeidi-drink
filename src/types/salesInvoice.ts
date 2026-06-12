@@ -1,6 +1,7 @@
 export type InvoiceStatus = "completed" | "void" | "refunded" | "partial_refund";
 export type PaymentStatus = "paid" | "unpaid" | "partial";
 export type PaymentMethod = "cash" | "card" | "mixed";
+export type OrderType = "takeaway" | "table";
 
 export interface SaleInvoiceItem {
   id?: string | number;
@@ -22,8 +23,14 @@ export interface SaleInvoice {
   status?: InvoiceStatus;
   payment_status?: PaymentStatus;
   payment_method?: PaymentMethod;
+  order_type?: OrderType;
   amount_paid?: number;
   change_given?: number;
   refund_amount?: number;
   kitchen_note?: string;
 }
+
+export const orderTypeLabels: Record<OrderType, string> = {
+  takeaway: "تيك اوي",
+  table: "طربيزة",
+};

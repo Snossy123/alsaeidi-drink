@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Employee } from "@/hooks/useSalesData";
-import type { PaymentMethod } from "@/types/salesInvoice";
+import type { OrderType, PaymentMethod, PaymentStatus } from "@/types/salesInvoice";
 
 interface CheckoutDialogProps {
   showEmployeeDialog: boolean;
@@ -15,6 +15,10 @@ interface CheckoutDialogProps {
   employees: Employee[];
   kitchenNote: string;
   setKitchenNote: (value: string) => void;
+  orderType: OrderType;
+  setOrderType: (value: OrderType) => void;
+  paymentStatus: PaymentStatus;
+  setPaymentStatus: (value: PaymentStatus) => void;
   paymentMethod: PaymentMethod;
   setPaymentMethod: (value: PaymentMethod) => void;
   amountPaid: string;
@@ -31,6 +35,10 @@ export const CheckoutDialog = ({
   employees,
   kitchenNote,
   setKitchenNote,
+  orderType,
+  setOrderType,
+  paymentStatus,
+  setPaymentStatus,
   paymentMethod,
   setPaymentMethod,
   amountPaid,
@@ -39,6 +47,7 @@ export const CheckoutDialog = ({
   handleCheckout,
 }: CheckoutDialogProps) => {
   const change = Math.max(0, (parseFloat(amountPaid) || 0) - total);
+  const isPaid = paymentStatus === "paid";
 
   return (
     <Dialog open={showEmployeeDialog} onOpenChange={setShowEmployeeDialog}>
@@ -71,31 +80,61 @@ export const CheckoutDialog = ({
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs font-black text-slate-500 uppercase tracking-widest mr-1">طريقة الدفع</Label>
-            <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
+            <Label className="text-xs font-black text-slate-500 uppercase tracking-widest mr-1">نوع الطلب</Label>
+            <Select value={orderType} onValueChange={(v) => setOrderType(v as OrderType)}>
               <SelectTrigger className="w-full h-11 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl px-4 text-sm font-black">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="cash">نقدي</SelectItem>
-                <SelectItem value="card">بطاقة</SelectItem>
+                <SelectItem value="takeaway">تيك اوي</SelectItem>
+                <SelectItem value="table">طربيزة</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {paymentMethod === "cash" && (
-            <div className="space-y-2">
-              <Label className="text-xs font-black text-slate-500 uppercase tracking-widest mr-1">المبلغ المدفوع</Label>
-              <Input
-                type="number"
-                min={total}
-                step="0.01"
-                value={amountPaid}
-                onChange={(e) => setAmountPaid(e.target.value)}
-                className="h-11"
-              />
-              <p className="text-sm font-bold text-emerald-600">الباقي: {change.toFixed(2)} ج</p>
-            </div>
+          <div className="space-y-2">
+            <Label className="text-xs font-black text-slate-500 uppercase tracking-widest mr-1">حالة الدفع</Label>
+            <Select value={paymentStatus} onValueChange={(v) => setPaymentStatus(v as PaymentStatus)}>
+              <SelectTrigger className="w-full h-11 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl px-4 text-sm font-black">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="paid">مدفوع</SelectItem>
+                <SelectItem value="unpaid">غير مدفوع</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {isPaid && (
+            <>
+              <div className="space-y-2">
+                <Label className="text-xs font-black text-slate-500 uppercase tracking-widest mr-1">طريقة الدفع</Label>
+                <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
+                  <SelectTrigger className="w-full h-11 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl px-4 text-sm font-black">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash">نقدي</SelectItem>
+                    <SelectItem value="card">بطاقة</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {paymentMethod === "cash" && (
+                <div className="space-y-2">
+                  <Label className="text-xs font-black text-slate-500 uppercase tracking-widest mr-1">المبلغ المدفوع</Label>
+                  <Input
+                    type="number"
+                    min={total}
+                    step="0.01"
+                    value={amountPaid}
+                    onChange={(e) => setAmountPaid(e.target.value)}
+                    className="h-11"
+                  />
+                  <p className="text-sm font-bold text-emerald-600">الباقي: {change.toFixed(2)} ج</p>
+                </div>
+              )}
+            </>
           )}
 
           <div className="space-y-2">
