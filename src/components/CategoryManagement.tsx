@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useGridCategoryItemsPerPage } from "@/hooks/useGridCategoryItemsPerPage";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,9 +10,9 @@ import { Plus, Edit, Trash2, Tag, Package, ChevronRight, ChevronLeft } from "luc
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/lib/constants";
 
-const ITEMS_PER_PAGE = 8; // عدد الفئات في كل صفحة
-
 const CategoryManagement = ({ categories, onCategoriesUpdate }: any) => {
+  const gridRef = useRef<HTMLDivElement>(null);
+  const itemsPerPage = useGridCategoryItemsPerPage(gridRef);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -26,11 +27,17 @@ const CategoryManagement = ({ categories, onCategoriesUpdate }: any) => {
   const API_URL = API_BASE_URL + "/categories";
 
   // حسابات Pagination
-  const totalPages = Math.ceil(categories.length / ITEMS_PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(categories.length / itemsPerPage));
   const paginatedCategories = categories.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,7 +147,7 @@ const CategoryManagement = ({ categories, onCategoriesUpdate }: any) => {
         </div>
       </CardHeader>
 
-      <CardContent className="p-5">
+      <CardContent ref={gridRef} className="p-5 min-h-[280px]">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-6 gap-3">
           {paginatedCategories.map((category) => (
             <div

@@ -197,7 +197,7 @@ const SalesInterface = ({
       </div>
 
       {/* 3. Left Column: Cart */}
-      <div className="w-full lg:w-60 xl:w-64 2xl:w-72 shrink-0 h-auto lg:h-full overflow-hidden">
+      <div className="w-full lg:w-64 xl:w-72 2xl:w-80 shrink-0 h-auto lg:h-full overflow-hidden">
         <CartSection
           cart={cart}
           removeFromCart={removeFromCart}

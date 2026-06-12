@@ -183,7 +183,7 @@ export function IndexLayout() {
                     {!isSalesTab && (
                         <div className="absolute top-0 right-0 w-[150px] h-[150px] lg:w-[400px] lg:h-[400px] bg-primary/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
                     )}
-                    <div className={`relative z-10 ${isSalesTab ? "h-full" : "h-full"}`}>
+                    <div className={`relative z-10 ${isSalesTab ? "h-full" : "min-h-0"}`}>
                         {renderContent()}
                     </div>
                 </main>
