@@ -21,10 +21,10 @@ export const CartSection = ({
   openEmployeeDialog
 }: CartSectionProps) => {
   return (
-    <Card className="h-full flex flex-col bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl border border-white/20 dark:border-slate-800 shadow-2xl rounded-[2.5rem] overflow-hidden relative z-10">
+    <Card className="h-full flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-lg rounded-xl overflow-hidden relative z-10">
 
       {/* Cart Header */}
-      <CardHeader className="py-4 lg:py-6 px-4 lg:px-6 border-b border-slate-100 dark:border-slate-800/50 shrink-0">
+      <CardHeader className="py-2 px-3 border-b border-slate-100 dark:border-slate-800/50 shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-600/20">
@@ -39,7 +39,7 @@ export const CartSection = ({
       </CardHeader>
 
       {/* Cart Items */}
-      <CardContent className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide">
+      <CardContent className="flex-1 overflow-y-auto p-2 space-y-2 scrollbar-hide min-h-0">
         {cart.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-slate-300 dark:text-slate-700 gap-4 opacity-50">
             <div className="w-16 h-16 rounded-full border-4 border-dashed border-current flex items-center justify-center">
@@ -110,7 +110,7 @@ export const CartSection = ({
       </CardContent>
 
       {/* Footer: Grand Total */}
-      <div className="p-4 lg:p-6 space-y-4 lg:space-y-6 bg-slate-900 dark:bg-black/40 relative overflow-hidden shrink-0 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+      <div className="p-3 space-y-3 bg-slate-900 dark:bg-black/40 relative overflow-hidden shrink-0">
         <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
         
         <div className="flex justify-between items-end relative z-10">
@@ -119,7 +119,7 @@ export const CartSection = ({
             <p className="text-[10px] text-blue-400 font-bold italic">شامل ضريبة القيمة المضافة</p>
           </div>
           <div className="text-left">
-            <span className="text-3xl lg:text-4xl 2xl:text-5xl font-black text-white tracking-tighter leading-none block">
+            <span className="text-2xl font-black text-white tracking-tighter leading-none block">
               {calculateTotal().toFixed(2)}
             </span>
             <span className="text-sm font-black text-blue-500 uppercase ml-1 tracking-widest mt-1 block">جنيه مصري</span>
@@ -130,13 +130,13 @@ export const CartSection = ({
           <Button
             variant="outline"
             size="icon"
-            className="h-12 w-12 2xl:h-14 2xl:w-14 rounded-2xl border-white/5 bg-white/5 hover:bg-white/10 text-white shrink-0 active:scale-90 transition-all"
+            className="h-10 w-10 rounded-xl border-white/5 bg-white/5 hover:bg-white/10 text-white shrink-0 active:scale-90 transition-all"
           >
             <Printer className="w-5 h-5" />
           </Button>
           <Button
             onClick={openEmployeeDialog}
-            className="flex-1 h-12 2xl:h-14 rounded-2xl bg-blue-600 hover:bg-blue-500 shadow-xl shadow-blue-600/20 font-black text-white tracking-wide active:scale-95 transition-all text-base"
+            className="flex-1 h-10 rounded-xl bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/20 font-black text-white tracking-wide active:scale-95 transition-all text-sm"
           >
             إتمام العملية الآن
           </Button>

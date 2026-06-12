@@ -23,15 +23,14 @@ export default function CategoriesSidebar({
     return (
         <aside 
             className="
-                w-full
+                w-full h-full
                 bg-white dark:bg-slate-900 
                 border border-slate-100 dark:border-slate-800 
-                rounded-[2rem] 
-                p-2 lg:p-4 
-                flex lg:flex-col items-center lg:items-stretch gap-2 lg:gap-3 
-                shadow-xl lg:shadow-2xl 
-                lg:h-fit lg:sticky lg:top-0 
-                overflow-x-auto lg:overflow-visible
+                rounded-xl 
+                p-2 
+                flex lg:flex-col items-center lg:items-stretch gap-2 
+                shadow-lg 
+                overflow-x-auto lg:overflow-hidden
                 scrollbar-hide
             " 
             dir="rtl"
@@ -44,7 +43,7 @@ export default function CategoriesSidebar({
             {/* "All" Button */}
             <Button
                 className={`
-                    h-12 w-auto px-6 whitespace-nowrap lg:h-12 2xl:h-14 lg:w-full lg:whitespace-normal
+                    h-10 w-auto px-4 whitespace-nowrap lg:h-10 lg:w-full lg:whitespace-normal
                     text-sm font-black rounded-2xl touch-manipulation active:scale-95 transition-all duration-300 relative overflow-hidden group shrink-0
                     ${selectedCategory === null
                         ? "bg-slate-900 text-white shadow-xl shadow-slate-900/20"
@@ -61,7 +60,7 @@ export default function CategoriesSidebar({
             </Button>
 
             {/* Mobile Categories - Horizontal Scroll / Desktop Vertical Stack */}
-            <div className="flex lg:flex-col gap-2.5">
+            <div className="flex lg:flex-col gap-2 lg:flex-1 lg:min-h-0 lg:overflow-y-auto scrollbar-hide">
                 {/* On Mobile: Show ALL categories in horizontal scroll, easier than pagination */}
                 {/* On Desktop: Use pagination if list is long, or just scroll if we prefer. 
                     Keeping pagination for desktop as requested originally, 
@@ -134,7 +133,7 @@ function CategoryButton({ cat, selectedCategory, setSelectedCategory }: any) {
         <Button
             onClick={() => setSelectedCategory(cat.id)}
             className={`
-                h-12 lg:h-12 2xl:h-14
+                h-10 lg:h-10
                 text-[13px] font-black rounded-2xl 
                 justify-start gap-3 lg:gap-4 px-4 
                 touch-manipulation active:scale-95 transition-all duration-300 relative overflow-hidden border-none group 

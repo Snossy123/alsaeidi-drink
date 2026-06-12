@@ -1,11 +1,8 @@
 import { Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { API_BASE_URL } from "@/lib/constants";
+import { getProductImageUrl } from "@/lib/constants";
 import { Product } from "@/hooks/useSalesData";
-
-// Derive image base URL from API_BASE_URL (removing /public/api)
-const IMAGE_BASE_URL = API_BASE_URL.replace("/public/api", "");
 
 interface SizeSelectionDialogProps {
   showSizeDialog: boolean;
@@ -35,9 +32,9 @@ export const SizeSelectionDialog = ({
           {selectedProduct && (
             <div className="space-y-6 lg:space-y-8">
               <div className="flex flex-col items-center gap-4 lg:gap-6">
-                {selectedProduct.image ? (
+                {getProductImageUrl(selectedProduct.image) ? (
                   <div className="w-40 h-32 lg:w-48 lg:h-36 2xl:w-64 2xl:h-48 rounded-[2rem] overflow-hidden shadow-2xl bg-slate-50 dark:bg-slate-800 p-4 border border-slate-100 dark:border-slate-800">
-                    <img src={IMAGE_BASE_URL + "/" + selectedProduct.image} alt={selectedProduct.name} className="w-full h-full object-contain" />
+                    <img src={getProductImageUrl(selectedProduct.image)!} alt={selectedProduct.name} className="w-full h-full object-contain" />
                   </div>
                 ) : (
                   <div className="w-20 h-20 rounded-full bg-blue-600/10 flex items-center justify-center">

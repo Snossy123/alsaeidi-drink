@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSwipeable } from "react-swipeable";
-import { Calculator, Moon, Sun, LayoutDashboard, Settings, LogOut } from "lucide-react";
+import { Calculator, Moon, Sun, LogOut } from "lucide-react";
 
 import SalesInterface from "@/components/SalesInterface";
 import ProductManagement from "@/components/ProductManagement";
@@ -64,62 +64,75 @@ export function IndexLayout() {
     const { dark, toggle } = useDarkMode();
     const { toggleSidebar } = useSidebar();
 
+    const isSalesTab = activeTab === "sales";
+
     const swipeHandlers = useSwipeable({
-        onSwipedLeft: toggleSidebar,
-        onSwipedRight: toggleSidebar,
+        onSwipedLeft: isSalesTab ? undefined : toggleSidebar,
+        onSwipedRight: isSalesTab ? undefined : toggleSidebar,
         trackTouch: true,
     });
 
     const renderContent = () => {
         const components: Record<string, React.ReactNode> = {
-            "sales": <SalesInterface />,
+            "sales": <SalesInterface
+                activeTab={activeTab}
+                onNavigate={setActiveTab}
+                dark={dark}
+                onToggleDark={toggle}
+            />,
             "products": <ProductManagement />,
             "sales-invoices": <SalesInvoices />,
             "invoices": <PurchaseInvoices />,
             "employees": <Employees />,
             "reports": <ReportsSection />,
         };
-        
-        return components[activeTab] || <SalesInterface />;
+
+        return components[activeTab] || <SalesInterface
+            activeTab={activeTab}
+            onNavigate={setActiveTab}
+            dark={dark}
+            onToggleDark={toggle}
+        />;
     };
 
     return (
         <div
             {...swipeHandlers}
             dir="rtl"
-            className="flex min-h-svh w-full mesh-bg overflow-hidden"
+            className="flex h-svh w-full mesh-bg overflow-hidden"
         >
-            {/* Sidebar */}
-            <Sidebar
-                side="right"
-                collapsible="icon"
-                className="glass border-l border-white/10 dark:border-white/5"
-            >
-                <SidebarHeader className="p-4 lg:p-6 flex flex-row items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                        <CalculatorIconButton />
-                        <div className="group-data-[collapsible=icon]:hidden">
-                            <h2 className="text-lg font-display font-black tracking-tighter">سنسو POS</h2>
-                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">Smart Operations</p>
+            {/* Sidebar — hidden on POS tab */}
+            {!isSalesTab && (
+                <Sidebar
+                    side="right"
+                    collapsible="icon"
+                    className="glass border-l border-white/10 dark:border-white/5"
+                >
+                    <SidebarHeader className="p-4 lg:p-6 flex flex-row items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                            <CalculatorIconButton />
+                            <div className="group-data-[collapsible=icon]:hidden">
+                                <h2 className="text-lg font-display font-black tracking-tighter">سنسو POS</h2>
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">Smart Operations</p>
+                            </div>
                         </div>
-                    </div>
-                </SidebarHeader>
+                    </SidebarHeader>
 
-                <SidebarContent className="p-4">
-                    <SidebarGroup>
-                        <SidebarGroupLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 mb-4 group-data-[collapsible=icon]:hidden">
-                            القائمة الرئيسية
-                        </SidebarGroupLabel>
+                    <SidebarContent className="p-4">
+                        <SidebarGroup>
+                            <SidebarGroupLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 mb-4 group-data-[collapsible=icon]:hidden">
+                                القائمة الرئيسية
+                            </SidebarGroupLabel>
 
-                        <SidebarGroupContent>
-                            <SidebarMenu className="gap-2 2xl:gap-3">
-                                {MENU_ITEMS.map(({ value, label, icon: Icon }) => (
-                                    <SidebarMenuItem key={value}>
-                                        <SidebarMenuButton
-                                            size="lg"
-                                            isActive={activeTab === value}
-                                            onClick={() => setActiveTab(value)}
-                                            className="
+                            <SidebarGroupContent>
+                                <SidebarMenu className="gap-2 2xl:gap-3">
+                                    {MENU_ITEMS.map(({ value, label, icon: Icon }) => (
+                                        <SidebarMenuItem key={value}>
+                                            <SidebarMenuButton
+                                                size="lg"
+                                                isActive={activeTab === value}
+                                                onClick={() => setActiveTab(value)}
+                                                className="
                         h-11 lg:h-12 2xl:h-14 text-base font-bold gap-4 rounded-2xl
                         transition-all duration-300
                         hover:bg-primary/10 hover:text-primary
@@ -129,43 +142,48 @@ export function IndexLayout() {
                         data-[active=true]:shadow-primary/30
                         data-[active=true]:scale-[1.02]
                       "
-                                        >
-                                            <Icon className="w-5 h-5" />
-                                            <span>{label}</span>
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
-                                ))}
-                            </SidebarMenu>
-                        </SidebarGroupContent>
-                    </SidebarGroup>
-                </SidebarContent>
+                                            >
+                                                <Icon className="w-5 h-5" />
+                                                <span>{label}</span>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                    ))}
+                                </SidebarMenu>
+                            </SidebarGroupContent>
+                        </SidebarGroup>
+                    </SidebarContent>
 
-                <div className="mt-auto p-4 border-t border-white/5 space-y-2">
-                    <button
-                        onClick={toggle}
-                        className="w-full h-12 rounded-xl flex items-center justify-center gap-3 text-muted-foreground hover:bg-white/5 transition-colors group-data-[collapsible=icon]:p-0"
-                    >
-                        {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                        <span className="group-data-[collapsible=icon]:hidden font-bold text-sm">{dark ? "الوضع النهاري" : "الوضع الليلي"}</span>
-                    </button>
-                    <button className="w-full h-12 rounded-xl flex items-center justify-center gap-3 text-red-500 hover:bg-red-500/10 transition-colors group-data-[collapsible=icon]:p-0">
-                        <LogOut className="w-5 h-5" />
-                        <span className="group-data-[collapsible=icon]:hidden font-bold text-sm">تسجيل الخروج</span>
-                    </button>
-                </div>
+                    <div className="mt-auto p-4 border-t border-white/5 space-y-2">
+                        <button
+                            onClick={toggle}
+                            className="w-full h-12 rounded-xl flex items-center justify-center gap-3 text-muted-foreground hover:bg-white/5 transition-colors group-data-[collapsible=icon]:p-0"
+                        >
+                            {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                            <span className="group-data-[collapsible=icon]:hidden font-bold text-sm">{dark ? "الوضع النهاري" : "الوضع الليلي"}</span>
+                        </button>
+                        <button className="w-full h-12 rounded-xl flex items-center justify-center gap-3 text-red-500 hover:bg-red-500/10 transition-colors group-data-[collapsible=icon]:p-0">
+                            <LogOut className="w-5 h-5" />
+                            <span className="group-data-[collapsible=icon]:hidden font-bold text-sm">تسجيل الخروج</span>
+                        </button>
+                    </div>
 
-                <SidebarRail />
-            </Sidebar>
+                    <SidebarRail />
+                </Sidebar>
+            )}
 
             {/* Main */}
-            <SidebarInset className="bg-transparent overflow-hidden">
-                <main className="h-full overflow-y-auto lg:overflow-hidden p-0 md:p-4 lg:p-6 relative">
-                    <div className="lg:hidden sticky top-0 z-20 flex items-center gap-3 p-3 bg-background/80 backdrop-blur-md border-b border-border/50">
-                        <SidebarTrigger className="h-10 w-10 shrink-0" />
-                        <span className="font-display font-black text-sm">سنسو POS</span>
-                    </div>
-                    <div className="absolute top-0 right-0 w-[150px] h-[150px] lg:w-[400px] lg:h-[400px] bg-primary/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-                    <div className="relative z-10 h-full">
+            <SidebarInset className={`bg-transparent overflow-hidden w-full flex-1 ${isSalesTab ? "h-svh min-h-0" : ""}`}>
+                <main className={`h-full relative ${isSalesTab ? "overflow-hidden p-0" : "overflow-y-auto lg:overflow-hidden p-0 md:p-4 lg:p-6"}`}>
+                    {!isSalesTab && (
+                        <div className="lg:hidden sticky top-0 z-20 flex items-center gap-3 p-3 bg-background/80 backdrop-blur-md border-b border-border/50">
+                            <SidebarTrigger className="h-10 w-10 shrink-0" />
+                            <span className="font-display font-black text-sm">سنسو POS</span>
+                        </div>
+                    )}
+                    {!isSalesTab && (
+                        <div className="absolute top-0 right-0 w-[150px] h-[150px] lg:w-[400px] lg:h-[400px] bg-primary/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+                    )}
+                    <div className={`relative z-10 ${isSalesTab ? "h-full" : "h-full"}`}>
                         {renderContent()}
                     </div>
                 </main>
