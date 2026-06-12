@@ -172,8 +172,8 @@ export function IndexLayout() {
             )}
 
             {/* Main */}
-            <SidebarInset className={`bg-transparent overflow-hidden w-full flex-1 ${isSalesTab ? "h-svh min-h-0" : ""}`}>
-                <main className={`h-full relative ${isSalesTab ? "overflow-hidden p-0" : "overflow-y-auto lg:overflow-hidden p-0 md:p-4 lg:p-6"}`}>
+            <SidebarInset className="bg-transparent overflow-hidden w-full flex-1 h-svh min-h-0">
+                <main className={`h-full min-h-0 relative ${isSalesTab ? "overflow-hidden p-0" : "overflow-y-auto p-0 md:p-4 lg:p-6"}`}>
                     {!isSalesTab && (
                         <div className="lg:hidden sticky top-0 z-20 flex items-center gap-3 p-3 bg-background/80 backdrop-blur-md border-b border-border/50">
                             <SidebarTrigger className="h-10 w-10 shrink-0" />
