@@ -22,6 +22,7 @@ import {
     SidebarMenuItem,
     SidebarInset,
     SidebarRail,
+    SidebarTrigger,
     useSidebar,
 } from "@/components/ui/sidebar";
 
@@ -159,6 +160,10 @@ export function IndexLayout() {
             {/* Main */}
             <SidebarInset className="bg-transparent overflow-hidden">
                 <main className="h-full overflow-y-auto lg:overflow-hidden p-0 md:p-4 lg:p-6 relative">
+                    <div className="lg:hidden sticky top-0 z-20 flex items-center gap-3 p-3 bg-background/80 backdrop-blur-md border-b border-border/50">
+                        <SidebarTrigger className="h-10 w-10 shrink-0" />
+                        <span className="font-display font-black text-sm">سنسو POS</span>
+                    </div>
                     <div className="absolute top-0 right-0 w-[150px] h-[150px] lg:w-[400px] lg:h-[400px] bg-primary/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
                     <div className="relative z-10 h-full">
                         {renderContent()}

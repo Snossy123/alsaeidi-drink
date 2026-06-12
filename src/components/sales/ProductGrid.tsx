@@ -156,6 +156,7 @@ const PaginationFooter = ({ currentPage, totalPages, setCurrentPage }: {
     <Button
       variant="outline"
       size="icon"
+      data-compact
       className="h-7 w-7 lg:h-10 lg:w-10 rounded-md lg:rounded-xl bg-white dark:bg-slate-900 border-none shadow-sm hover:shadow-xl active:scale-90 transition-all text-slate-400 hover:text-blue-600 disabled:opacity-20"
       onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
       disabled={currentPage === 1}
@@ -178,6 +179,7 @@ const PaginationFooter = ({ currentPage, totalPages, setCurrentPage }: {
     <Button
       variant="outline"
       size="icon"
+      data-compact
       className="h-7 w-7 lg:h-10 lg:w-10 rounded-md lg:rounded-xl bg-white dark:bg-slate-900 border-none shadow-sm hover:shadow-xl active:scale-90 transition-all text-slate-400 hover:text-blue-600 disabled:opacity-20"
       onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
       disabled={currentPage === totalPages || totalPages === 0}

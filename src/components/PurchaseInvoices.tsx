@@ -104,7 +104,7 @@ const PurchaseInvoices = () => {
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <PurchaseInvoiceHeader invoiceCount={invoices.length} />
         
-        <DialogContent className="max-w-6xl p-0 overflow-hidden rounded-[3rem] border-none bg-white dark:bg-slate-900 shadow-[0_30px_100px_rgba(0,0,0,0.3)]" dir="rtl">
+        <DialogContent className="max-w-6xl max-h-[90dvh] p-0 overflow-y-auto rounded-[3rem] border-none bg-white dark:bg-slate-900 shadow-[0_30px_100px_rgba(0,0,0,0.3)]" dir="rtl">
           <AddPurchaseInvoiceForm 
             categories={categories} 
             onSubmit={handleInvoiceSubmit}
@@ -136,7 +136,7 @@ const PurchaseInvoices = () => {
 
       {/* Invoice Details Dialog */}
       <Dialog open={isInvoiceDialogOpen} onOpenChange={setIsInvoiceDialogOpen}>
-        <DialogContent className="max-w-5xl p-0 overflow-hidden rounded-[3rem] border-none bg-white dark:bg-slate-900 shadow-[0_30px_100px_rgba(0,0,0,0.3)]" dir="rtl">
+        <DialogContent className="max-w-5xl max-h-[90dvh] p-0 overflow-y-auto rounded-[3rem] border-none bg-white dark:bg-slate-900 shadow-[0_30px_100px_rgba(0,0,0,0.3)]" dir="rtl">
           <div className="bg-slate-900 p-8 text-white relative">
             <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/20 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2" />
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -150,7 +150,7 @@ const PurchaseInvoices = () => {
                 <h2 className="text-3xl font-black tracking-tight">تفاصيل فاتورة المشتريات {selectedInvoice?.invoice_number}</h2>
               </div>
               
-              <div className="text-left bg-white/5 backdrop-blur-xl p-4 rounded-3xl border border-white/10 min-w-[200px]">
+              <div className="text-left bg-white/5 backdrop-blur-xl p-4 rounded-3xl border border-white/10 min-w-0 flex-1">
                 <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest mb-1">إجمالي مشتريات الفاتورة</p>
                 <div className="text-3xl font-black text-white">{Number(selectedInvoice?.total).toFixed(2)} <span className="text-sm">جنية</span></div>
               </div>

@@ -148,7 +148,22 @@
     @apply select-none;
   }
 
-  button, a, [role="button"] {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .min-h-dvh {
+    min-height: 100dvh;
+  }
+
+  button:not([data-compact]),
+  a:not([data-compact]),
+  [role="button"]:not([data-compact]) {
     @apply min-h-[44px] min-w-[44px] transition-all duration-300 active:scale-95;
   }
 }

@@ -161,7 +161,7 @@ const SalesInterface = () => {
           handleBarcodeSubmit={handleBarcodeSubmit}
         />
 
-        <div className="flex-1 min-h-[500px] lg:min-h-0">
+        <div className="flex-1 min-h-[300px] lg:min-h-0">
           <ProductGrid 
             searchTerm={searchTerm}
             handleSearchChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}

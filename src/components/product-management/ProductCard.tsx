@@ -92,7 +92,7 @@ const ProductCard = ({
           </span>
         </div>
 
-        <div className="flex gap-2 pt-1 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+        <div className="flex gap-2 pt-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 translate-y-0 sm:translate-y-2 sm:group-hover:translate-y-0 transition-all duration-300">
           <Button
             variant="default"
             size="sm"

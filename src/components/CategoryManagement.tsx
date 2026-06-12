@@ -95,7 +95,7 @@ const CategoryManagement = ({ categories, onCategoriesUpdate }: any) => {
                 <Plus className="w-4 h-4 ml-2" /> إضافة فئة
               </Button>
             </DialogTrigger>
-            <DialogContent className="dark:bg-slate-900 dark:border-slate-800" dir="rtl">
+            <DialogContent className="max-h-[90dvh] overflow-y-auto dark:bg-slate-900 dark:border-slate-800" dir="rtl">
               <DialogHeader>
                 <DialogTitle className="dark:text-white">{editingCategory ? "تعديل الفئة" : "إضافة فئة جديدة"}</DialogTitle>
               </DialogHeader>
@@ -141,7 +141,7 @@ const CategoryManagement = ({ categories, onCategoriesUpdate }: any) => {
       </CardHeader>
 
       <CardContent className="p-5">
-        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-6 gap-3">
           {paginatedCategories.map((category) => (
             <div
               key={category.id}
@@ -157,7 +157,7 @@ const CategoryManagement = ({ categories, onCategoriesUpdate }: any) => {
 
               <p className="font-black text-xs text-slate-700 dark:text-slate-200 text-center truncate w-full px-1">{category.name}</p>
 
-              <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity absolute top-1 right-1">
+              <div className="flex gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity absolute top-1 right-1">
                 <Button size="icon" variant="ghost" onClick={() => handleEdit(category)} className="h-6 w-6 text-slate-400 hover:text-blue-500 rounded-full bg-white dark:bg-slate-950 shadow-sm border border-slate-100 dark:border-slate-800">
                   <Edit className="w-3 h-3" />
                 </Button>

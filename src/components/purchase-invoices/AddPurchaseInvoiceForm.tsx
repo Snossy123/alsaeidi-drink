@@ -139,7 +139,7 @@ const AddPurchaseInvoiceForm = ({ categories, onSubmit, onCancel }: AddPurchaseI
             </Button>
           </div>
           
-          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-hide">
+          <div className="space-y-4 max-h-[40vh] sm:max-h-[400px] overflow-y-auto pr-2 scrollbar-hide">
             {invoiceItems.map((item, index) => (
               <PurchaseInvoiceItemRow
                 key={index}

@@ -217,7 +217,7 @@ const Employees = () => {
                   إضافة موظف
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-lg rounded-[2.5rem] p-0 overflow-hidden border-none bg-white dark:bg-slate-900 shadow-2xl" dir="rtl">
+              <DialogContent className="max-w-lg max-h-[90dvh] rounded-[2.5rem] p-0 overflow-y-auto border-none bg-white dark:bg-slate-900 shadow-2xl" dir="rtl">
                 <div className="bg-slate-900 p-6 text-white text-center">
                   <DialogHeader>
                     <DialogTitle className="text-2xl font-black">{editingEmployee ? "تعديل بيانات الموظف" : "إضافة موظف جديد"}</DialogTitle>
@@ -225,7 +225,7 @@ const Employees = () => {
                   </DialogHeader>
                 </div>
                 <form onSubmit={handleSubmit} className="p-8 space-y-5">
-                  <div className="grid grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div className="space-y-2">
                       <Label className="text-xs font-black uppercase tracking-wider text-slate-400">الاسم الكامل</Label>
                       <Input
@@ -249,7 +249,7 @@ const Employees = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div className="space-y-2">
                       <Label className="text-xs font-black uppercase tracking-wider text-slate-400">المسمى الوظيفي</Label>
                       <Input
@@ -272,7 +272,7 @@ const Employees = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div className="space-y-2">
                       <Label className="text-xs font-black uppercase tracking-wider text-slate-400">الراتب الشهري</Label>
                       <div className="relative">
@@ -402,7 +402,7 @@ const Employees = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                           <Button
                             size="icon"
                             variant="ghost"

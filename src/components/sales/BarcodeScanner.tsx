@@ -1,6 +1,7 @@
 import { Barcode, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface BarcodeScannerProps {
   barcode: string;
@@ -9,6 +10,8 @@ interface BarcodeScannerProps {
 }
 
 export const BarcodeScanner = ({ barcode, setBarcode, handleBarcodeSubmit }: BarcodeScannerProps) => {
+  const isMobile = useIsMobile();
+
   return (
     <div className="flex flex-col md:flex-row items-center gap-2 bg-slate-900 rounded-xl lg:rounded-[2rem] p-2 lg:p-4 shadow-2xl relative overflow-hidden shrink-0">
       <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/20 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2" />
@@ -35,7 +38,7 @@ export const BarcodeScanner = ({ barcode, setBarcode, handleBarcodeSubmit }: Bar
           onChange={(e) => setBarcode(e.target.value)}
           placeholder="باركود..."
           className="flex-1 font-bold text-xs lg:text-sm h-8 lg:h-11 bg-transparent border-none text-white placeholder:text-slate-600 focus-visible:ring-0 focus-visible:ring-offset-0 min-w-[1px]"
-          autoFocus={window.innerWidth > 1024}
+          autoFocus={!isMobile}
         />
 
         <Button

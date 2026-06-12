@@ -29,7 +29,7 @@ export const CheckoutDialog = ({
 }: CheckoutDialogProps) => {
   return (
     <Dialog open={showEmployeeDialog} onOpenChange={setShowEmployeeDialog}>
-      <DialogContent className="max-w-xl p-0 overflow-hidden rounded-[3rem] border-none bg-white dark:bg-slate-900 shadow-2xl" dir="rtl">
+      <DialogContent className="max-w-xl max-h-[90dvh] p-0 overflow-y-auto rounded-[3rem] border-none bg-white dark:bg-slate-900 shadow-2xl" dir="rtl">
         <div className="bg-slate-900 p-8 text-white relative">
           <div className="absolute top-0 left-0 w-32 h-32 bg-purple-600/30 blur-[80px] rounded-full -translate-x-1/2 -translate-y-1/2" />
           <DialogHeader className="relative z-10 text-right">

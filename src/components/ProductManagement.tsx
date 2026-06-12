@@ -9,10 +9,10 @@ import ProductFilters from "./product-management/ProductFilters";
 import ProductCard from "./product-management/ProductCard";
 import ProductPagination from "./product-management/ProductPagination";
 import { Package } from "lucide-react";
-
-const ITEMS_PER_PAGE = 4;
+import { useGridColumns } from "@/hooks/useGridColumns";
 
 const ProductManagement = () => {
+  const { itemsPerPage } = useGridColumns();
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -63,10 +63,10 @@ const ProductManagement = () => {
   });
 
   // 📑 حسابات Pagination
-  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const paginatedProducts = filteredProducts.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
   // إعادة التعيين لصفحة 1 عند البحث
@@ -160,15 +160,15 @@ const ProductManagement = () => {
           </div>
           
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full lg:w-auto">
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-3xl min-w-[140px]">
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-3xl min-w-0 flex-1">
               <p className="text-white/50 text-[10px] font-bold uppercase tracking-widest mb-1">إجمالي المنتجات</p>
               <p className="text-2xl font-black text-white">{products.length}</p>
             </div>
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-3xl min-w-[140px]">
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-3xl min-w-0 flex-1">
               <p className="text-white/50 text-[10px] font-bold uppercase tracking-widest mb-1">الفئات</p>
               <p className="text-2xl font-black text-white">{categories.length}</p>
             </div>
-            <div className="bg-blue-600/20 backdrop-blur-md border border-blue-500/30 p-4 rounded-3xl min-w-[140px] hidden sm:block">
+            <div className="bg-blue-600/20 backdrop-blur-md border border-blue-500/30 p-4 rounded-3xl min-w-0 flex-1 hidden sm:block">
               <p className="text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-1">نقص المخزون</p>
               <p className="text-2xl font-black text-blue-400">{products.filter(p => p.stock < 5).length}</p>
             </div>

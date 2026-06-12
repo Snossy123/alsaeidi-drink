@@ -77,7 +77,7 @@ const SalesInvoices = () => {
               </div>
               <p className="text-2xl font-black text-white">{invoices.length}</p>
             </div>
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-4 px-6 min-w-[200px]">
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-4 px-6 min-w-0 flex-1">
               <div className="flex items-center gap-3 mb-1">
                 <ShoppingBag className="w-4 h-4 text-emerald-400" />
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">إجمالي المبيعات</span>
@@ -162,7 +162,7 @@ const SalesInvoices = () => {
 
       {/* Premium Invoice Details Dialog */}
       <Dialog open={isInvoiceDialogOpen} onOpenChange={setIsInvoiceDialogOpen}>
-        <DialogContent className="max-w-4xl p-0 overflow-hidden rounded-[3rem] border-none bg-white dark:bg-slate-900 shadow-[0_30px_100px_rgba(0,0,0,0.3)]" dir="rtl">
+        <DialogContent className="max-w-4xl max-h-[90dvh] p-0 overflow-y-auto rounded-[3rem] border-none bg-white dark:bg-slate-900 shadow-[0_30px_100px_rgba(0,0,0,0.3)]" dir="rtl">
           <div className="bg-slate-900 p-8 text-white relative">
             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/20 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2" />
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -178,7 +178,7 @@ const SalesInvoices = () => {
                 </DialogHeader>
               </div>
               
-              <div className="text-left bg-white/5 backdrop-blur-xl p-4 rounded-3xl border border-white/10 min-w-[200px]">
+              <div className="text-left bg-white/5 backdrop-blur-xl p-4 rounded-3xl border border-white/10 min-w-0 flex-1">
                 <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">المبلغ الإجمالي</p>
                 <div className="text-3xl font-black">{Number(selectedInvoice?.total).toFixed(2)} <span className="text-sm">جنية</span></div>
               </div>
@@ -189,7 +189,7 @@ const SalesInvoices = () => {
             {selectedInvoice && (
               <div className="space-y-8">
                 {/* Meta Grid */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                   {[
                     { label: "رقم الفاتورة", value: selectedInvoice.invoiceNumber, icon: Receipt, color: "text-blue-500" },
                     { label: "التاريخ", value: selectedInvoice.date, icon: Calendar, color: "text-purple-500" },
@@ -212,6 +212,7 @@ const SalesInvoices = () => {
                     <h3 className="text-lg font-black text-slate-800 dark:text-white">قائمة المنتجات المبيعة</h3>
                     <Badge variant="outline" className="text-slate-400 font-bold border-slate-200 dark:border-slate-800">{selectedInvoice.items.length} صنف</Badge>
                   </div>
+                  <div className="overflow-x-auto">
                   <Table>
                     <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
                       <TableRow className="border-slate-100 dark:border-slate-800">
@@ -236,6 +237,7 @@ const SalesInvoices = () => {
                       ))}
                     </TableBody>
                   </Table>
+                  </div>
                 </div>
 
                 {/* Final Actions */}
