@@ -10,6 +10,7 @@ import ProductCard from "./product-management/ProductCard";
 import ProductPagination from "./product-management/ProductPagination";
 import { Package } from "lucide-react";
 import { useGridColumns } from "@/hooks/useGridColumns";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ProductManagement = () => {
   const { itemsPerPage } = useGridColumns();
@@ -34,7 +35,6 @@ const ProductManagement = () => {
   const API_PRODUCTS_URL = API_BASE_URL + "/products";
   const API_CATEGORIES_URL = API_BASE_URL + "/categories";
 
-  // ✅ جلب البيانات
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -53,7 +53,6 @@ const ProductManagement = () => {
     fetchData();
   }, []);
 
-  // 🔍 تصفية المنتجات بناءً على البحث
   const filteredProducts = products.filter((product) => {
     const categoryName = categories.find((c) => Number(c.id) === product.category_id)?.name || "";
     return (
@@ -62,14 +61,12 @@ const ProductManagement = () => {
     );
   });
 
-  // 📑 حسابات Pagination
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage) || 1;
   const paginatedProducts = filteredProducts.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // إعادة التعيين لصفحة 1 عند البحث
   useEffect(() => { setCurrentPage(1); }, [searchTerm]);
 
   const handleSubmit = async (e: FormEvent) => {
@@ -147,49 +144,52 @@ const ProductManagement = () => {
   };
 
   return (
-    <div className="space-y-8 pb-20">
-      {/* Premium Dashboard Header */}
-      <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 px-8 py-10 shadow-2xl">
-        <div className="absolute top-0 right-0 w-1/3 h-full bg-blue-600/20 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-1/4 h-full bg-indigo-600/10 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/2" />
-        
-        <div className="relative flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
-          <div className="space-y-2">
-            <h2 className="text-2xl lg:text-3xl 2xl:text-4xl font-black text-white tracking-tight">إدارة المنتجات</h2>
-            <p className="text-slate-400 font-medium">تحكم كامل في مخزونك ومنتجاتك بكل سهولة</p>
+    <div className="space-y-4 pb-4">
+      <div className="relative overflow-hidden rounded-2xl bg-slate-900 px-5 py-5 shadow-xl">
+        <div className="relative flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+          <div>
+            <h2 className="text-xl font-black text-white tracking-tight">إدارة المنتجات</h2>
+            <p className="text-slate-400 text-sm">تحكم في المخزون والفئات</p>
           </div>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full lg:w-auto">
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-3xl min-w-0 flex-1">
-              <p className="text-white/50 text-[10px] font-bold uppercase tracking-widest mb-1">إجمالي المنتجات</p>
-              <p className="text-2xl font-black text-white">{products.length}</p>
+
+          <div className="grid grid-cols-3 gap-2 w-full lg:w-auto">
+            <div className="bg-white/5 border border-white/10 p-3 rounded-xl min-w-0">
+              <p className="text-white/50 text-[9px] font-bold uppercase mb-0.5">المنتجات</p>
+              <p className="text-lg font-black text-white">{products.length}</p>
             </div>
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-3xl min-w-0 flex-1">
-              <p className="text-white/50 text-[10px] font-bold uppercase tracking-widest mb-1">الفئات</p>
-              <p className="text-2xl font-black text-white">{categories.length}</p>
+            <div className="bg-white/5 border border-white/10 p-3 rounded-xl min-w-0">
+              <p className="text-white/50 text-[9px] font-bold uppercase mb-0.5">الفئات</p>
+              <p className="text-lg font-black text-white">{categories.length}</p>
             </div>
-            <div className="bg-blue-600/20 backdrop-blur-md border border-blue-500/30 p-4 rounded-3xl min-w-0 flex-1 hidden sm:block">
-              <p className="text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-1">نقص المخزون</p>
-              <p className="text-2xl font-black text-blue-400">{products.filter(p => p.stock < 5).length}</p>
+            <div className="bg-blue-600/20 border border-blue-500/30 p-3 rounded-xl min-w-0">
+              <p className="text-blue-400 text-[9px] font-bold uppercase mb-0.5">نقص المخزون</p>
+              <p className="text-lg font-black text-blue-400">{products.filter(p => p.stock < 5).length}</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-8">
-        {/* Category Management - Secondary Section */}
-        <section className="space-y-4">
-          <div className="flex items-center gap-3 px-1">
-            <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
-            <h3 className="text-xl font-black text-slate-800 dark:text-slate-200">التصنيفات</h3>
-          </div>
-          <CategoryManagement categories={categories} onCategoriesUpdate={setCategories} />
-        </section>
+      <Tabs defaultValue="products" dir="rtl" className="w-full">
+        <TabsList className="w-full h-11 rounded-xl bg-slate-100 dark:bg-slate-900 p-1">
+          <TabsTrigger value="products" className="flex-1 rounded-lg font-bold text-sm">
+            المنتجات ({products.length})
+          </TabsTrigger>
+          <TabsTrigger value="categories" className="flex-1 rounded-lg font-bold text-sm">
+            الفئات ({categories.length})
+          </TabsTrigger>
+        </TabsList>
 
-        {/* Products Toolbar */}
-        <section className="space-y-6">
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-xl">
-            <div className="flex-1 w-full max-w-2xl">
+        <TabsContent value="categories" className="mt-3">
+          <CategoryManagement
+            categories={categories}
+            onCategoriesUpdate={setCategories}
+            embedded
+          />
+        </TabsContent>
+
+        <TabsContent value="products" className="mt-3 space-y-3">
+          <div className="flex flex-col md:flex-row gap-3 items-center justify-between bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
+            <div className="flex-1 w-full">
               <ProductFilters searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
             </div>
             <ProductDialog
@@ -204,7 +204,7 @@ const ProductManagement = () => {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2">
             {paginatedProducts.map((product) => (
               <ProductCard
                 key={product.id}
@@ -218,22 +218,23 @@ const ProductManagement = () => {
           </div>
 
           {paginatedProducts.length === 0 && (
-            <div className="text-center py-20 bg-slate-50 dark:bg-slate-900/50 rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-slate-800">
-              <Package className="w-16 h-16 mx-auto mb-4 text-slate-300" />
-              <h3 className="text-xl font-bold text-slate-400">لا توجد منتجات مطابقة للبحث</h3>
-              <p className="text-slate-400 mt-1">جرب كلمات بحث مختلفة أو أضف منتجاً جديداً</p>
+            <div className="text-center py-12 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
+              <Package className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+              <h3 className="text-base font-bold text-slate-400">لا توجد منتجات مطابقة للبحث</h3>
             </div>
           )}
 
-          <div className="flex justify-center pt-8">
-            <ProductPagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
-          </div>
-        </section>
-      </div>
+          {totalPages > 1 && (
+            <div className="flex justify-center pt-2">
+              <ProductPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

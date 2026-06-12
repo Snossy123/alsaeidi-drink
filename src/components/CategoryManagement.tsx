@@ -4,13 +4,18 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Edit, Trash2, Tag, Package, ChevronRight, ChevronLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/lib/constants";
 
-const CategoryManagement = ({ categories, onCategoriesUpdate }: any) => {
+interface CategoryManagementProps {
+  categories: any[];
+  onCategoriesUpdate: (categories: any[]) => void;
+  embedded?: boolean;
+}
+
+const CategoryManagement = ({ categories, onCategoriesUpdate, embedded = false }: CategoryManagementProps) => {
   const gridRef = useRef<HTMLDivElement>(null);
   const itemsPerPage = useGridCategoryItemsPerPage(gridRef);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -26,7 +31,6 @@ const CategoryManagement = ({ categories, onCategoriesUpdate }: any) => {
   const colors = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#06B6D4", "#84CC16", "#F97316"];
   const API_URL = API_BASE_URL + "/categories";
 
-  // حسابات Pagination
   const totalPages = Math.max(1, Math.ceil(categories.length / itemsPerPage));
   const paginatedCategories = categories.slice(
     (currentPage - 1) * itemsPerPage,
@@ -89,17 +93,19 @@ const CategoryManagement = ({ categories, onCategoriesUpdate }: any) => {
   };
 
   return (
-    <Card className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm border-blue-100 dark:border-slate-800 shadow-xl overflow-hidden">
-      <CardHeader className="py-4 px-6 border-b dark:border-slate-800">
-        <div className="flex justify-between items-center">
-          <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-400">
-            <Tag className="w-5 h-5" />
-            إدارة الفئات
-          </CardTitle>
+    <Card className={`bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden ${embedded ? "border-none shadow-none" : ""}`}>
+      <CardHeader className={`py-3 px-4 border-b dark:border-slate-800 ${embedded ? "px-0 pt-0" : ""}`}>
+        <div className={`flex items-center ${embedded ? "justify-end" : "justify-between"}`}>
+          {!embedded && (
+            <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-400 text-base">
+              <Tag className="w-4 h-4" />
+              إدارة الفئات
+            </CardTitle>
+          )}
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 shadow-lg">
-                <Plus className="w-4 h-4 ml-2" /> إضافة فئة
+              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 h-9">
+                <Plus className="w-4 h-4 ml-1" /> إضافة فئة
               </Button>
             </DialogTrigger>
             <DialogContent className="max-h-[90dvh] overflow-y-auto dark:bg-slate-900 dark:border-slate-800" dir="rtl">
@@ -137,7 +143,7 @@ const CategoryManagement = ({ categories, onCategoriesUpdate }: any) => {
                     ))}
                   </div>
                 </div>
-                <div className="flex gap-2 pt-6">
+                <div className="flex gap-2 pt-4">
                   <Button type="submit" className="flex-1 bg-blue-600">حفظ</Button>
                   <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="dark:border-slate-700 dark:text-slate-300">إلغاء</Button>
                 </div>
@@ -147,28 +153,39 @@ const CategoryManagement = ({ categories, onCategoriesUpdate }: any) => {
         </div>
       </CardHeader>
 
-      <CardContent ref={gridRef} className="p-5 min-h-[280px]">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-6 gap-3">
+      <CardContent ref={gridRef} className={`p-3 ${embedded ? "px-0" : ""}`}>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-6 gap-2">
           {paginatedCategories.map((category) => (
             <div
               key={category.id}
-              className="relative p-3 bg-white dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center gap-2 group hover:shadow-xl hover:border-blue-400/50 dark:hover:border-blue-500/50 transition-all cursor-default overflow-hidden"
+              className="relative p-2 bg-white dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 rounded-xl flex flex-col items-center justify-center gap-1.5 overflow-hidden"
             >
-              {/* Background Accent */}
-              <div className="absolute inset-0 opacity-5 bg-gradient-to-br from-transparent to-black pointer-events-none" style={{ backgroundColor: category.color }} />
-              
-              <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-inner relative overflow-hidden" style={{ backgroundColor: `${category.color}20` }}>
-                <div className="w-3 h-3 rounded-full shadow-lg" style={{ backgroundColor: category.color }} />
-                <div className="absolute inset-0 animate-ping opacity-20 pointer-events-none" style={{ backgroundColor: category.color }} />
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: `${category.color}20` }}
+              >
+                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: category.color }} />
               </div>
 
-              <p className="font-black text-xs text-slate-700 dark:text-slate-200 text-center truncate w-full px-1">{category.name}</p>
+              <p className="font-black text-[11px] text-slate-700 dark:text-slate-200 text-center truncate w-full px-1">
+                {category.name}
+              </p>
 
-              <div className="flex gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity absolute top-1 right-1">
-                <Button size="icon" variant="ghost" onClick={() => handleEdit(category)} className="h-6 w-6 text-slate-400 hover:text-blue-500 rounded-full bg-white dark:bg-slate-950 shadow-sm border border-slate-100 dark:border-slate-800">
+              <div className="flex gap-1 absolute top-1 left-1">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => handleEdit(category)}
+                  className="h-7 w-7 text-slate-400 hover:text-blue-500 rounded-lg bg-white/90 dark:bg-slate-950 shadow-sm"
+                >
                   <Edit className="w-3 h-3" />
                 </Button>
-                <Button size="icon" variant="ghost" onClick={() => handleDelete(category.id)} className="h-6 w-6 text-slate-400 hover:text-red-500 rounded-full bg-white dark:bg-slate-950 shadow-sm border border-slate-100 dark:border-slate-800">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => handleDelete(category.id)}
+                  className="h-7 w-7 text-slate-400 hover:text-red-500 rounded-lg bg-white/90 dark:bg-slate-950 shadow-sm"
+                >
                   <Trash2 className="w-3 h-3" />
                 </Button>
               </div>
@@ -177,16 +194,15 @@ const CategoryManagement = ({ categories, onCategoriesUpdate }: any) => {
         </div>
 
         {categories.length === 0 && (
-          <div className="text-center py-12 opacity-40">
-            <Package className="w-12 h-12 mx-auto mb-2 dark:text-slate-400" />
-            <p className="dark:text-slate-400 font-medium">لا توجد فئات</p>
+          <div className="text-center py-8 opacity-40">
+            <Package className="w-10 h-10 mx-auto mb-2 dark:text-slate-400" />
+            <p className="dark:text-slate-400 text-sm font-medium">لا توجد فئات</p>
           </div>
         )}
       </CardContent>
 
-      {/* Pagination Footer */}
       {totalPages > 1 && (
-        <CardFooter className="py-4 border-t dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
+        <CardFooter className="py-3 border-t dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
           <Button
             variant="outline"
             size="icon"
