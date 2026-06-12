@@ -24,48 +24,46 @@ export const CartSection = ({
   const { onTouchStart, onTouchMove, onTouchEnd, guardAction } = useScrollTouchGuard();
 
   return (
-    <Card className="h-full flex flex-col bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl border border-white/20 dark:border-slate-800 shadow-2xl rounded-[2.5rem] overflow-hidden relative z-10">
+    <Card className="h-full flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-lg rounded-xl overflow-hidden relative z-10">
 
-      <CardHeader className="py-4 lg:py-6 px-4 lg:px-6 border-b border-slate-100 dark:border-slate-800/50 shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-600/20">
-              <ShoppingCart className="w-5 h-5 text-white" />
-            </div>
-            <div className="space-y-0.5">
-              <span className="text-sm font-black text-slate-800 dark:text-white">الفاتورة الحالية</span>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{cart.length} أصناف في السلة</p>
-            </div>
+      <CardHeader className="py-2 px-3 border-b border-slate-100 dark:border-slate-800/50 shrink-0">
+        <div className="flex items-center gap-2">
+          <div className="bg-blue-600 p-1.5 rounded-lg">
+            <ShoppingCart className="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <span className="text-xs font-black text-slate-800 dark:text-white">الفاتورة الحالية</span>
+            <p className="text-[9px] text-slate-400 font-bold">{cart.length} أصناف في السلة</p>
           </div>
         </div>
       </CardHeader>
 
       <CardContent
-        className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide min-h-0 touch-pan-y"
+        className="flex-1 overflow-y-auto p-2 space-y-2 scrollbar-hide min-h-0 touch-pan-y"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
         {cart.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-slate-300 dark:text-slate-700 gap-4 opacity-50">
-            <div className="w-16 h-16 rounded-full border-4 border-dashed border-current flex items-center justify-center">
-              <Receipt className="w-8 h-8" />
+          <div className="h-full flex flex-col items-center justify-center text-slate-300 dark:text-slate-700 gap-2 opacity-50">
+            <div className="w-12 h-12 rounded-full border-2 border-dashed border-current flex items-center justify-center">
+              <Receipt className="w-6 h-6" />
             </div>
-            <p className="text-sm font-black italic">السلة فارغة حالياً</p>
+            <p className="text-xs font-black italic">السلة فارغة حالياً</p>
           </div>
         ) : (
           cart.map((item) => (
             <div
               key={`${item.id}-${item.price}`}
-              className="group bg-white/50 dark:bg-slate-800/30 border border-slate-100/50 dark:border-slate-800/50 rounded-2xl p-3 shadow-sm hover:shadow-md transition-all duration-300"
+              className="bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800/50 rounded-xl p-2"
             >
-              <div className="flex justify-between items-start gap-2">
-                <div className="space-y-1 min-w-0">
-                  <h4 className="font-black text-sm text-slate-700 dark:text-slate-200 leading-tight group-hover:text-blue-600 transition-colors">
+              <div className="flex justify-between items-start gap-1">
+                <div className="min-w-0">
+                  <h4 className="font-black text-xs text-slate-700 dark:text-slate-200 leading-tight truncate">
                     {item.name}
                   </h4>
                   {item.size && (
-                    <Badge variant="outline" className="text-[9px] font-black h-4 px-1.5 border-blue-200 text-blue-600 bg-blue-50/50">
+                    <Badge variant="outline" className="text-[8px] font-black h-3.5 px-1 mt-0.5 border-blue-200 text-blue-600 bg-blue-50/50">
                       {item.size === 's' ? 'صغير' : item.size === 'm' ? 'وسط' : 'كبير'}
                     </Badge>
                   )}
@@ -73,30 +71,33 @@ export const CartSection = ({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 rounded-xl text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0 touch-manipulation"
+                  data-compact
+                  className="h-7 w-7 rounded-lg text-slate-300 hover:text-red-500 shrink-0 touch-manipulation"
                   onClick={guardAction(() => removeFromCart(item.id, item.price))}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3.5 h-3.5" />
                 </Button>
               </div>
 
-              <div className="flex items-center justify-between mt-3">
-                <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900 rounded-xl p-1 border border-slate-200/50 dark:border-slate-700/50 touch-manipulation">
+              <div className="flex items-center justify-between mt-1.5">
+                <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 rounded-lg p-0.5 border border-slate-200/50 dark:border-slate-700/50 touch-manipulation">
                   <Button
                     size="icon"
+                    data-compact
                     variant="ghost"
-                    className="h-7 w-7 rounded-lg hover:bg-white dark:hover:bg-slate-800 text-slate-500"
+                    className="h-6 w-6 rounded text-slate-500"
                     onClick={guardAction(() => updateQuantity(item.id, item.quantity - 1, item.price))}
                   >
                     <Minus className="w-3 h-3" />
                   </Button>
-                  <span className="text-xs font-black min-w-[20px] text-center text-slate-800 dark:text-white">
+                  <span className="text-[10px] font-black min-w-[16px] text-center text-slate-800 dark:text-white">
                     {item.quantity}
                   </span>
                   <Button
                     size="icon"
+                    data-compact
                     variant="ghost"
-                    className="h-7 w-7 rounded-lg hover:bg-white dark:hover:bg-slate-800 text-slate-500"
+                    className="h-6 w-6 rounded text-slate-500"
                     onClick={guardAction(() => updateQuantity(item.id, item.quantity + 1, item.price))}
                   >
                     <Plus className="w-3 h-3" />
@@ -104,9 +105,9 @@ export const CartSection = ({
                 </div>
 
                 <div className="text-left">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">السعر</p>
-                  <span className="text-sm font-black text-blue-600 dark:text-blue-400">
-                    {(item.price * item.quantity).toFixed(2)} <span className="text-[10px]">ج</span>
+                  <p className="text-[8px] font-bold text-slate-400 leading-none mb-0.5">السعر</p>
+                  <span className="text-xs font-black text-blue-600 dark:text-blue-400">
+                    {(item.price * item.quantity).toFixed(2)} <span className="text-[9px]">ج</span>
                   </span>
                 </div>
               </div>
@@ -115,33 +116,33 @@ export const CartSection = ({
         )}
       </CardContent>
 
-      <div className="p-4 lg:p-6 space-y-4 lg:space-y-6 bg-slate-900 dark:bg-black/40 relative overflow-hidden shrink-0 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
-        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-        <div className="flex justify-between items-end relative z-10">
-          <div className="space-y-1">
-            <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">الإجمالي النهائي</span>
-            <p className="text-[10px] text-blue-400 font-bold italic">شامل ضريبة القيمة المضافة</p>
+      <div className="p-3 space-y-2 bg-slate-900 dark:bg-black/40 shrink-0">
+        <div className="flex justify-between items-end">
+          <div>
+            <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider">الإجمالي النهائي</span>
+            <p className="text-[8px] text-blue-400 font-bold">شامل ضريبة القيمة المضافة</p>
           </div>
           <div className="text-left">
-            <span className="text-3xl lg:text-4xl font-black text-white tracking-tighter leading-none block">
+            <span className="text-2xl font-black text-white tracking-tight leading-none block">
               {calculateTotal().toFixed(2)}
             </span>
-            <span className="text-sm font-black text-blue-500 uppercase ml-1 tracking-widest mt-1 block">جنيه مصري</span>
+            <span className="text-[10px] font-black text-blue-500 mt-0.5 block">جنيه مصري</span>
           </div>
         </div>
 
-        <div className="flex gap-3 relative z-10">
+        <div className="flex gap-2">
           <Button
             variant="outline"
             size="icon"
-            className="h-12 w-12 rounded-2xl border-white/5 bg-white/5 hover:bg-white/10 text-white shrink-0 active:scale-90 transition-all"
+            data-compact
+            className="h-9 w-9 rounded-lg border-white/5 bg-white/5 hover:bg-white/10 text-white shrink-0"
           >
-            <Printer className="w-5 h-5" />
+            <Printer className="w-4 h-4" />
           </Button>
           <Button
+            data-compact
             onClick={openEmployeeDialog}
-            className="flex-1 h-12 rounded-2xl bg-blue-600 hover:bg-blue-500 shadow-xl shadow-blue-600/20 font-black text-white tracking-wide active:scale-95 transition-all text-base"
+            className="flex-1 h-9 rounded-lg bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/20 font-black text-white active:scale-95 transition-all text-xs"
           >
             إتمام العملية الآن
           </Button>

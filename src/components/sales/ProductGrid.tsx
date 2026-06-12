@@ -91,8 +91,11 @@ const ProductCard = ({ product, onClick }: { product: Product; onClick: () => vo
             className="w-full h-full object-contain"
           />
         ) : (
-          <div className="bg-slate-100 dark:bg-slate-800/50 p-2 rounded-lg">
-            <Package className="w-6 h-6 text-slate-300 dark:text-slate-700" />
+          <div className="flex flex-col items-center justify-center gap-1.5 w-full h-full p-2 text-center">
+            <Package className="w-5 h-5 text-slate-300 dark:text-slate-600 shrink-0" />
+            <span className="text-sm font-black text-slate-700 dark:text-slate-200 leading-tight line-clamp-3">
+              {product.name}
+            </span>
           </div>
         )}
 
