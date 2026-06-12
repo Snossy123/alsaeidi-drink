@@ -85,7 +85,7 @@ const ProductCard = ({ product, onClick }: { product: Product; onClick: () => vo
       <div className="absolute inset-0 bg-gradient-to-br from-blue-600/0 to-purple-600/0 group-hover:from-blue-600/5 group-hover:to-purple-600/5 transition-all duration-500" />
       
       {/* Image Section */}
-      <div className="aspect-[1/1] w-full bg-slate-50/50 dark:bg-slate-950/30 p-1.5 lg:p-4 flex items-center justify-center relative overflow-hidden">
+      <div className="aspect-[4/3] lg:aspect-[1/1] w-full bg-slate-50/50 dark:bg-slate-950/30 p-1.5 lg:p-4 flex items-center justify-center relative overflow-hidden">
         {product.image ? (
           <img
             src={IMAGE_BASE_URL + "/" + product.image}
@@ -117,18 +117,18 @@ const ProductCard = ({ product, onClick }: { product: Product; onClick: () => vo
         </h3>
 
         {product.hasSizes ? (
-          <div className="grid grid-cols-3 gap-0.5 lg:gap-2">
+          <div className="grid grid-cols-3 gap-1 lg:gap-2">
             {[
               { label: 'ص', price: product.s_price, color: 'hover:bg-blue-600' },
               { label: 'و', price: product.m_price, color: 'hover:bg-purple-600' },
               { label: 'ك', price: product.l_price, color: 'hover:bg-emerald-600' }
             ].map((size, idx) => (
               <div key={idx} className={cn(
-                "flex flex-col items-center bg-slate-50 dark:bg-slate-950/50 py-1 lg:py-2 rounded-md lg:rounded-xl group/size transition-all duration-300 border border-transparent hover:border-white/20",
+                "flex flex-col items-center min-w-0 bg-slate-50 dark:bg-slate-950/50 py-1 lg:py-2 rounded-md lg:rounded-xl group/size transition-all duration-300 border border-transparent hover:border-white/20",
                 size.color
               )}>
-                <span className="text-[8px] lg:text-[10px] font-black text-slate-400 group-hover/size:text-white/80 uppercase mb-0">{size.label}</span>
-                <span className="text-[9px] lg:text-xs font-black text-slate-800 dark:text-white group-hover/size:text-white">{size.price}</span>
+                <span className="text-[8px] lg:text-[10px] font-black text-slate-400 group-hover/size:text-white/80 uppercase">{size.label}</span>
+                <span className="text-[9px] lg:text-xs font-black text-slate-800 dark:text-white group-hover/size:text-white tabular-nums truncate w-full text-center">{size.price}</span>
               </div>
             ))}
           </div>
@@ -215,7 +215,7 @@ export const ProductGrid = ({
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 lg:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-3 lg:gap-5">
             {paginatedProducts.map((product) => (
               <ProductCard 
                 key={product.id} 

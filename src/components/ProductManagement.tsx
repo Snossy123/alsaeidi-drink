@@ -155,7 +155,7 @@ const ProductManagement = () => {
         
         <div className="relative flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
           <div className="space-y-2">
-            <h2 className="text-4xl font-black text-white tracking-tight">إدارة المنتجات</h2>
+            <h2 className="text-2xl lg:text-3xl 2xl:text-4xl font-black text-white tracking-tight">إدارة المنتجات</h2>
             <p className="text-slate-400 font-medium">تحكم كامل في مخزونك ومنتجاتك بكل سهولة</p>
           </div>
           
@@ -204,7 +204,7 @@ const ProductManagement = () => {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-4 gap-6">
             {paginatedProducts.map((product) => (
               <ProductCard
                 key={product.id}

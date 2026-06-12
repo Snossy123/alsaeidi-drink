@@ -62,7 +62,7 @@ const ProductDialog = ({
           <Plus className="w-5 h-5 ml-2" /> إضافة منتج
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg dark:bg-slate-900 dark:border-slate-800" dir="rtl">
+      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto dark:bg-slate-900 dark:border-slate-800" dir="rtl">
         <DialogHeader>
           <DialogTitle className="text-2xl dark:text-white">
             {editingProduct ? "تعديل" : "إضافة"} منتج
@@ -166,7 +166,7 @@ const ProductDialog = ({
               />
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div className="space-y-2">
                 <Label className="dark:text-slate-300">صغير</Label>
                 <Input

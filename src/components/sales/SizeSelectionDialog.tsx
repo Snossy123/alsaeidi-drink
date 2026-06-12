@@ -22,21 +22,21 @@ export const SizeSelectionDialog = ({
 }: SizeSelectionDialogProps) => {
   return (
     <Dialog open={showSizeDialog} onOpenChange={setShowSizeDialog}>
-      <DialogContent className="max-w-2xl text-center rounded-[3rem] p-0 overflow-hidden border-none bg-white dark:bg-slate-900 shadow-[0_30px_100px_rgba(0,0,0,0.3)]" dir="rtl">
-        <div className="bg-slate-900 p-8 text-white relative">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto text-center rounded-[3rem] p-0 border-none bg-white dark:bg-slate-900 shadow-[0_30px_100px_rgba(0,0,0,0.3)]" dir="rtl">
+        <div className="bg-slate-900 p-4 lg:p-8 text-white relative">
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/30 blur-[80px] rounded-full translate-x-1/2 -translate-y-1/2" />
           <DialogHeader className="relative z-10">
-            <DialogTitle className="text-3xl font-black tracking-tight">تخصيص الحجم</DialogTitle>
+            <DialogTitle className="text-2xl lg:text-3xl font-black tracking-tight">تخصيص الحجم</DialogTitle>
             <p className="text-slate-400 font-bold text-sm mt-1 uppercase tracking-widest">اختر المقاس المفضل للمنتج</p>
           </DialogHeader>
         </div>
 
-        <div className="p-8">
+        <div className="p-4 lg:p-8">
           {selectedProduct && (
-            <div className="space-y-8">
-              <div className="flex flex-col items-center gap-6">
+            <div className="space-y-6 lg:space-y-8">
+              <div className="flex flex-col items-center gap-4 lg:gap-6">
                 {selectedProduct.image ? (
-                  <div className="w-64 h-48 rounded-[2rem] overflow-hidden shadow-2xl bg-slate-50 dark:bg-slate-800 p-4 border border-slate-100 dark:border-slate-800">
+                  <div className="w-40 h-32 lg:w-48 lg:h-36 2xl:w-64 2xl:h-48 rounded-[2rem] overflow-hidden shadow-2xl bg-slate-50 dark:bg-slate-800 p-4 border border-slate-100 dark:border-slate-800">
                     <img src={IMAGE_BASE_URL + "/" + selectedProduct.image} alt={selectedProduct.name} className="w-full h-full object-contain" />
                   </div>
                 ) : (
@@ -47,32 +47,32 @@ export const SizeSelectionDialog = ({
                 <h2 className="font-black text-2xl text-slate-800 dark:text-white tracking-tight">{selectedProduct.name}</h2>
               </div>
 
-              <div className="grid grid-cols-3 gap-6 mt-10">
+              <div className="grid grid-cols-3 gap-3 lg:gap-6 mt-6 lg:mt-10">
                 {selectedProduct.s_price > 0 && (
                   <Button
                     onClick={() => handleSelectSize("s")}
-                    className="h-32 flex flex-col items-center justify-center gap-3 rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-none hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-lg group active:scale-95"
+                    className="h-24 lg:h-28 2xl:h-32 flex flex-col items-center justify-center gap-2 lg:gap-3 rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-none hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-lg group active:scale-95"
                   >
                     <span className="text-xs font-black text-slate-400 group-hover:text-blue-100 uppercase tracking-widest">صغير (S)</span>
-                    <span className="text-2xl font-black">{selectedProduct.s_price} ج</span>
+                    <span className="text-xl lg:text-2xl font-black">{selectedProduct.s_price} ج</span>
                   </Button>
                 )}
                 {selectedProduct.m_price > 0 && (
                   <Button
                     onClick={() => handleSelectSize("m")}
-                    className="h-32 flex flex-col items-center justify-center gap-3 rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-none hover:bg-purple-600 hover:text-white transition-all duration-300 shadow-lg group active:scale-95"
+                    className="h-24 lg:h-28 2xl:h-32 flex flex-col items-center justify-center gap-2 lg:gap-3 rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-none hover:bg-purple-600 hover:text-white transition-all duration-300 shadow-lg group active:scale-95"
                   >
                     <span className="text-xs font-black text-slate-400 group-hover:text-purple-100 uppercase tracking-widest">وسط (M)</span>
-                    <span className="text-2xl font-black">{selectedProduct.m_price} ج</span>
+                    <span className="text-xl lg:text-2xl font-black">{selectedProduct.m_price} ج</span>
                   </Button>
                 )}
                 {selectedProduct.l_price > 0 && (
                   <Button
                     onClick={() => handleSelectSize("l")}
-                    className="h-32 flex flex-col items-center justify-center gap-3 rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-none hover:bg-emerald-600 hover:text-white transition-all duration-300 shadow-lg group active:scale-95"
+                    className="h-24 lg:h-28 2xl:h-32 flex flex-col items-center justify-center gap-2 lg:gap-3 rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-none hover:bg-emerald-600 hover:text-white transition-all duration-300 shadow-lg group active:scale-95"
                   >
                     <span className="text-xs font-black text-slate-400 group-hover:text-emerald-100 uppercase tracking-widest">كبير (L)</span>
-                    <span className="text-2xl font-black">{selectedProduct.l_price} ج</span>
+                    <span className="text-xl lg:text-2xl font-black">{selectedProduct.l_price} ج</span>
                   </Button>
                 )}
               </div>

@@ -94,7 +94,7 @@ export function IndexLayout() {
                 collapsible="icon"
                 className="glass border-l border-white/10 dark:border-white/5"
             >
-                <SidebarHeader className="p-6 flex flex-row items-center justify-between gap-3">
+                <SidebarHeader className="p-4 lg:p-6 flex flex-row items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                         <CalculatorIconButton />
                         <div className="group-data-[collapsible=icon]:hidden">
@@ -111,7 +111,7 @@ export function IndexLayout() {
                         </SidebarGroupLabel>
 
                         <SidebarGroupContent>
-                            <SidebarMenu className="gap-3">
+                            <SidebarMenu className="gap-2 2xl:gap-3">
                                 {MENU_ITEMS.map(({ value, label, icon: Icon }) => (
                                     <SidebarMenuItem key={value}>
                                         <SidebarMenuButton
@@ -119,7 +119,7 @@ export function IndexLayout() {
                                             isActive={activeTab === value}
                                             onClick={() => setActiveTab(value)}
                                             className="
-                        h-14 text-base font-bold gap-4 rounded-2xl
+                        h-11 lg:h-12 2xl:h-14 text-base font-bold gap-4 rounded-2xl
                         transition-all duration-300
                         hover:bg-primary/10 hover:text-primary
                         data-[active=true]:bg-primary

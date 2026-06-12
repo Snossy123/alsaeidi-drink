@@ -119,7 +119,7 @@ export const CartSection = ({
             <p className="text-[10px] text-blue-400 font-bold italic">شامل ضريبة القيمة المضافة</p>
           </div>
           <div className="text-left">
-            <span className="text-4xl lg:text-5xl font-black text-white tracking-tighter leading-none block">
+            <span className="text-3xl lg:text-4xl 2xl:text-5xl font-black text-white tracking-tighter leading-none block">
               {calculateTotal().toFixed(2)}
             </span>
             <span className="text-sm font-black text-blue-500 uppercase ml-1 tracking-widest mt-1 block">جنيه مصري</span>
@@ -130,13 +130,13 @@ export const CartSection = ({
           <Button
             variant="outline"
             size="icon"
-            className="h-14 w-14 rounded-2xl border-white/5 bg-white/5 hover:bg-white/10 text-white shrink-0 active:scale-90 transition-all"
+            className="h-12 w-12 2xl:h-14 2xl:w-14 rounded-2xl border-white/5 bg-white/5 hover:bg-white/10 text-white shrink-0 active:scale-90 transition-all"
           >
             <Printer className="w-5 h-5" />
           </Button>
           <Button
             onClick={openEmployeeDialog}
-            className="flex-1 h-14 rounded-2xl bg-blue-600 hover:bg-blue-500 shadow-xl shadow-blue-600/20 font-black text-white tracking-wide active:scale-95 transition-all text-base"
+            className="flex-1 h-12 2xl:h-14 rounded-2xl bg-blue-600 hover:bg-blue-500 shadow-xl shadow-blue-600/20 font-black text-white tracking-wide active:scale-95 transition-all text-base"
           >
             إتمام العملية الآن
           </Button>

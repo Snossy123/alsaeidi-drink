@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useGridColumns } from "@/hooks/useGridColumns";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/lib/constants";
 import CategoriesSidebar from "./CategoriesSidebar";
@@ -41,30 +42,7 @@ const SalesInterface = () => {
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [kitchenNote, setKitchenNote] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-
-  useEffect(() => {
-    const handleResize = () => {
-      const width = window.innerWidth;
-      // Matching grid-cols from ProductGrid.tsx:
-      // grid-cols-1 (<640) -> 2 items
-      // sm:grid-cols-2 (>=640) -> 4 items
-      // md:grid-cols-2 (>=768) -> 4 items
-      // lg:grid-cols-3 (>=1024) -> 6 items
-      // xl:grid-cols-4 (>=1280) -> 8 items
-      // 2xl:grid-cols-5 (>=1536) -> 10 items
-      
-      if (width < 640) setItemsPerPage(2);
-      else if (width < 1024) setItemsPerPage(4);
-      else if (width < 1280) setItemsPerPage(6);
-      else if (width < 1536) setItemsPerPage(8);
-      else setItemsPerPage(10);
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const { itemsPerPage } = useGridColumns();
 
   /**
    * Handlers
@@ -167,7 +145,7 @@ const SalesInterface = () => {
     <div className="flex flex-col lg:flex-row h-auto lg:h-full w-full antialiased bg-slate-50/50 dark:bg-slate-950/50 p-2 lg:p-4 gap-4 overflow-hidden lg:overflow-hidden" dir="rtl">
       
       {/* 1. Right Column: Categories (Desktop Right, Mobile Top) */}
-      <div className="w-full lg:w-64 shrink-0">
+      <div className="w-full lg:w-48 xl:w-52 2xl:w-64 shrink-0">
         <CategoriesSidebar
           categories={categories}
           selectedCategory={selectedCategory}
@@ -197,7 +175,7 @@ const SalesInterface = () => {
       </div>
 
       {/* 3. Left Column: Cart */}
-      <div className="w-full lg:w-80 shrink-0 h-auto lg:h-full relative">
+      <div className="w-full lg:w-64 xl:w-72 2xl:w-80 shrink-0 h-auto lg:h-full relative">
         <div className="absolute inset-0 bg-blue-600/5 blur-3xl rounded-full translate-y-1/2 pointer-events-none" />
         <CartSection 
           cart={cart}
