@@ -37,7 +37,15 @@ const SalesInterface = ({
 }: SalesInterfaceProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const { shift, requiresShift, openShift, closeShift, loading: shiftLoading } = useShift();
+  const {
+    shift,
+    requiresShift,
+    openShift,
+    closeShift,
+    loading: shiftLoading,
+    isCachedShift,
+    isOffline,
+  } = useShift();
   const gridContainerRef = useRef<HTMLDivElement>(null);
   const { itemsPerPage } = useGridLayout(gridContainerRef);
 
@@ -148,6 +156,7 @@ const SalesInterface = ({
       })),
       kitchen_note: kitchenNote,
       employee_id: selectedEmployee,
+      shift_id: shift?.id,
       payment_method: paymentMethod,
       amount_paid: paid,
       change_given: isPaid ? Math.max(0, paid - total) : 0,
@@ -223,9 +232,14 @@ const SalesInterface = ({
     <div className="flex flex-col lg:flex-row h-full w-full antialiased bg-slate-50/50 dark:bg-slate-950/50 p-1.5 lg:p-2 gap-2 overflow-hidden" dir="rtl">
       <OpenShiftDialog
         open={showOpenShift}
+        offline={isOffline}
         onOpenShift={async (openingFloat, notes) => {
-          await openShift(openingFloat, notes);
-          toast({ title: "تم فتح الوردية" });
+          try {
+            await openShift(openingFloat, notes);
+            toast({ title: "تم فتح الوردية" });
+          } catch (error: any) {
+            toast({ title: error.message || "فشل فتح الوردية", variant: "destructive" });
+          }
         }}
       />
 
@@ -234,8 +248,12 @@ const SalesInterface = ({
         onOpenChange={setShowCloseShiftDialog}
         shift={shift}
         onCloseShift={async (actualCash, notes) => {
-          await closeShift(actualCash, notes);
-          toast({ title: "تم إغلاق الوردية" });
+          try {
+            await closeShift(actualCash, notes);
+            toast({ title: "تم إغلاق الوردية" });
+          } catch (error: any) {
+            toast({ title: error.message || "فشل إغلاق الوردية", variant: "destructive" });
+          }
         }}
       />
 
@@ -251,7 +269,14 @@ const SalesInterface = ({
       </div>
 
       <div className="flex-1 min-w-0 flex flex-col gap-2 overflow-hidden">
-        {shift && <ShiftBanner shift={shift} onCloseClick={() => setShowCloseShiftDialog(true)} />}
+        {shift && (
+          <ShiftBanner
+            shift={shift}
+            onCloseClick={() => setShowCloseShiftDialog(true)}
+            isCached={isCachedShift}
+            isOffline={isOffline}
+          />
+        )}
 
         <BarcodeScanner
           barcode={barcode}

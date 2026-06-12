@@ -32,9 +32,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(data.user);
         setToken(storedToken);
       } catch {
-        clearAuthSession();
-        setUser(null);
-        setToken(null);
+        const storedUser = getStoredUser();
+        if (!navigator.onLine && storedUser && storedToken) {
+          setUser(storedUser);
+          setToken(storedToken);
+        } else {
+          clearAuthSession();
+          setUser(null);
+          setToken(null);
+        }
       } finally {
         setLoading(false);
       }

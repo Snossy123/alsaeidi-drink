@@ -1,20 +1,22 @@
 const DB_NAME = "pos-offline";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 function openOfflineDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-    request.onupgradeneeded = () => {
+    request.onupgradeneeded = (event) => {
       const db = request.result;
-      if (!db.objectStoreNames.contains("pendingSales")) {
+      const oldVersion = event.oldVersion;
+
+      if (oldVersion < 1) {
         db.createObjectStore("pendingSales", { keyPath: "id" });
-      }
-      if (!db.objectStoreNames.contains("cachedProducts")) {
         db.createObjectStore("cachedProducts", { keyPath: "key" });
-      }
-      if (!db.objectStoreNames.contains("cachedCategories")) {
         db.createObjectStore("cachedCategories", { keyPath: "key" });
+      }
+
+      if (oldVersion < 2 && !db.objectStoreNames.contains("cachedShifts")) {
+        db.createObjectStore("cachedShifts", { keyPath: "employeeId" });
       }
     };
 

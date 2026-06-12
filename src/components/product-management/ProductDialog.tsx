@@ -77,8 +77,8 @@ const ProductDialog = ({
         className="sm:max-w-md w-[95vw] max-h-[90dvh] p-0 gap-0 overflow-hidden !flex !flex-col dark:bg-slate-900 dark:border-slate-800 rounded-2xl [&>div]:flex [&>div]:flex-col [&>div]:min-h-0 [&>div]:flex-1"
         dir="rtl"
       >
-        <DialogHeader className="px-4 pt-4 pb-2 shrink-0">
-          <DialogTitle className="text-lg dark:text-white">
+        <DialogHeader className="px-4 pt-4 pb-2 shrink-0 pe-14 ps-4">
+          <DialogTitle className="text-lg font-black dark:text-white leading-tight">
             {editingProduct ? "تعديل" : "إضافة"} منتج
           </DialogTitle>
         </DialogHeader>
@@ -100,10 +100,10 @@ const ProductDialog = ({
                       type="button"
                       variant="destructive"
                       size="icon"
-                      className="absolute top-1 right-1 h-6 w-6 rounded-full"
+                      className="absolute top-1 start-1 h-7 w-7 rounded-full shadow-sm"
                       onClick={removeImage}
                     >
-                      <X className="w-3 h-3" />
+                      <X className="w-3.5 h-3.5" />
                     </Button>
                   </div>
                 ) : (
@@ -133,12 +133,16 @@ const ProductDialog = ({
                   />
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/40 px-3 py-2">
+                  <Label htmlFor="has-sizes" className="dark:text-slate-300 text-xs font-bold cursor-pointer">
+                    يوجد أحجام مختلفة
+                  </Label>
                   <Switch
+                    id="has-sizes"
+                    className="shrink-0"
                     checked={formData.hasSizes}
                     onCheckedChange={(c) => setFormData({ ...formData, hasSizes: c })}
                   />
-                  <Label className="dark:text-slate-300 text-xs">يوجد أحجام مختلفة</Label>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">

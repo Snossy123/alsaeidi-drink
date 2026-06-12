@@ -6,10 +6,11 @@ import { Label } from "@/components/ui/label";
 
 interface OpenShiftDialogProps {
   open: boolean;
+  offline?: boolean;
   onOpenShift: (openingFloat: number, notes?: string) => Promise<void>;
 }
 
-export function OpenShiftDialog({ open, onOpenShift }: OpenShiftDialogProps) {
+export function OpenShiftDialog({ open, offline = false, onOpenShift }: OpenShiftDialogProps) {
   const [openingFloat, setOpeningFloat] = useState("0");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -30,6 +31,11 @@ export function OpenShiftDialog({ open, onOpenShift }: OpenShiftDialogProps) {
         <DialogHeader>
           <DialogTitle className="font-black text-xl">فتح وردية جديدة</DialogTitle>
         </DialogHeader>
+        {offline && (
+          <p className="text-sm text-amber-700 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
+            لا يمكن فتح وردية بدون إنترنت. اتصل بالشبكة ثم أعد المحاولة.
+          </p>
+        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label>رصيد الدرج الافتتاحي</Label>
@@ -46,7 +52,7 @@ export function OpenShiftDialog({ open, onOpenShift }: OpenShiftDialogProps) {
             <Label>ملاحظات (اختياري)</Label>
             <Input value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
-          <Button type="submit" className="w-full font-black" disabled={submitting}>
+          <Button type="submit" className="w-full font-black" disabled={submitting || offline}>
             {submitting ? "جاري الفتح..." : "فتح الوردية"}
           </Button>
         </form>

@@ -1,4 +1,5 @@
 import { idbCount, idbDelete, idbGet, idbGetAll, idbPut } from "./db";
+import type { Shift } from "@/types/shift";
 
 type SyncListener = (pendingCount: number) => void;
 const listeners = new Set<SyncListener>();
@@ -55,4 +56,25 @@ export async function cacheCategories(categories: unknown[]) {
 export async function getCachedCategories<T = unknown[]>(): Promise<T | null> {
   const row = await idbGet<{ key: string; value: T }>("cachedCategories", "all");
   return row?.value || null;
+}
+
+export async function cacheShift(employeeId: number, shift: Shift | null) {
+  if (shift?.status === "open") {
+    await idbPut("cachedShifts", {
+      employeeId,
+      shift,
+      updatedAt: new Date().toISOString(),
+    });
+    return;
+  }
+
+  await idbDelete("cachedShifts", employeeId).catch(() => undefined);
+}
+
+export async function getCachedShift(employeeId: number): Promise<Shift | null> {
+  const row = await idbGet<{ employeeId: number; shift: Shift }>("cachedShifts", employeeId);
+  if (row?.shift?.status === "open") {
+    return row.shift;
+  }
+  return null;
 }

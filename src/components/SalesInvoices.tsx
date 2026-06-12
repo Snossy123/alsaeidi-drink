@@ -4,15 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FileText, Calendar, User, Printer, ChevronLeft, Clock } from "lucide-react";
+import { FileText, Calendar, User, Printer, ChevronLeft, Clock, RotateCcw } from "lucide-react";
 import { apiClient } from "@/lib/apiClient";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { printInvoice } from "@/lib/invoicePrinter";
 import type { SaleInvoice, InvoiceStatus, PaymentStatus } from "@/types/salesInvoice";
 import { orderTypeLabels } from "@/types/salesInvoice";
+import ProductPagination from "@/components/product-management/ProductPagination";
+import { matchesDateRange, matchesTimeRange } from "@/lib/invoiceFilters";
+
+const PAGE_SIZE = 10;
 
 const statusLabels: Record<InvoiceStatus, string> = {
   completed: "مكتملة",
@@ -33,7 +38,13 @@ const SalesInvoices = () => {
   const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [paymentFilter, setPaymentFilter] = useState<string>("all");
+  const [orderTypeFilter, setOrderTypeFilter] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [timeFrom, setTimeFrom] = useState("");
+  const [timeTo, setTimeTo] = useState("");
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [refundAmount, setRefundAmount] = useState("");
   const { isManagerOrAbove } = useAuth();
   const { toast } = useToast();
@@ -58,9 +69,42 @@ const SalesInvoices = () => {
         (invoice.cashier || "").toLowerCase().includes(search.toLowerCase());
       const matchesStatus = statusFilter === "all" || invoice.status === statusFilter;
       const matchesPayment = paymentFilter === "all" || invoice.payment_status === paymentFilter;
-      return matchesSearch && matchesStatus && matchesPayment;
+      const matchesOrderType = orderTypeFilter === "all" || invoice.order_type === orderTypeFilter;
+      const matchesDate = matchesDateRange(invoice.date, dateFrom, dateTo);
+      const matchesTime = matchesTimeRange(invoice.time, timeFrom, timeTo);
+
+      return matchesSearch && matchesStatus && matchesPayment && matchesOrderType && matchesDate && matchesTime;
     });
-  }, [invoices, search, statusFilter, paymentFilter]);
+  }, [invoices, search, statusFilter, paymentFilter, orderTypeFilter, dateFrom, dateTo, timeFrom, timeTo]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredInvoices.length / PAGE_SIZE));
+
+  const paginatedInvoices = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredInvoices.slice(start, start + PAGE_SIZE);
+  }, [filteredInvoices, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter, paymentFilter, orderTypeFilter, dateFrom, dateTo, timeFrom, timeTo]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const resetFilters = () => {
+    setSearch("");
+    setStatusFilter("all");
+    setPaymentFilter("all");
+    setOrderTypeFilter("all");
+    setDateFrom("");
+    setDateTo("");
+    setTimeFrom("");
+    setTimeTo("");
+    setCurrentPage(1);
+  };
 
   const handleVoid = async () => {
     if (!selectedInvoice) return;
@@ -152,33 +196,77 @@ const SalesInvoices = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <Input placeholder="بحث برقم الفاتورة أو الكاشير..." value={search} onChange={(e) => setSearch(e.target.value)} />
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger><SelectValue placeholder="الحالة" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">كل الحالات</SelectItem>
-            <SelectItem value="completed">مكتملة</SelectItem>
-            <SelectItem value="void">ملغاة</SelectItem>
-            <SelectItem value="refunded">مسترجعة</SelectItem>
-            <SelectItem value="partial_refund">استرجاع جزئي</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={paymentFilter} onValueChange={setPaymentFilter}>
-          <SelectTrigger><SelectValue placeholder="الدفع" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">كل حالات الدفع</SelectItem>
-            <SelectItem value="paid">مدفوعة</SelectItem>
-            <SelectItem value="unpaid">غير مدفوعة</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <Card>
+        <CardContent className="p-4 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="font-black text-sm text-muted-foreground">فلاتر البحث</h2>
+            <Button variant="ghost" size="sm" onClick={resetFilters} className="gap-2">
+              <RotateCcw className="w-4 h-4" />
+              مسح الفلاتر
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            <Input
+              placeholder="بحث برقم الفاتورة أو الكاشير..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger><SelectValue placeholder="الحالة" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل الحالات</SelectItem>
+                <SelectItem value="completed">مكتملة</SelectItem>
+                <SelectItem value="void">ملغاة</SelectItem>
+                <SelectItem value="refunded">مسترجعة</SelectItem>
+                <SelectItem value="partial_refund">استرجاع جزئي</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+              <SelectTrigger><SelectValue placeholder="الدفع" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل حالات الدفع</SelectItem>
+                <SelectItem value="paid">مدفوعة</SelectItem>
+                <SelectItem value="unpaid">غير مدفوعة</SelectItem>
+                <SelectItem value="partial">مدفوعة جزئياً</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={orderTypeFilter} onValueChange={setOrderTypeFilter}>
+              <SelectTrigger><SelectValue placeholder="نوع الطلب" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل أنواع الطلب</SelectItem>
+                <SelectItem value="takeaway">تيك اوي</SelectItem>
+                <SelectItem value="table">طربيزة</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-muted-foreground">من تاريخ</Label>
+              <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-muted-foreground">إلى تاريخ</Label>
+              <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-muted-foreground">من وقت</Label>
+              <Input type="time" value={timeFrom} onChange={(e) => setTimeFrom(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-muted-foreground">إلى وقت</Label>
+              <Input type="time" value={timeTo} onChange={(e) => setTimeTo(e.target.value)} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4">
-        {filteredInvoices.length === 0 ? (
+        {paginatedInvoices.length === 0 ? (
           <Card><CardContent className="p-10 text-center text-muted-foreground">لا توجد فواتير</CardContent></Card>
         ) : (
-          filteredInvoices.map((invoice) => (
+          paginatedInvoices.map((invoice) => (
             <Card
               key={invoice.id}
               className="cursor-pointer hover:shadow-lg transition-all"
@@ -195,7 +283,7 @@ const SalesInvoices = () => {
                     <Badge variant="secondary">{orderTypeLabels[invoice.order_type || "takeaway"]}</Badge>
                   </div>
                   <h3 className="font-black text-lg">{invoice.invoiceNumber}</h3>
-                  <div className="flex gap-4 text-sm text-muted-foreground">
+                  <div className="flex gap-4 text-sm text-muted-foreground flex-wrap">
                     <span className="flex items-center gap-1"><Calendar className="w-4 h-4" />{invoice.date}</span>
                     <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{invoice.time}</span>
                     <span className="flex items-center gap-1"><User className="w-4 h-4" />{invoice.cashier}</span>
@@ -210,6 +298,12 @@ const SalesInvoices = () => {
           ))
         )}
       </div>
+
+      <ProductPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
 
       <Dialog open={isInvoiceDialogOpen} onOpenChange={setIsInvoiceDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90dvh] flex flex-col overflow-hidden rounded-[2rem]" dir="rtl">
