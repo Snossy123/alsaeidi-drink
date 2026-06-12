@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Edit, Trash2, Tag, Package, ChevronRight, ChevronLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { API_BASE_URL } from "@/lib/constants";
+import { apiClient } from "@/lib/apiClient";
 
 interface CategoryManagementProps {
   categories: any[];
@@ -29,7 +29,6 @@ const CategoryManagement = ({ categories, onCategoriesUpdate, embedded = false }
 
   const { toast } = useToast();
   const colors = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#06B6D4", "#84CC16", "#F97316"];
-  const API_URL = API_BASE_URL + "/categories";
 
   const totalPages = Math.max(1, Math.ceil(categories.length / itemsPerPage));
   const paginatedCategories = categories.slice(
@@ -53,12 +52,10 @@ const CategoryManagement = ({ categories, onCategoriesUpdate, embedded = false }
     };
 
     try {
-      const response = await fetch(API_URL, {
+      const data = await apiClient<{ success: boolean; categories: any[] }>("/categories", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: editingCategory ? "update" : "add", category: newCategory }),
       });
-      const data = await response.json();
       if (data.success) {
         onCategoriesUpdate(data.categories);
         setIsDialogOpen(false);
@@ -80,12 +77,10 @@ const CategoryManagement = ({ categories, onCategoriesUpdate, embedded = false }
   const handleDelete = async (id: string) => {
     if (!confirm("هل أنت متأكد من حذف هذه الفئة؟")) return;
     try {
-      const response = await fetch(API_URL, {
+      const data = await apiClient<{ success: boolean; categories: any[] }>("/categories", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "delete", id }),
       });
-      const data = await response.json();
       if (data.success) onCategoriesUpdate(data.categories);
     } catch (error) {
       toast({ title: "خطأ", description: "فشل الحذف", variant: "destructive" });

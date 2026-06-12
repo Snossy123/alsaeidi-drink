@@ -1,11 +1,13 @@
 import { Moon, Sun, LogOut, Calculator } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { MENU_ITEMS } from "@/pages/menu.config";
+import { getMenuItemsForRole } from "@/pages/menu.config";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface PosNavSheetProps {
   open: boolean;
@@ -24,9 +26,18 @@ export const PosNavSheet = ({
   dark,
   onToggleDark,
 }: PosNavSheetProps) => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const menuItems = getMenuItemsForRole(user?.role);
+
   const handleNavigate = (tab: string) => {
     onNavigate(tab);
     onOpenChange(false);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
   };
 
   return (
@@ -40,14 +51,14 @@ export const PosNavSheet = ({
             <div className="text-right">
               <SheetTitle className="text-base font-black">سنسو POS</SheetTitle>
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                Smart Operations
+                {user?.name}
               </p>
             </div>
           </div>
         </SheetHeader>
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          {MENU_ITEMS.map(({ value, label, icon: Icon }) => (
+          {menuItems.map(({ value, label, icon: Icon }) => (
             <button
               key={value}
               onClick={() => handleNavigate(value)}
@@ -71,7 +82,10 @@ export const PosNavSheet = ({
             {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             <span>{dark ? "الوضع النهاري" : "الوضع الليلي"}</span>
           </button>
-          <button className="w-full h-11 rounded-xl flex items-center justify-center gap-3 text-red-500 hover:bg-red-500/10 transition-colors font-bold text-sm">
+          <button
+            onClick={handleLogout}
+            className="w-full h-11 rounded-xl flex items-center justify-center gap-3 text-red-500 hover:bg-red-500/10 transition-colors font-bold text-sm"
+          >
             <LogOut className="w-5 h-5" />
             <span>تسجيل الخروج</span>
           </button>

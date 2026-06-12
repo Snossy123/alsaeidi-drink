@@ -1,18 +1,32 @@
-// menu.config.ts
 import {
-    ShoppingCart,
-    Package,
-    FileText,
-    BarChart3,
-    Receipt,
-    Users
+  ShoppingCart,
+  Package,
+  FileText,
+  BarChart3,
+  Receipt,
+  Users,
+  Clock,
 } from "lucide-react";
+import type { UserRole } from "@/types/auth";
 
-export const MENU_ITEMS = [
-    { value: "sales", label: "نقطة البيع", icon: ShoppingCart },
-    { value: "products", label: "المنتجات", icon: Package },
-    { value: "sales-invoices", label: "فواتير المبيعات", icon: Receipt },
-    { value: "invoices", label: "فواتير الشراء", icon: FileText },
-    { value: "employees", label: "الموظفين", icon: Users },
-    { value: "reports", label: "التقارير", icon: BarChart3 },
+export interface MenuItem {
+  value: string;
+  label: string;
+  icon: typeof ShoppingCart;
+  roles?: UserRole[];
+}
+
+export const MENU_ITEMS: MenuItem[] = [
+  { value: "sales", label: "نقطة البيع", icon: ShoppingCart },
+  { value: "products", label: "المنتجات", icon: Package, roles: ["admin", "manager"] },
+  { value: "sales-invoices", label: "فواتير المبيعات", icon: Receipt },
+  { value: "invoices", label: "فواتير الشراء", icon: FileText, roles: ["admin", "manager"] },
+  { value: "employees", label: "الموظفين", icon: Users, roles: ["admin"] },
+  { value: "shifts", label: "الورديات", icon: Clock, roles: ["admin", "manager"] },
+  { value: "reports", label: "التقارير", icon: BarChart3, roles: ["admin", "manager"] },
 ];
+
+export function getMenuItemsForRole(role?: UserRole | null) {
+  if (!role) return MENU_ITEMS;
+  return MENU_ITEMS.filter((item) => !item.roles || item.roles.includes(role));
+}

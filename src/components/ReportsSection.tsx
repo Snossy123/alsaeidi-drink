@@ -8,10 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { FileText, Calendar, TrendingUp, ShoppingCart, Package, DollarSign } from "lucide-react";
-import { API_BASE_URL } from "@/lib/constants";
-
-
-const API_URL = API_BASE_URL;
+import { apiClient } from "@/lib/apiClient";
 
 const ReportsSection = () => {
   const [selectedReport, setSelectedReport] = useState("sales");
@@ -28,10 +25,7 @@ const ReportsSection = () => {
     }
 
     try {
-      const response = await fetch(
-        `${API_URL}/reports?type=${selectedReport}&from=${dateFrom}&to=${dateTo}`
-      );
-      const data = await response.json();
+      const data = await apiClient(`/reports?type=${selectedReport}&from=${dateFrom}&to=${dateTo}`);
       setReportData(data);
     } catch (error) {
       console.error("فشل في جلب التقرير:", error);

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, FormEvent } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { API_BASE_URL } from "@/lib/constants";
+import { apiClient } from "@/lib/apiClient";
 import { Category, Product } from "@/types";
 
 import CategoryManagement from "./CategoryManagement";
@@ -33,18 +33,13 @@ const ProductManagement = () => {
   });
 
   const { toast } = useToast();
-  const API_PRODUCTS_URL = API_BASE_URL + "/products";
-  const API_CATEGORIES_URL = API_BASE_URL + "/categories";
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [resProducts, resCategories] = await Promise.all([
-          fetch(API_PRODUCTS_URL),
-          fetch(API_CATEGORIES_URL)
+        const [productsData, categoriesData] = await Promise.all([
+          apiClient<{ products: Product[] }>("/products"),
+          apiClient<{ categories: Category[] }>("/categories"),
         ]);
-        const productsData = await resProducts.json();
-        const categoriesData = await resCategories.json();
         setProducts(productsData.products || []);
         setCategories(categoriesData.categories || []);
       } catch (error) {
@@ -93,12 +88,10 @@ const ProductManagement = () => {
     };
 
     try {
-      const response = await fetch(API_PRODUCTS_URL, {
+      const data = await apiClient<{ success: boolean; products: Product[] }>("/products", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: editingProduct ? "update" : "add", product: newProduct })
+        body: JSON.stringify({ action: editingProduct ? "update" : "add", product: newProduct }),
       });
-      const data = await response.json();
       if (data.success) {
         setProducts(data.products);
         setIsDialogOpen(false);
@@ -112,12 +105,10 @@ const ProductManagement = () => {
   const handleDelete = async (id: string) => {
     if (!confirm("هل أنت متأكد من الحذف؟")) return;
     try {
-      const response = await fetch(API_PRODUCTS_URL, {
+      const data = await apiClient<{ success: boolean; products: Product[] }>("/products", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "delete", id })
+        body: JSON.stringify({ action: "delete", id }),
       });
-      const data = await response.json();
       if (data.success) setProducts(data.products);
     } catch (error) {
       toast({ title: "خطأ في الحذف", variant: "destructive" });

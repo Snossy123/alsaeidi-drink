@@ -7,10 +7,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { User, Plus, Edit, Trash2, Briefcase, Calendar, Mail, Phone, DollarSign, Search, ShieldCheck, Lock as LockIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { API_BASE_URL } from "@/lib/constants";
+import { apiClient } from "@/lib/apiClient";
 import { Badge } from "@/components/ui/badge";
 
-const API_URL = API_BASE_URL + "/employees";
 
 interface Employee {
   id: number;
@@ -46,8 +45,7 @@ const Employees = () => {
   const fetchEmployees = async () => {
     setLoading(true);
     try {
-      const response = await fetch(API_URL);
-      const data = await response.json();
+      const data = await apiClient<{ status: string; employees: Employee[] }>("/employees");
       if (data.status === "success") setEmployees(data.employees);
     } catch {
       toast({
@@ -85,17 +83,15 @@ const Employees = () => {
     }
 
     try {
-      const response = await fetch(API_URL, {
+      const data = await apiClient<{ success: boolean; employees: Employee[] }>("/employees", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: editingEmployee ? "update" : "add",
           employee: editingEmployee ? { ...formData, id: editingEmployee.id } : formData,
         }),
       });
 
-      const data = await response.json();
-      if (data.status === "success") {
+      if (data.success) {
         toast({
           title: editingEmployee ? "تم التحديث" : "تمت الإضافة",
           description: data.message,
@@ -150,14 +146,12 @@ const Employees = () => {
 
   const handleDelete = async (id: number) => {
     try {
-      const response = await fetch(API_URL, {
+      const data = await apiClient<{ success: boolean; employees: Employee[]; message?: string }>("/employees", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "delete", id }),
       });
 
-      const data = await response.json();
-      if (data.status === "success") {
+      if (data.success) {
         toast({
           title: "تم الحذف",
           description: data.message,

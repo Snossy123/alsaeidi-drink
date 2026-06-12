@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
 import { Calculator, Moon, Sun, LogOut } from "lucide-react";
 
@@ -8,7 +9,10 @@ import PurchaseInvoices from "@/components/PurchaseInvoices";
 import ReportsSection from "@/components/ReportsSection";
 import SalesInvoices from "@/components/SalesInvoices";
 import Employees from "@/components/Employees";
-import { MENU_ITEMS } from "./menu.config";
+import ShiftReport from "@/components/shifts/ShiftReport";
+import { OfflineBanner } from "@/components/OfflineBanner";
+import { getMenuItemsForRole } from "./menu.config";
+import { useAuth } from "@/contexts/AuthContext";
 
 import {
     Sidebar,
@@ -26,7 +30,6 @@ import {
     useSidebar,
 } from "@/components/ui/sidebar";
 
-/* -------------------- Dark Mode Hook -------------------- */
 const useDarkMode = () => {
     const [dark, setDark] = useState(
         localStorage.getItem("pos-theme") === "dark"
@@ -42,7 +45,6 @@ const useDarkMode = () => {
     return { dark, toggle };
 };
 
-/* -------------------- Calculator Button -------------------- */
 const CalculatorIconButton = () => {
     const { toggleSidebar } = useSidebar();
 
@@ -58,11 +60,13 @@ const CalculatorIconButton = () => {
     );
 };
 
-/* -------------------- Main Layout -------------------- */
 export function IndexLayout() {
     const [activeTab, setActiveTab] = useState("sales");
     const { dark, toggle } = useDarkMode();
     const { toggleSidebar } = useSidebar();
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
+    const menuItems = getMenuItemsForRole(user?.role);
 
     const isSalesTab = activeTab === "sales";
 
@@ -71,6 +75,11 @@ export function IndexLayout() {
         onSwipedRight: isSalesTab ? undefined : toggleSidebar,
         trackTouch: true,
     });
+
+    const handleLogout = async () => {
+        await logout();
+        navigate("/login");
+    };
 
     const renderContent = () => {
         const components: Record<string, React.ReactNode> = {
@@ -84,15 +93,11 @@ export function IndexLayout() {
             "sales-invoices": <SalesInvoices />,
             "invoices": <PurchaseInvoices />,
             "employees": <Employees />,
+            "shifts": <ShiftReport />,
             "reports": <ReportsSection />,
         };
 
-        return components[activeTab] || <SalesInterface
-            activeTab={activeTab}
-            onNavigate={setActiveTab}
-            dark={dark}
-            onToggleDark={toggle}
-        />;
+        return components[activeTab] || components.sales;
     };
 
     return (
@@ -101,7 +106,6 @@ export function IndexLayout() {
             dir="rtl"
             className="flex h-svh w-full mesh-bg overflow-hidden"
         >
-            {/* Sidebar — hidden on POS tab */}
             {!isSalesTab && (
                 <Sidebar
                     side="right"
@@ -114,6 +118,9 @@ export function IndexLayout() {
                             <div className="group-data-[collapsible=icon]:hidden">
                                 <h2 className="text-lg font-display font-black tracking-tighter">سنسو POS</h2>
                                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">Smart Operations</p>
+                                {user && (
+                                    <p className="text-[10px] text-muted-foreground mt-1">{user.name} — {user.role}</p>
+                                )}
                             </div>
                         </div>
                     </SidebarHeader>
@@ -126,21 +133,14 @@ export function IndexLayout() {
 
                             <SidebarGroupContent>
                                 <SidebarMenu className="gap-1.5">
-                                    {MENU_ITEMS.map(({ value, label, icon: Icon }) => (
+                                    {menuItems.map(({ value, label, icon: Icon }) => (
                                         <SidebarMenuItem key={value}>
                                             <SidebarMenuButton
                                                 size="lg"
                                                 isActive={activeTab === value}
                                                 onClick={() => setActiveTab(value)}
                                                 tooltip={label}
-                                                className="
-                        h-11 text-sm font-bold gap-3 rounded-xl
-                        transition-colors
-                        hover:bg-sidebar-accent hover:text-sidebar-accent-foreground
-                        group-data-[collapsible=icon]:!h-10 group-data-[collapsible=icon]:!w-10 group-data-[collapsible=icon]:!p-0 group-data-[collapsible=icon]:justify-center
-                        data-[active=true]:bg-sidebar-primary
-                        data-[active=true]:text-sidebar-primary-foreground
-                      "
+                                                className="h-11 text-sm font-bold gap-3 rounded-xl transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:!h-10 group-data-[collapsible=icon]:!w-10 group-data-[collapsible=icon]:!p-0 group-data-[collapsible=icon]:justify-center data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground"
                                             >
                                                 <Icon className="w-5 h-5 shrink-0" />
                                                 <span className="group-data-[collapsible=icon]:hidden">{label}</span>
@@ -160,7 +160,10 @@ export function IndexLayout() {
                             {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                             <span className="group-data-[collapsible=icon]:hidden font-bold text-sm">{dark ? "الوضع النهاري" : "الوضع الليلي"}</span>
                         </button>
-                        <button className="w-full h-10 rounded-xl flex items-center justify-center gap-3 text-red-500 hover:bg-red-500/10 transition-colors group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:p-0">
+                        <button
+                            onClick={handleLogout}
+                            className="w-full h-10 rounded-xl flex items-center justify-center gap-3 text-red-500 hover:bg-red-500/10 transition-colors group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:p-0"
+                        >
                             <LogOut className="w-5 h-5" />
                             <span className="group-data-[collapsible=icon]:hidden font-bold text-sm">تسجيل الخروج</span>
                         </button>
@@ -170,8 +173,8 @@ export function IndexLayout() {
                 </Sidebar>
             )}
 
-            {/* Main */}
             <SidebarInset className="bg-transparent overflow-hidden w-full flex-1 h-svh min-h-0">
+                <OfflineBanner />
                 <main className={`h-full min-h-0 relative ${isSalesTab ? "overflow-hidden p-0" : "overflow-y-auto p-0 md:p-3 lg:p-4"}`}>
                     {!isSalesTab && (
                         <div className="lg:hidden sticky top-0 z-20 flex items-center gap-3 p-3 bg-background/80 backdrop-blur-md border-b border-border/50">

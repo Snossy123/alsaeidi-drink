@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { API_BASE_URL } from "@/lib/constants";
+import { apiClient } from "@/lib/apiClient";
 import { PurchaseInvoice, Category } from "@/types/invoices";
 
 // Sub-components
@@ -12,26 +12,15 @@ import PurchaseInvoiceCard from "./purchase-invoices/PurchaseInvoiceCard";
 import PurchaseInvoiceDetails from "./purchase-invoices/PurchaseInvoiceDetails";
 import AddPurchaseInvoiceForm from "./purchase-invoices/AddPurchaseInvoiceForm";
 
-const API_URL = API_BASE_URL;
-const API_CATEGORIES_URL = API_BASE_URL + "/categories";
-
 const saveInvoice = async (invoiceData: any) => {
-  const response = await fetch(API_URL + '/purchase-invoices', {
+  return apiClient('/purchase-invoices', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(invoiceData)
+    body: JSON.stringify(invoiceData),
   });
-
-  if (!response.ok) throw new Error('فشل في حفظ الفاتورة');
-
-  return await response.json();
 };
 
 const fetchInvoices = async () => {
-  const response = await fetch(API_URL + '/purchase-invoices');
-  if (!response.ok) throw new Error('فشل في جلب الفواتير');
-
-  return await response.json();
+  return apiClient('/purchase-invoices');
 };
 
 const PurchaseInvoices = () => {
@@ -46,11 +35,7 @@ const PurchaseInvoices = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [resCategories] = await Promise.all([
-          fetch(API_CATEGORIES_URL)
-        ]);
-
-        const categoriesData = await resCategories.json();
+        const categoriesData = await apiClient<{ categories: Category[] }>('/categories');
         setCategories(categoriesData.categories || []);
       } catch (error) {
         toast({

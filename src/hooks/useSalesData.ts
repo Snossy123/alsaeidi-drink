@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { API_BASE_URL } from "@/lib/constants";
+import { apiClient } from "@/lib/apiClient";
+import { cacheCategories, cacheProducts, getCachedCategories, getCachedProducts } from "@/lib/offline/syncQueue";
 
 export interface Product {
   id: string | number;
@@ -19,7 +20,6 @@ export interface Product {
 export interface Category {
   id: string;
   name: string;
-  // Add other category fields if needed
 }
 
 export interface Employee {
@@ -38,27 +38,32 @@ export const useSalesData = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [productsRes, categoriesRes, employeesRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/products`),
-          fetch(`${API_BASE_URL}/categories`),
-          fetch(`${API_BASE_URL}/employees`)
-        ]);
-
         const [productsData, categoriesData, employeesData] = await Promise.all([
-          productsRes.json(),
-          categoriesRes.json(),
-          employeesRes.json()
+          apiClient<{ status: string; products: Product[] }>("/products"),
+          apiClient<{ status: string; categories: Category[] }>("/categories"),
+          apiClient<{ status: string; employees: Employee[] }>("/employees"),
         ]);
 
-        if (productsData.status === "success") setProducts(productsData.products);
-        if (categoriesData.status === "success") setCategories(categoriesData.categories);
+        if (productsData.status === "success") {
+          setProducts(productsData.products);
+          await cacheProducts(productsData.products);
+        }
+        if (categoriesData.status === "success") {
+          setCategories(categoriesData.categories);
+          await cacheCategories(categoriesData.categories);
+        }
         if (employeesData.status === "success") setEmployees(employeesData.employees);
-
       } catch (error: any) {
+        const cachedProducts = await getCachedProducts<Product[]>();
+        const cachedCategories = await getCachedCategories<Category[]>();
+
+        if (cachedProducts?.length) setProducts(cachedProducts);
+        if (cachedCategories?.length) setCategories(cachedCategories);
+
         toast({
-          title: "فشل التحميل",
+          title: cachedProducts?.length ? "وضع أوفلاين" : "فشل التحميل",
           description: error.message || "تحقق من الاتصال بالإنترنت",
-          variant: "destructive",
+          variant: cachedProducts?.length ? "default" : "destructive",
         });
       } finally {
         setLoading(false);
