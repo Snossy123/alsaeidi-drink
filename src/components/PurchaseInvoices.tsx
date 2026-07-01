@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FileText, RotateCcw } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/apiClient";
-import { PurchaseInvoice, Category } from "@/types/invoices";
+import { PurchaseInvoice, Category, PurchaseInvoiceType, getPurchaseInvoiceType, purchaseInvoiceTypeLabels } from "@/types/invoices";
 import { matchesAmountRange, matchesDateRange, matchesTimeRange } from "@/lib/invoiceFilters";
 import ProductPagination from "@/components/product-management/ProductPagination";
 
@@ -20,14 +21,15 @@ import AddPurchaseInvoiceForm from "./purchase-invoices/AddPurchaseInvoiceForm";
 const PAGE_SIZE = 9;
 
 const saveInvoice = async (invoiceData: any) => {
-  return apiClient('/purchase-invoices', {
+  return apiClient<{ invoice?: PurchaseInvoice }>('/purchase-invoices', {
     method: 'POST',
     body: JSON.stringify(invoiceData),
   });
 };
 
-const fetchInvoices = async () => {
-  return apiClient<{ invoices: PurchaseInvoice[] }>('/purchase-invoices');
+const fetchInvoices = async (invoiceType?: PurchaseInvoiceType | "all") => {
+  const query = invoiceType && invoiceType !== "all" ? `?invoice_type=${invoiceType}` : "";
+  return apiClient<{ invoices: PurchaseInvoice[] }>(`/purchase-invoices${query}`);
 };
 
 const PurchaseInvoices = () => {
@@ -46,6 +48,7 @@ const PurchaseInvoices = () => {
   const [timeTo, setTimeTo] = useState("");
   const [minAmount, setMinAmount] = useState("");
   const [maxAmount, setMaxAmount] = useState("");
+  const [typeFilter, setTypeFilter] = useState<PurchaseInvoiceType | "all">("all");
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
@@ -66,7 +69,7 @@ const PurchaseInvoices = () => {
   }, [toast]);
 
   useEffect(() => {
-    fetchInvoices()
+    fetchInvoices(typeFilter === "all" ? undefined : typeFilter)
       .then((data) => setInvoices(data.invoices))
       .catch((error) => {
         console.error(error);
@@ -76,7 +79,7 @@ const PurchaseInvoices = () => {
           variant: "destructive"
         });
       });
-  }, [toast]);
+  }, [toast, typeFilter]);
 
   const filteredInvoices = useMemo(() => {
     return invoices.filter((invoice) => {
@@ -101,7 +104,7 @@ const PurchaseInvoices = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, dateFrom, dateTo, timeFrom, timeTo, minAmount, maxAmount]);
+  }, [search, dateFrom, dateTo, timeFrom, timeTo, minAmount, maxAmount, typeFilter]);
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -117,21 +120,23 @@ const PurchaseInvoices = () => {
     setTimeTo("");
     setMinAmount("");
     setMaxAmount("");
+    setTypeFilter("all");
     setCurrentPage(1);
   };
 
   const hasActiveFilters =
-    search || dateFrom || dateTo || timeFrom || timeTo || minAmount || maxAmount;
+    search || dateFrom || dateTo || timeFrom || timeTo || minAmount || maxAmount || typeFilter !== "all";
 
   const handleInvoiceSubmit = async (newInvoice: any) => {
     try {
-      await saveInvoice(newInvoice);
-      const updatedInvoices = await fetchInvoices();
+      const result = await saveInvoice(newInvoice);
+      const savedNumber = result.invoice?.invoice_number || newInvoice.invoice_number;
+      const updatedInvoices = await fetchInvoices(typeFilter === "all" ? undefined : typeFilter);
       setInvoices(updatedInvoices.invoices);
 
       toast({
         title: "تم إضافة الفاتورة",
-        description: `تم إضافة فاتورة الشراء ${newInvoice.invoice_number} بنجاح`,
+        description: `تم إضافة فاتورة الشراء ${savedNumber} بنجاح`,
       });
 
       setIsAddDialogOpen(false);
@@ -151,11 +156,13 @@ const PurchaseInvoices = () => {
         <PurchaseInvoiceHeader invoiceCount={filteredInvoices.length} />
 
         <DialogContent className="max-w-6xl max-h-[90dvh] p-0 overflow-y-auto rounded-[3rem] border-none bg-white dark:bg-slate-900 shadow-[0_30px_100px_rgba(0,0,0,0.3)]" dir="rtl">
-          <AddPurchaseInvoiceForm
-            categories={categories}
-            onSubmit={handleInvoiceSubmit}
-            onCancel={() => setIsAddDialogOpen(false)}
-          />
+          {isAddDialogOpen && (
+            <AddPurchaseInvoiceForm
+              categories={categories}
+              onSubmit={handleInvoiceSubmit}
+              onCancel={() => setIsAddDialogOpen(false)}
+            />
+          )}
         </DialogContent>
       </Dialog>
 
@@ -169,12 +176,22 @@ const PurchaseInvoices = () => {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
             <Input
               placeholder="بحث برقم الفاتورة أو المورد..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
+            <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as PurchaseInvoiceType | "all")}>
+              <SelectTrigger>
+                <SelectValue placeholder="نوع الفاتورة" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل الأنواع</SelectItem>
+                <SelectItem value="general">{purchaseInvoiceTypeLabels.general}</SelectItem>
+                <SelectItem value="operation">{purchaseInvoiceTypeLabels.operation}</SelectItem>
+              </SelectContent>
+            </Select>
             <div className="space-y-1.5">
               <Label className="text-xs font-bold text-muted-foreground">من تاريخ</Label>
               <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
@@ -185,7 +202,7 @@ const PurchaseInvoices = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs font-bold text-muted-foreground">من وقت</Label>
               <Input type="time" value={timeFrom} onChange={(e) => setTimeFrom(e.target.value)} />
@@ -266,7 +283,13 @@ const PurchaseInvoices = () => {
                   <div className="bg-purple-600 p-2.5 rounded-2xl shadow-lg">
                     <FileText className="w-6 h-6" />
                   </div>
-                  <span className="bg-purple-600/10 text-purple-400 border border-purple-400/30 px-3 py-1 font-black text-xs rounded-full">فاتورة تحصيل</span>
+                  <span className={`border px-3 py-1 font-black text-xs rounded-full ${
+                    selectedInvoice && getPurchaseInvoiceType(selectedInvoice) === "general"
+                      ? "bg-purple-600/10 text-purple-400 border-purple-400/30"
+                      : "bg-amber-500/10 text-amber-400 border-amber-400/30"
+                  }`}>
+                    {selectedInvoice ? purchaseInvoiceTypeLabels[getPurchaseInvoiceType(selectedInvoice)] : ""}
+                  </span>
                 </div>
                 <h2 className="text-3xl font-black tracking-tight">تفاصيل فاتورة المشتريات {selectedInvoice?.invoice_number}</h2>
               </div>

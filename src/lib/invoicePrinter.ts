@@ -23,6 +23,7 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false) => {
   const printWindow = window.open("", "_blank", "width=400,height=600");
   if (!printWindow) return;
 
+  const total = Number(data.total) || 0;
   const sizeMap: any = { s: "صغير", m: "وسط", l: "كبير" };
   const orderLabel = data.order_type ? orderTypeLabels[data.order_type] : "تيك اوي";
   const paymentLabel = data.payment_status ? paymentStatusLabels[data.payment_status] : "مدفوع";
@@ -84,24 +85,28 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false) => {
             </tr>
           </thead>
           <tbody>
-            ${data.items.map((item: any) => `
+            ${data.items.map((item: any) => {
+              const price = Number(item.price) || 0;
+              const quantity = Number(item.quantity) || 0;
+              return `
               <tr>
                 <td>
                   <span class="bold">${item.name}</span>
                   ${item.size ? `<br/><small>(${sizeMap[item.size] || item.size})</small>` : ""}
                 </td>
-                <td>${item.price}</td>
-                <td class="center">${item.quantity}</td>
-                <td style="text-align:left" class="bold">${(item.price * item.quantity).toFixed(2)}</td>
+                <td>${price.toFixed(2)}</td>
+                <td class="center">${quantity}</td>
+                <td style="text-align:left" class="bold">${(price * quantity).toFixed(2)}</td>
               </tr>
-            `).join("")}
+            `;
+            }).join("")}
           </tbody>
         </table>
 
         <div class="total-section">
           <div style="display: flex; justify-content: space-between; font-size: 16px;" class="bold">
             <span>الإجمالي النهائي:</span>
-            <span>${data.total.toFixed(2)} ج</span>
+            <span>${total.toFixed(2)} ج</span>
           </div>
         </div>
 

@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,10 +22,10 @@ interface CheckoutDialogProps {
   setPaymentStatus: (value: PaymentStatus) => void;
   paymentMethod: PaymentMethod;
   setPaymentMethod: (value: PaymentMethod) => void;
-  amountPaid: string;
-  setAmountPaid: (value: string) => void;
   total: number;
-  handleCheckout: () => void;
+  handleCheckout: (cashAmountPaid: string) => void;
+  editMode?: boolean;
+  editInvoiceNumber?: string;
 }
 
 export const CheckoutDialog = ({
@@ -41,12 +42,24 @@ export const CheckoutDialog = ({
   setPaymentStatus,
   paymentMethod,
   setPaymentMethod,
-  amountPaid,
-  setAmountPaid,
   total,
   handleCheckout,
+  editMode = false,
+  editInvoiceNumber,
 }: CheckoutDialogProps) => {
-  const change = Math.max(0, (parseFloat(amountPaid) || 0) - total);
+  const [amountPaid, setAmountPaid] = useState("");
+  const wasOpenRef = useRef(false);
+
+  useEffect(() => {
+    if (showEmployeeDialog && !wasOpenRef.current) {
+      setAmountPaid(total.toFixed(2));
+    }
+    wasOpenRef.current = showEmployeeDialog;
+  }, [showEmployeeDialog, total]);
+
+  const paid = parseFloat(amountPaid) || 0;
+  const change = Math.max(0, paid - total);
+  const remaining = Math.max(0, total - paid);
   const isPaid = paymentStatus === "paid";
 
   return (
@@ -57,12 +70,17 @@ export const CheckoutDialog = ({
       >
         <div className="bg-slate-900 p-4 text-white">
           <DialogHeader className="text-right">
-            <DialogTitle className="text-xl font-black tracking-tight">تأكيد العملية</DialogTitle>
-            <p className="text-slate-400 font-bold text-xs mt-1">خطوات نهائية لإصدار الفاتورة</p>
+            <DialogTitle className="text-xl font-black tracking-tight">
+              {editMode ? "حفظ تعديلات الفاتورة" : "تأكيد العملية"}
+            </DialogTitle>
+            <p className="text-slate-400 font-bold text-xs mt-1">
+              {editMode ? editInvoiceNumber : "خطوات نهائية لإصدار الفاتورة"}
+            </p>
           </DialogHeader>
         </div>
 
         <div className="p-4 space-y-4">
+          {!editMode && (
           <div className="space-y-2">
             <Label className="text-xs font-black text-slate-500 uppercase tracking-widest mr-1">الموظف المسؤول</Label>
             <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
@@ -78,6 +96,7 @@ export const CheckoutDialog = ({
               </SelectContent>
             </Select>
           </div>
+          )}
 
           <div className="space-y-2">
             <Label className="text-xs font-black text-slate-500 uppercase tracking-widest mr-1">نوع الطلب</Label>
@@ -92,6 +111,7 @@ export const CheckoutDialog = ({
             </Select>
           </div>
 
+          {!editMode && (
           <div className="space-y-2">
             <Label className="text-xs font-black text-slate-500 uppercase tracking-widest mr-1">حالة الدفع</Label>
             <Select value={paymentStatus} onValueChange={(v) => setPaymentStatus(v as PaymentStatus)}>
@@ -104,8 +124,9 @@ export const CheckoutDialog = ({
               </SelectContent>
             </Select>
           </div>
+          )}
 
-          {isPaid && (
+          {!editMode && isPaid && (
             <>
               <div className="space-y-2">
                 <Label className="text-xs font-black text-slate-500 uppercase tracking-widest mr-1">طريقة الدفع</Label>
@@ -124,14 +145,23 @@ export const CheckoutDialog = ({
                 <div className="space-y-2">
                   <Label className="text-xs font-black text-slate-500 uppercase tracking-widest mr-1">المبلغ المدفوع</Label>
                   <Input
-                    type="number"
-                    min={total}
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
+                    dir="ltr"
                     value={amountPaid}
-                    onChange={(e) => setAmountPaid(e.target.value)}
-                    className="h-11"
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                        setAmountPaid(value);
+                      }
+                    }}
+                    className="h-11 text-left"
                   />
-                  <p className="text-sm font-bold text-emerald-600">الباقي: {change.toFixed(2)} ج</p>
+                  {paid >= total ? (
+                    <p className="text-sm font-bold text-emerald-600">الباقي: {change.toFixed(2)} ج</p>
+                  ) : (
+                    <p className="text-sm font-bold text-amber-600">المتبقي: {remaining.toFixed(2)} ج</p>
+                  )}
                 </div>
               )}
             </>
@@ -153,10 +183,12 @@ export const CheckoutDialog = ({
 
           <Button
             data-compact
-            onClick={handleCheckout}
+            onClick={() => handleCheckout(amountPaid)}
             className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-500 font-black text-white text-sm"
           >
-            إتمام البيع وطباعة الفاتورة ({total.toFixed(2)} ج)
+            {editMode
+              ? `حفظ التعديلات (${total.toFixed(2)} ج)`
+              : `إتمام البيع وطباعة الفاتورة (${total.toFixed(2)} ج)`}
           </Button>
         </div>
       </DialogContent>

@@ -1,16 +1,19 @@
 import { useState, useRef, useEffect } from "react";
+import { X } from "lucide-react";
 import { useGridLayout } from "@/hooks/useGridLayout";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/apiClient";
 import { useAuth } from "@/contexts/AuthContext";
+import { useInvoiceEdit } from "@/contexts/InvoiceEditContext";
 import { useShift } from "@/hooks/useShift";
 import { enqueueSale } from "@/lib/offline/syncQueue";
 import CategoriesSidebar from "./CategoriesSidebar";
 
 import { useSalesData } from "@/hooks/useSalesData";
-import { useCart } from "@/hooks/useCart";
+import { useCart, mergeCartItems } from "@/hooks/useCart";
 import { printInvoice } from "@/lib/invoicePrinter";
-import type { OrderType, PaymentMethod, PaymentStatus } from "@/types/salesInvoice";
+import { Button } from "@/components/ui/button";
+import type { OrderType, PaymentMethod, PaymentStatus, SaleInvoice } from "@/types/salesInvoice";
 
 import { BarcodeScanner } from "./sales/BarcodeScanner";
 import { ProductGrid } from "./sales/ProductGrid";
@@ -37,6 +40,7 @@ const SalesInterface = ({
 }: SalesInterfaceProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { editingInvoice, clearEditing } = useInvoiceEdit();
   const {
     shift,
     requiresShift,
@@ -50,7 +54,7 @@ const SalesInterface = ({
   const { itemsPerPage } = useGridLayout(gridContainerRef);
 
   const { products, categories, employees } = useSalesData();
-  const { cart, addToCart, updateQuantity, removeFromCart, clearCart, calculateTotal } = useCart();
+  const { cart, addToCart, updateQuantity, removeFromCart, clearCart, loadCart, calculateTotal } = useCart();
 
   const [barcode, setBarcode] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -64,9 +68,9 @@ const SalesInterface = ({
   const [orderType, setOrderType] = useState<OrderType>("takeaway");
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("paid");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
-  const [amountPaid, setAmountPaid] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [navOpen, setNavOpen] = useState(false);
+  const loadedEditIdRef = useRef<string | number | null>(null);
 
   useEffect(() => {
     if (user?.type === "employee") {
@@ -75,10 +79,36 @@ const SalesInterface = ({
   }, [user]);
 
   useEffect(() => {
-    if (showEmployeeDialog) {
-      setAmountPaid(calculateTotal().toFixed(2));
+    if (!editingInvoice) {
+      loadedEditIdRef.current = null;
+      return;
     }
-  }, [showEmployeeDialog, cart, calculateTotal]);
+    if (loadedEditIdRef.current === editingInvoice.id) return;
+    loadedEditIdRef.current = editingInvoice.id;
+
+    loadCart(
+      editingInvoice.items.map((item) => ({
+        id: item.product_id ?? item.id ?? item.name,
+        name: item.name,
+        price: Number(item.price),
+        quantity: Number(item.quantity),
+        barcode: item.barcode,
+      }))
+    );
+    setOrderType(editingInvoice.order_type || "takeaway");
+    setKitchenNote(editingInvoice.kitchen_note || "");
+    setPaymentStatus("unpaid");
+  }, [editingInvoice, loadCart]);
+
+  const handleCancelEdit = () => {
+    loadedEditIdRef.current = null;
+    clearEditing();
+    clearCart();
+    setKitchenNote("");
+    setOrderType("takeaway");
+    setPaymentStatus("paid");
+    setPaymentMethod("cash");
+  };
 
   const handleBarcodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,24 +145,92 @@ const SalesInterface = ({
     setSelectedProduct(null);
   };
 
-  const handleCheckout = async () => {
-    if (!selectedEmployee) {
+  const handleCheckout = async (cashAmountPaid = "") => {
+    if (!selectedEmployee && !editingInvoice) {
       toast({ title: "لم يتم اختيار الموظف", variant: "destructive" });
       return;
     }
 
-    if (requiresShift && !shift) {
+    if (requiresShift && !shift && !editingInvoice) {
       toast({ title: "يجب فتح وردية أولاً", variant: "destructive" });
       return;
     }
 
-    const total = calculateTotal();
+    const mergedCart = mergeCartItems(cart);
+    const total = mergedCart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+    if (editingInvoice) {
+      if (!navigator.onLine) {
+        toast({ title: "التعديل يتطلب اتصال بالإنترنت", variant: "destructive" });
+        return;
+      }
+
+      const updatePayload = {
+        items: mergedCart.map((item) => ({
+          product_id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          barcode: item.barcode || "",
+        })),
+        kitchen_note: kitchenNote,
+        total,
+      };
+
+      try {
+        const result = await apiClient<{ status: string; invoice: SaleInvoice; message?: string }>(
+          `/sales-invoices/${editingInvoice.id}/items`,
+          {
+            method: "PATCH",
+            body: JSON.stringify(updatePayload),
+          }
+        );
+
+        if (result.status === "success") {
+          const updated = result.invoice;
+          printInvoice({
+            invoiceNumber: updated.invoiceNumber,
+            date: updated.date,
+            time: updated.time,
+            employeeName: updated.cashier || "",
+            total: updated.total,
+            items: updated.items,
+            kitchen_note: updated.kitchen_note,
+            order_type: updated.order_type,
+            payment_status: updated.payment_status,
+          }, false);
+          printInvoice({
+            invoiceNumber: updated.invoiceNumber,
+            date: updated.date,
+            time: updated.time,
+            employeeName: updated.cashier || "",
+            total: updated.total,
+            items: updated.items,
+            kitchen_note: updated.kitchen_note,
+            order_type: updated.order_type,
+            payment_status: updated.payment_status,
+          }, true);
+          toast({ title: "تم تحديث الفاتورة", description: updated.invoiceNumber });
+          handleCancelEdit();
+          setShowEmployeeDialog(false);
+        } else {
+          toast({ title: "فشل التحديث", description: result.message, variant: "destructive" });
+        }
+      } catch (error: any) {
+        toast({ title: "فشل التحديث", description: error.message, variant: "destructive" });
+      }
+      return;
+    }
+
+    const cartItems = mergedCart;
+    const checkoutTotal = total;
+
     const isPaid = paymentStatus === "paid";
     const paid = isPaid
-      ? (paymentMethod === "cash" ? parseFloat(amountPaid) || total : total)
+      ? (paymentMethod === "cash" ? parseFloat(cashAmountPaid) || checkoutTotal : checkoutTotal)
       : 0;
 
-    if (isPaid && paymentMethod === "cash" && paid < total) {
+    if (isPaid && paymentMethod === "cash" && paid < checkoutTotal) {
       toast({ title: "المبلغ المدفوع أقل من الإجمالي", variant: "destructive" });
       return;
     }
@@ -149,8 +247,8 @@ const SalesInterface = ({
       date: now.toISOString().slice(0, 10),
       time: now.toTimeString().slice(0, 8),
       employeeName: employee?.name || user?.name || "غير محدد",
-      total,
-      items: cart.map((item) => ({
+      total: checkoutTotal,
+      items: cartItems.map((item) => ({
         ...item,
         product_id: item.id,
       })),
@@ -159,7 +257,7 @@ const SalesInterface = ({
       shift_id: shift?.id,
       payment_method: paymentMethod,
       amount_paid: paid,
-      change_given: isPaid ? Math.max(0, paid - total) : 0,
+      change_given: isPaid ? Math.max(0, paid - checkoutTotal) : 0,
       payment_status: paymentStatus,
       order_type: orderType,
     };
@@ -269,6 +367,17 @@ const SalesInterface = ({
       </div>
 
       <div className="flex-1 min-w-0 flex flex-col gap-2 overflow-hidden">
+        {editingInvoice && (
+          <div className="flex items-center justify-between gap-2 rounded-xl bg-amber-500/10 border border-amber-500/30 px-3 py-2 shrink-0">
+            <p className="text-sm font-black text-amber-700 dark:text-amber-400">
+              تعديل فاتورة {editingInvoice.invoiceNumber}
+            </p>
+            <Button variant="ghost" size="sm" className="gap-1 h-8" onClick={handleCancelEdit}>
+              <X className="w-4 h-4" /> إلغاء
+            </Button>
+          </div>
+        )}
+
         {shift && (
           <ShiftBanner
             shift={shift}
@@ -307,6 +416,7 @@ const SalesInterface = ({
           removeFromCart={removeFromCart}
           updateQuantity={updateQuantity}
           calculateTotal={calculateTotal}
+          editMode={!!editingInvoice}
           openEmployeeDialog={() =>
             cart.length > 0 ? setShowEmployeeDialog(true) : toast({ title: "السلة فارغة", variant: "destructive" })
           }
@@ -334,10 +444,10 @@ const SalesInterface = ({
         setPaymentStatus={setPaymentStatus}
         paymentMethod={paymentMethod}
         setPaymentMethod={setPaymentMethod}
-        amountPaid={amountPaid}
-        setAmountPaid={setAmountPaid}
         total={calculateTotal()}
         handleCheckout={handleCheckout}
+        editMode={!!editingInvoice}
+        editInvoiceNumber={editingInvoice?.invoiceNumber}
       />
 
       {onNavigate && onToggleDark && (

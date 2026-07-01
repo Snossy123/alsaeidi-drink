@@ -13,6 +13,7 @@ import ShiftReport from "@/components/shifts/ShiftReport";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { getMenuItemsForRole } from "./menu.config";
 import { useAuth } from "@/contexts/AuthContext";
+import { InvoiceEditProvider } from "@/contexts/InvoiceEditContext";
 
 import {
     Sidebar,
@@ -90,7 +91,7 @@ export function IndexLayout() {
                 onToggleDark={toggle}
             />,
             "products": <ProductManagement />,
-            "sales-invoices": <SalesInvoices />,
+            "sales-invoices": <SalesInvoices onNavigate={setActiveTab} />,
             "invoices": <PurchaseInvoices />,
             "employees": <Employees />,
             "shifts": <ShiftReport />,
@@ -101,6 +102,7 @@ export function IndexLayout() {
     };
 
     return (
+        <InvoiceEditProvider>
         <div
             {...swipeHandlers}
             dir="rtl"
@@ -191,5 +193,6 @@ export function IndexLayout() {
                 </main>
             </SidebarInset>
         </div>
+        </InvoiceEditProvider>
     );
 }

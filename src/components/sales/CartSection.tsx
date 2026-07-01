@@ -12,6 +12,7 @@ interface CartSectionProps {
   updateQuantity: (id: string | number, newQuantity: number, price: number) => void;
   calculateTotal: () => number;
   openEmployeeDialog: () => void;
+  editMode?: boolean;
 }
 
 export const CartSection = ({
@@ -19,7 +20,8 @@ export const CartSection = ({
   removeFromCart,
   updateQuantity,
   calculateTotal,
-  openEmployeeDialog
+  openEmployeeDialog,
+  editMode = false,
 }: CartSectionProps) => {
   const { onTouchStart, onTouchMove, onTouchEnd, guardAction } = useScrollTouchGuard();
 
@@ -32,7 +34,9 @@ export const CartSection = ({
             <ShoppingCart className="w-4 h-4 text-white" />
           </div>
           <div>
-            <span className="text-xs font-black text-slate-800 dark:text-white">الفاتورة الحالية</span>
+            <span className="text-xs font-black text-slate-800 dark:text-white">
+              {editMode ? "تعديل الفاتورة" : "الفاتورة الحالية"}
+            </span>
             <p className="text-[9px] text-slate-400 font-bold">{cart.length} أصناف في السلة</p>
           </div>
         </div>
@@ -144,7 +148,7 @@ export const CartSection = ({
             onClick={openEmployeeDialog}
             className="flex-1 h-9 rounded-lg bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/20 font-black text-white active:scale-95 transition-all text-xs"
           >
-            إتمام العملية الآن
+            {editMode ? "حفظ التعديلات" : "إتمام العملية الآن"}
           </Button>
         </div>
       </div>

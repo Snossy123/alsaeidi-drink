@@ -7,11 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FileText, Calendar, User, Printer, ChevronLeft, Clock, RotateCcw } from "lucide-react";
+import { FileText, Calendar, User, Printer, ChevronLeft, Clock, RotateCcw, CreditCard, Pencil } from "lucide-react";
 import { apiClient } from "@/lib/apiClient";
 import { useAuth } from "@/contexts/AuthContext";
+import { useInvoiceEdit } from "@/contexts/InvoiceEditContext";
 import { useToast } from "@/hooks/use-toast";
 import { printInvoice } from "@/lib/invoicePrinter";
+import { PayInvoiceDialog } from "@/components/sales/PayInvoiceDialog";
 import type { SaleInvoice, InvoiceStatus, PaymentStatus } from "@/types/salesInvoice";
 import { orderTypeLabels } from "@/types/salesInvoice";
 import ProductPagination from "@/components/product-management/ProductPagination";
@@ -32,7 +34,11 @@ const paymentLabels: Record<PaymentStatus, string> = {
   partial: "مدفوعة جزئياً",
 };
 
-const SalesInvoices = () => {
+interface SalesInvoicesProps {
+  onNavigate?: (tab: string) => void;
+}
+
+const SalesInvoices = ({ onNavigate }: SalesInvoicesProps) => {
   const [invoices, setInvoices] = useState<SaleInvoice[]>([]);
   const [selectedInvoice, setSelectedInvoice] = useState<SaleInvoice | null>(null);
   const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
@@ -46,8 +52,19 @@ const SalesInvoices = () => {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [refundAmount, setRefundAmount] = useState("");
+  const [isPayDialogOpen, setIsPayDialogOpen] = useState(false);
   const { isManagerOrAbove } = useAuth();
+  const { startEditing } = useInvoiceEdit();
   const { toast } = useToast();
+
+  const getInvoiceStatus = (invoice: SaleInvoice): InvoiceStatus =>
+    (invoice.status ?? "completed") as InvoiceStatus;
+
+  const getPaymentStatus = (invoice: SaleInvoice): PaymentStatus =>
+    (invoice.payment_status ?? "paid") as PaymentStatus;
+
+  const isEditableUnpaid = (invoice: SaleInvoice) =>
+    getPaymentStatus(invoice) !== "paid" && getInvoiceStatus(invoice) === "completed";
 
   const loadInvoices = async () => {
     try {
@@ -174,6 +191,19 @@ const SalesInvoices = () => {
     } catch (error: any) {
       toast({ title: "فشلت الطباعة", description: error.message, variant: "destructive" });
     }
+  };
+
+  const handleEditInvoice = () => {
+    if (!selectedInvoice) return;
+    startEditing(selectedInvoice);
+    setIsInvoiceDialogOpen(false);
+    onNavigate?.("sales");
+    toast({ title: "وضع التعديل", description: `تعديل فاتورة ${selectedInvoice.invoiceNumber}` });
+  };
+
+  const handleInvoicePaid = (invoice: SaleInvoice) => {
+    setSelectedInvoice(invoice);
+    loadInvoices();
   };
 
   return (
@@ -306,77 +336,104 @@ const SalesInvoices = () => {
       />
 
       <Dialog open={isInvoiceDialogOpen} onOpenChange={setIsInvoiceDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90dvh] flex flex-col overflow-hidden rounded-[2rem]" dir="rtl">
+        <DialogContent
+          className="max-w-4xl max-h-[90dvh] !flex !flex-col !gap-0 !p-0 !overflow-hidden rounded-[2rem]"
+          dir="rtl"
+        >
           {selectedInvoice && (
-            <div className="flex flex-col gap-6 min-h-0 flex-1">
-              <DialogHeader className="shrink-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Badge>{statusLabels[selectedInvoice.status || "completed"]}</Badge>
-                  <Badge variant="outline">{paymentLabels[selectedInvoice.payment_status || "paid"]}</Badge>
-                  <Badge variant="secondary">{orderTypeLabels[selectedInvoice.order_type || "takeaway"]}</Badge>
-                </div>
-                <DialogTitle className="text-2xl font-black">تفاصيل الفاتورة {selectedInvoice.invoiceNumber}</DialogTitle>
-              </DialogHeader>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm shrink-0">
-                <div><p className="text-muted-foreground">التاريخ</p><p className="font-bold">{selectedInvoice.date}</p></div>
-                <div><p className="text-muted-foreground">الوقت</p><p className="font-bold">{selectedInvoice.time}</p></div>
-                <div><p className="text-muted-foreground">البائع</p><p className="font-bold">{selectedInvoice.cashier}</p></div>
-                <div><p className="text-muted-foreground">الإجمالي</p><p className="font-bold">{Number(selectedInvoice.total).toFixed(2)} ج</p></div>
-              </div>
-
-              <div className="min-h-0 max-h-[40dvh] overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-800">
-                <Table>
-                  <TableHeader className="sticky top-0 z-10 bg-background">
-                    <TableRow>
-                      <TableHead className="text-right">المنتج</TableHead>
-                      <TableHead className="text-right">السعر</TableHead>
-                      <TableHead className="text-center">الكمية</TableHead>
-                      <TableHead className="text-left">الإجمالي</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {selectedInvoice.items.map((item, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{item.name}</TableCell>
-                        <TableCell>{Number(item.price).toFixed(2)}</TableCell>
-                        <TableCell className="text-center">{item.quantity}</TableCell>
-                        <TableCell>{(item.price * item.quantity).toFixed(2)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-
-              {isManagerOrAbove && selectedInvoice.status !== "void" && (
-                <div className="flex flex-wrap gap-2 shrink-0">
-                  <Button variant="destructive" onClick={handleVoid}>إلغاء الفاتورة</Button>
-                  <Button variant="outline" onClick={togglePaymentStatus}>
-                    {selectedInvoice.payment_status === "paid" ? "تعيين غير مدفوعة" : "تعيين مدفوعة"}
-                  </Button>
-                  <div className="flex gap-2 items-center">
-                    <Input
-                      type="number"
-                      placeholder="مبلغ الاسترجاع"
-                      value={refundAmount}
-                      onChange={(e) => setRefundAmount(e.target.value)}
-                      className="w-40"
-                    />
-                    <Button onClick={handleRefund}>استرجاع</Button>
+            <div className="flex flex-col max-h-[calc(90dvh-5rem)] w-full">
+              <div className="shrink-0 space-y-4 p-6 pb-4">
+                <DialogHeader>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge>{statusLabels[getInvoiceStatus(selectedInvoice)]}</Badge>
+                    <Badge variant="outline">{paymentLabels[getPaymentStatus(selectedInvoice)]}</Badge>
+                    <Badge variant="secondary">{orderTypeLabels[selectedInvoice.order_type || "takeaway"]}</Badge>
                   </div>
-                </div>
-              )}
+                  <DialogTitle className="text-2xl font-black">تفاصيل الفاتورة {selectedInvoice.invoiceNumber}</DialogTitle>
+                </DialogHeader>
 
-              <div className="flex gap-3 shrink-0">
-                <Button className="flex-1 gap-2" onClick={handleReprint}>
-                  <Printer className="w-4 h-4" /> إعادة طباعة
-                </Button>
-                <Button variant="outline" onClick={() => setIsInvoiceDialogOpen(false)}>إغلاق</Button>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div><p className="text-muted-foreground">التاريخ</p><p className="font-bold">{selectedInvoice.date}</p></div>
+                  <div><p className="text-muted-foreground">الوقت</p><p className="font-bold">{selectedInvoice.time}</p></div>
+                  <div><p className="text-muted-foreground">البائع</p><p className="font-bold">{selectedInvoice.cashier}</p></div>
+                  <div><p className="text-muted-foreground">الإجمالي</p><p className="font-bold">{Number(selectedInvoice.total).toFixed(2)} ج</p></div>
+                </div>
+              </div>
+
+              <div className="flex-1 min-h-0 overflow-y-auto px-6">
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800">
+                  <Table>
+                    <TableHeader className="sticky top-0 z-10 bg-background">
+                      <TableRow>
+                        <TableHead className="text-right">المنتج</TableHead>
+                        <TableHead className="text-right">السعر</TableHead>
+                        <TableHead className="text-center">الكمية</TableHead>
+                        <TableHead className="text-left">الإجمالي</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {selectedInvoice.items.map((item, index) => (
+                        <TableRow key={index}>
+                          <TableCell>{item.name}</TableCell>
+                          <TableCell>{Number(item.price).toFixed(2)}</TableCell>
+                          <TableCell className="text-center">{item.quantity}</TableCell>
+                          <TableCell>{(item.price * item.quantity).toFixed(2)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+
+              <div className="shrink-0 border-t border-slate-200 dark:border-slate-800 p-4 space-y-3 bg-background">
+                {isEditableUnpaid(selectedInvoice) && (
+                  <div className="flex flex-wrap gap-2">
+                    <Button className="flex-1 min-w-[140px] gap-2" onClick={() => setIsPayDialogOpen(true)}>
+                      <CreditCard className="w-4 h-4" /> دفع الفاتورة
+                    </Button>
+                    <Button variant="secondary" className="flex-1 min-w-[140px] gap-2" onClick={handleEditInvoice}>
+                      <Pencil className="w-4 h-4" /> تعديل الفاتورة
+                    </Button>
+                  </div>
+                )}
+
+                {isManagerOrAbove && getInvoiceStatus(selectedInvoice) !== "void" && (
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="destructive" onClick={handleVoid}>إلغاء الفاتورة</Button>
+                    <Button variant="outline" onClick={togglePaymentStatus}>
+                      {getPaymentStatus(selectedInvoice) === "paid" ? "تعيين غير مدفوعة" : "تعيين مدفوعة"}
+                    </Button>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        type="number"
+                        placeholder="مبلغ الاسترجاع"
+                        value={refundAmount}
+                        onChange={(e) => setRefundAmount(e.target.value)}
+                        className="w-40"
+                      />
+                      <Button onClick={handleRefund}>استرجاع</Button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <Button className="flex-1 gap-2" onClick={handleReprint}>
+                    <Printer className="w-4 h-4" /> إعادة طباعة
+                  </Button>
+                  <Button variant="outline" onClick={() => setIsInvoiceDialogOpen(false)}>إغلاق</Button>
+                </div>
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
+
+      <PayInvoiceDialog
+        open={isPayDialogOpen}
+        onOpenChange={setIsPayDialogOpen}
+        invoice={selectedInvoice}
+        onPaid={handleInvoicePaid}
+      />
     </div>
   );
 };
