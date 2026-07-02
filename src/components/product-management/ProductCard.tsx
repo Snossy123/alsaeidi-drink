@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, Package } from "lucide-react";
+import { Edit, Trash2, Package, Minus, Plus } from "lucide-react";
 import { getProductImageUrl } from "@/lib/constants";
 import { Product, Category } from "@/types";
 
@@ -9,6 +9,7 @@ interface ProductCardProps {
   categories: Category[];
   onEdit: (product: Product) => void;
   onDelete: (id: string) => void;
+  onStockAdjust?: (productId: string | number, delta: number) => void;
   getCategoryColor: (categoryId: any) => string;
 }
 
@@ -17,6 +18,7 @@ const ProductCard = ({
   categories,
   onEdit,
   onDelete,
+  onStockAdjust,
   getCategoryColor
 }: ProductCardProps) => {
   const categoryName = categories.find(c => Number(c.id) === product.category_id)?.name || "بدون فئة";
@@ -82,6 +84,30 @@ const ProductCard = ({
             </Button>
           </div>
         </div>
+
+        {onStockAdjust && (
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-6 w-6 rounded-md"
+              onClick={() => onStockAdjust(product.id, -5)}
+            >
+              <Minus className="w-3 h-3" />
+            </Button>
+            <span className="text-[9px] font-bold text-slate-500 px-1">±5</span>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-6 w-6 rounded-md"
+              onClick={() => onStockAdjust(product.id, 5)}
+            >
+              <Plus className="w-3 h-3" />
+            </Button>
+          </div>
+        )}
 
         {product.hasSizes ? (
           <div className="flex gap-1 flex-wrap">

@@ -30,6 +30,7 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir,
       emptyOutDir: true,
+      sourcemap: mode !== 'production',
     }
   };
 });

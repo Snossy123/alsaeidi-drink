@@ -1,10 +1,18 @@
-import { useEffect, useRef, useState } from "react";
-import { Receipt } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  Banknote,
+  CreditCard,
+  Receipt,
+  ShoppingBag,
+  User,
+  UtensilsCrossed,
+  Wallet,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import { Employee } from "@/hooks/useSalesData";
 import type { OrderType, PaymentMethod, PaymentStatus } from "@/types/salesInvoice";
 
@@ -26,6 +34,64 @@ interface CheckoutDialogProps {
   handleCheckout: (cashAmountPaid: string) => void;
   editMode?: boolean;
   editInvoiceNumber?: string;
+}
+
+interface OptionButtonGroupProps<T extends string> {
+  value: T;
+  onChange: (value: T) => void;
+  options: { value: T; label: string; icon?: ReactNode }[];
+  columns?: 2 | 3;
+}
+
+function OptionButtonGroup<T extends string>({
+  value,
+  onChange,
+  options,
+  columns = 2,
+}: OptionButtonGroupProps<T>) {
+  return (
+    <div
+      className={cn(
+        "grid gap-2",
+        columns === 3 ? "grid-cols-3" : "grid-cols-2"
+      )}
+    >
+      {options.map((opt) => {
+        const selected = value === opt.value;
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => onChange(opt.value)}
+            className={cn(
+              "flex flex-col items-center justify-center gap-1.5 min-h-[52px] rounded-xl border-2 px-3 py-2.5 text-sm font-black transition-all active:scale-[0.97]",
+              selected
+                ? "border-blue-600 bg-blue-600 text-white shadow-md shadow-blue-600/25"
+                : "border-slate-200 bg-slate-50 text-slate-700 hover:border-blue-300 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200 dark:hover:border-blue-500 dark:hover:bg-blue-950/40"
+            )}
+          >
+            {opt.icon && (
+              <span className={cn("shrink-0", selected ? "text-white" : "text-slate-400")}>
+                {opt.icon}
+              </span>
+            )}
+            <span>{opt.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function FieldSection({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <Label className="text-sm font-black text-slate-600 dark:text-slate-300 mr-1">
+        {label}
+      </Label>
+      {children}
+    </div>
+  );
 }
 
 export const CheckoutDialog = ({
@@ -68,82 +134,87 @@ export const CheckoutDialog = ({
         className="max-w-md overflow-hidden overflow-x-hidden rounded-2xl border-none bg-white dark:bg-slate-900 shadow-2xl p-0 gap-0"
         dir="rtl"
       >
-        <div className="bg-slate-900 p-4 text-white">
-          <DialogHeader className="text-right">
+        <div className="bg-slate-900 p-5 text-white">
+          <DialogHeader className="text-right space-y-1">
             <DialogTitle className="text-xl font-black tracking-tight">
               {editMode ? "حفظ تعديلات الفاتورة" : "تأكيد العملية"}
             </DialogTitle>
-            <p className="text-slate-400 font-bold text-xs mt-1">
+            <p className="text-slate-400 font-bold text-xs">
               {editMode ? editInvoiceNumber : "خطوات نهائية لإصدار الفاتورة"}
             </p>
           </DialogHeader>
+          <div className="mt-4 rounded-xl bg-white/10 px-4 py-3 flex items-center justify-between">
+            <span className="text-sm font-bold text-slate-300">إجمالي الفاتورة</span>
+            <span className="text-2xl font-black">{total.toFixed(2)} ج</span>
+          </div>
         </div>
 
-        <div className="p-4 space-y-4">
+        <div className="p-5 space-y-5 max-h-[min(70vh,520px)] overflow-y-auto">
           {!editMode && (
-          <div className="space-y-2">
-            <Label className="text-xs font-black text-slate-500 uppercase tracking-widest mr-1">الموظف المسؤول</Label>
-            <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
-              <SelectTrigger className="w-full h-11 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl px-4 text-sm font-black">
-                <SelectValue placeholder="-- اختر الموظف --" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                {employees.map((emp) => (
-                  <SelectItem key={emp.id} value={emp.id.toString()} className="font-bold py-2">
-                    {emp.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            <FieldSection label="الموظف المسؤول">
+              <div className="flex flex-wrap gap-2">
+                {employees.map((emp) => {
+                  const selected = selectedEmployee === emp.id.toString();
+                  return (
+                    <button
+                      key={emp.id}
+                      type="button"
+                      onClick={() => setSelectedEmployee(emp.id.toString())}
+                      className={cn(
+                        "inline-flex items-center gap-2 min-h-[48px] rounded-xl border-2 px-4 py-2.5 text-sm font-black transition-all active:scale-[0.97]",
+                        selected
+                          ? "border-blue-600 bg-blue-600 text-white shadow-md shadow-blue-600/25"
+                          : "border-slate-200 bg-slate-50 text-slate-700 hover:border-blue-300 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200"
+                      )}
+                    >
+                      <User className={cn("w-4 h-4 shrink-0", selected ? "text-white" : "text-slate-400")} />
+                      {emp.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </FieldSection>
           )}
 
-          <div className="space-y-2">
-            <Label className="text-xs font-black text-slate-500 uppercase tracking-widest mr-1">نوع الطلب</Label>
-            <Select value={orderType} onValueChange={(v) => setOrderType(v as OrderType)}>
-              <SelectTrigger className="w-full h-11 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl px-4 text-sm font-black">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="takeaway">تيك اوي</SelectItem>
-                <SelectItem value="table">طربيزة</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <FieldSection label="نوع الطلب">
+            <OptionButtonGroup
+              value={orderType}
+              onChange={(v) => setOrderType(v as OrderType)}
+              options={[
+                { value: "takeaway", label: "تيك اوي", icon: <ShoppingBag className="w-4 h-4" /> },
+                { value: "table", label: "طربيزة", icon: <UtensilsCrossed className="w-4 h-4" /> },
+              ]}
+            />
+          </FieldSection>
 
           {!editMode && (
-          <div className="space-y-2">
-            <Label className="text-xs font-black text-slate-500 uppercase tracking-widest mr-1">حالة الدفع</Label>
-            <Select value={paymentStatus} onValueChange={(v) => setPaymentStatus(v as PaymentStatus)}>
-              <SelectTrigger className="w-full h-11 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl px-4 text-sm font-black">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="paid">مدفوع</SelectItem>
-                <SelectItem value="unpaid">غير مدفوع</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            <FieldSection label="حالة الدفع">
+              <OptionButtonGroup
+                value={paymentStatus}
+                onChange={(v) => setPaymentStatus(v as PaymentStatus)}
+                options={[
+                  { value: "paid", label: "مدفوع", icon: <Wallet className="w-4 h-4" /> },
+                  { value: "unpaid", label: "غير مدفوع", icon: <CreditCard className="w-4 h-4" /> },
+                ]}
+              />
+            </FieldSection>
           )}
 
           {!editMode && isPaid && (
             <>
-              <div className="space-y-2">
-                <Label className="text-xs font-black text-slate-500 uppercase tracking-widest mr-1">طريقة الدفع</Label>
-                <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
-                  <SelectTrigger className="w-full h-11 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl px-4 text-sm font-black">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cash">نقدي</SelectItem>
-                    <SelectItem value="card">بطاقة</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <FieldSection label="طريقة الدفع">
+                <OptionButtonGroup
+                  value={paymentMethod}
+                  onChange={(v) => setPaymentMethod(v as PaymentMethod)}
+                  options={[
+                    { value: "cash", label: "نقدي", icon: <Banknote className="w-4 h-4" /> },
+                    { value: "card", label: "بطاقة", icon: <CreditCard className="w-4 h-4" /> },
+                  ]}
+                />
+              </FieldSection>
 
               {paymentMethod === "cash" && (
-                <div className="space-y-2">
-                  <Label className="text-xs font-black text-slate-500 uppercase tracking-widest mr-1">المبلغ المدفوع</Label>
+                <FieldSection label="المبلغ المدفوع">
                   <Input
                     type="text"
                     inputMode="decimal"
@@ -155,20 +226,26 @@ export const CheckoutDialog = ({
                         setAmountPaid(value);
                       }
                     }}
-                    className="h-11 text-left"
+                    className="h-12 text-left text-lg font-black border-2 rounded-xl"
                   />
-                  {paid >= total ? (
-                    <p className="text-sm font-bold text-emerald-600">الباقي: {change.toFixed(2)} ج</p>
-                  ) : (
-                    <p className="text-sm font-bold text-amber-600">المتبقي: {remaining.toFixed(2)} ج</p>
-                  )}
-                </div>
+                  <div
+                    className={cn(
+                      "rounded-xl px-4 py-2.5 text-sm font-black text-center",
+                      paid >= total
+                        ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                        : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
+                    )}
+                  >
+                    {paid >= total
+                      ? `الباقي: ${change.toFixed(2)} ج`
+                      : `المتبقي: ${remaining.toFixed(2)} ج`}
+                  </div>
+                </FieldSection>
               )}
             </>
           )}
 
-          <div className="space-y-2">
-            <Label className="text-xs font-black text-slate-500 uppercase tracking-widest mr-1">ملاحظات التحضير</Label>
+          <FieldSection label="ملاحظات التحضير">
             <div className="relative">
               <Receipt className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
@@ -176,15 +253,17 @@ export const CheckoutDialog = ({
                 placeholder="مثال: بدون سكر - زيادة ثلج..."
                 value={kitchenNote}
                 onChange={(e) => setKitchenNote(e.target.value)}
-                className="h-11 pr-10 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl text-sm font-bold"
+                className="h-12 pr-10 bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold"
               />
             </div>
-          </div>
+          </FieldSection>
+        </div>
 
+        <div className="p-5 pt-0">
           <Button
             data-compact
             onClick={() => handleCheckout(amountPaid)}
-            className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-500 font-black text-white text-sm"
+            className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-500 font-black text-white text-sm shadow-lg shadow-blue-600/25"
           >
             {editMode
               ? `حفظ التعديلات (${total.toFixed(2)} ج)`

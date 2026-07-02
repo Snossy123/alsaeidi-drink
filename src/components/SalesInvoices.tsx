@@ -143,10 +143,26 @@ const SalesInvoices = ({ onNavigate }: SalesInvoicesProps) => {
     const amount = parseFloat(refundAmount);
     if (!amount || amount <= 0) return;
 
+    const refundable = selectedInvoice.total - (selectedInvoice.refund_amount ?? 0);
+    const isFullRefund = Math.abs(amount - refundable) < 0.01;
+    const payload: {
+      amount: number;
+      reason: string;
+      items?: Array<{ product_id: number | string; quantity: number; name: string }>;
+    } = { amount, reason: "استرجاع من الواجهة" };
+
+    if (isFullRefund) {
+      payload.items = selectedInvoice.items.map((item) => ({
+        product_id: item.product_id ?? item.id,
+        quantity: item.quantity,
+        name: item.name,
+      }));
+    }
+
     try {
       await apiClient(`/sales-invoices/${selectedInvoice.id}/refund`, {
         method: "POST",
-        body: JSON.stringify({ amount, reason: "استرجاع من الواجهة" }),
+        body: JSON.stringify(payload),
       });
       toast({ title: "تم تسجيل الاسترجاع" });
       setRefundAmount("");

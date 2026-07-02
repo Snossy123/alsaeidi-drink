@@ -115,6 +115,21 @@ const ProductManagement = () => {
     }
   };
 
+  const handleStockAdjust = async (productId: string | number, delta: number) => {
+    try {
+      const data = await apiClient<{ success: boolean; products: Product[] }>(`/products/${productId}/stock`, {
+        method: "PATCH",
+        body: JSON.stringify({ delta }),
+      });
+      if (data.success) {
+        setProducts(data.products);
+        toast({ title: delta > 0 ? "تم زيادة المخزون" : "تم تقليل المخزون" });
+      }
+    } catch (error) {
+      toast({ title: "فشل تحديث المخزون", variant: "destructive" });
+    }
+  };
+
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
     setFormData({
@@ -217,6 +232,7 @@ const ProductManagement = () => {
                     categories={categories}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    onStockAdjust={handleStockAdjust}
                     getCategoryColor={getCategoryColor}
                   />
                 ))}
