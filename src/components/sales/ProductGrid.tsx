@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { getProductImageUrl } from "@/lib/constants";
+import { getProductSizeOptions } from "@/lib/productSizes";
 
 /**
  * Product Interface
@@ -71,6 +72,8 @@ const ProductCard = ({ product, onClick }: { product: Product; onClick: () => vo
   const [imgError, setImgError] = useState(false);
   const imageUrl = getProductImageUrl(product.image);
   const showImage = imageUrl && !imgError;
+  const sizeOptions = getProductSizeOptions(product);
+  const showSizePrices = product.hasSizes && sizeOptions.length > 0;
 
   return (
     <div
@@ -117,16 +120,21 @@ const ProductCard = ({ product, onClick }: { product: Product; onClick: () => vo
           {product.name}
         </h3>
 
-        {product.hasSizes ? (
-          <div className="grid grid-cols-3 gap-0.5">
-            {[
-              { label: 'ص', price: product.s_price },
-              { label: 'و', price: product.m_price },
-              { label: 'ك', price: product.l_price },
-            ].map((size, idx) => (
-              <div key={idx} className="flex flex-col items-center min-w-0 bg-slate-50 dark:bg-slate-950/50 py-0.5 rounded-md">
-                <span className="text-[7px] font-black text-slate-400 uppercase">{size.label}</span>
-                <span className="text-[8px] font-black text-slate-800 dark:text-white tabular-nums truncate w-full text-center">{size.price}</span>
+        {showSizePrices ? (
+          <div className={cn(
+            "grid gap-0.5",
+            sizeOptions.length === 1 && "grid-cols-1",
+            sizeOptions.length === 2 && "grid-cols-2",
+            sizeOptions.length === 3 && "grid-cols-3",
+          )}>
+            {sizeOptions.map((size) => (
+              <div key={size.key} className="flex flex-col items-center min-w-0 bg-slate-50 dark:bg-slate-950/50 py-0.5 rounded-md">
+                <span className="text-[7px] font-black text-slate-400 uppercase">
+                  {size.key === "s" ? "ص" : size.key === "m" ? "و" : "ك"}
+                </span>
+                <span className="text-[8px] font-black text-slate-800 dark:text-white tabular-nums truncate w-full text-center">
+                  {size.price}
+                </span>
               </div>
             ))}
           </div>

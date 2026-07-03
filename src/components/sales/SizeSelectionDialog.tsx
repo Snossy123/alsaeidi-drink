@@ -1,45 +1,16 @@
-import { Package } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { AlertCircle, Package } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getProductImageUrl } from "@/lib/constants";
+import { getProductSizeOptions, ProductSize } from "@/lib/productSizes";
 import { Product } from "@/hooks/useSalesData";
+import { cn } from "@/lib/utils";
 
 interface SizeSelectionDialogProps {
   showSizeDialog: boolean;
   setShowSizeDialog: (open: boolean) => void;
   selectedProduct: Product | null;
-  handleSelectSize: (size: "s" | "m" | "l") => void;
+  handleSelectSize: (size: ProductSize) => void;
 }
-
-const SIZE_OPTIONS = [
-  {
-    key: "s" as const,
-    label: "صغير (S)",
-    priceKey: "s_price" as const,
-    bg: "bg-blue-50 dark:bg-blue-950/40",
-    border: "border-blue-300 dark:border-blue-700",
-    labelColor: "text-blue-700 dark:text-blue-300",
-    priceColor: "text-blue-900 dark:text-blue-100",
-  },
-  {
-    key: "m" as const,
-    label: "وسط (M)",
-    priceKey: "m_price" as const,
-    bg: "bg-purple-50 dark:bg-purple-950/40",
-    border: "border-purple-300 dark:border-purple-700",
-    labelColor: "text-purple-700 dark:text-purple-300",
-    priceColor: "text-purple-900 dark:text-purple-100",
-  },
-  {
-    key: "l" as const,
-    label: "كبير (L)",
-    priceKey: "l_price" as const,
-    bg: "bg-emerald-50 dark:bg-emerald-950/40",
-    border: "border-emerald-300 dark:border-emerald-700",
-    labelColor: "text-emerald-700 dark:text-emerald-300",
-    priceColor: "text-emerald-900 dark:text-emerald-100",
-  },
-];
 
 export const SizeSelectionDialog = ({
   showSizeDialog,
@@ -47,25 +18,27 @@ export const SizeSelectionDialog = ({
   selectedProduct,
   handleSelectSize,
 }: SizeSelectionDialogProps) => {
+  const sizeOptions = selectedProduct ? getProductSizeOptions(selectedProduct) : [];
+
   return (
     <Dialog open={showSizeDialog} onOpenChange={setShowSizeDialog}>
       <DialogContent
-        className="max-w-lg overflow-hidden text-center rounded-2xl p-0 border-none bg-white dark:bg-slate-900 shadow-2xl"
+        className="max-w-md overflow-hidden text-center rounded-2xl p-0 border-none bg-white dark:bg-slate-900 shadow-2xl"
         dir="rtl"
       >
-        <div className="bg-slate-900 p-4 text-white">
+        <div className="bg-slate-900 p-5 text-white">
           <DialogHeader>
             <DialogTitle className="text-xl font-black tracking-tight">تخصيص الحجم</DialogTitle>
             <p className="text-slate-400 font-bold text-xs mt-1">اختر المقاس المفضل للمنتج</p>
           </DialogHeader>
         </div>
 
-        <div className="p-4">
+        <div className="p-5">
           {selectedProduct && (
-            <div className="space-y-4">
-              <div className="flex flex-col items-center gap-2">
+            <div className="space-y-5">
+              <div className="flex flex-col items-center gap-3">
                 {getProductImageUrl(selectedProduct.image) ? (
-                  <div className="w-32 h-24 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-800 p-2 border border-slate-100 dark:border-slate-800">
+                  <div className="w-28 h-24 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-800 p-2 border border-slate-100 dark:border-slate-800">
                     <img
                       src={getProductImageUrl(selectedProduct.image)!}
                       alt={selectedProduct.name}
@@ -80,28 +53,48 @@ export const SizeSelectionDialog = ({
                 <h2 className="font-black text-lg text-slate-800 dark:text-white">{selectedProduct.name}</h2>
               </div>
 
-              <div className="grid grid-cols-3 gap-2">
-                {SIZE_OPTIONS.map((size) => {
-                  const price = selectedProduct[size.priceKey];
-                  if (!price || price <= 0) return null;
-
-                  return (
-                    <Button
+              {sizeOptions.length > 0 ? (
+                <div
+                  className={cn(
+                    "grid gap-3",
+                    sizeOptions.length === 1 && "grid-cols-1 max-w-[200px] mx-auto",
+                    sizeOptions.length === 2 && "grid-cols-2",
+                    sizeOptions.length === 3 && "grid-cols-3",
+                  )}
+                >
+                  {sizeOptions.map((size) => (
+                    <button
                       key={size.key}
+                      type="button"
                       data-compact
                       onClick={() => handleSelectSize(size.key)}
-                      className={`h-20 flex flex-col items-center justify-center gap-1 rounded-xl border-2 ${size.bg} ${size.border} shadow-sm active:scale-95 transition-transform`}
+                      className={cn(
+                        "h-24 flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 shadow-sm",
+                        "transition-transform active:scale-95 hover:brightness-95",
+                        size.bg,
+                        size.border,
+                      )}
                     >
-                      <span className={`text-xs font-black uppercase tracking-wide ${size.labelColor}`}>
+                      <span className={cn("text-xs font-black uppercase tracking-wide", size.labelColor)}>
                         {size.label}
                       </span>
-                      <span className={`text-lg font-black ${size.priceColor}`}>
-                        {price} ج
+                      <span className={cn("text-lg font-black tabular-nums", size.priceColor)}>
+                        {size.price} ج
                       </span>
-                    </Button>
-                  );
-                })}
-              </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/30 p-4 flex flex-col items-center gap-2">
+                  <AlertCircle className="w-8 h-8 text-amber-600 dark:text-amber-400" />
+                  <p className="font-black text-sm text-amber-900 dark:text-amber-100">
+                    لا توجد أحجام متاحة
+                  </p>
+                  <p className="text-xs font-bold text-amber-700/80 dark:text-amber-300/80 leading-relaxed">
+                    لم يتم تحديد أسعار الأحجام لهذا المنتج. يرجى تحديث المنتج من إدارة المنتجات.
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

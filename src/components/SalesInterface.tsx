@@ -12,6 +12,7 @@ import CategoriesSidebar from "./CategoriesSidebar";
 import { useSalesData } from "@/hooks/useSalesData";
 import { useCart, mergeCartItems } from "@/hooks/useCart";
 import { printInvoice } from "@/lib/invoicePrinter";
+import { getProductSizeOptions, getProductSizePrice, ProductSize } from "@/lib/productSizes";
 import { Button } from "@/components/ui/button";
 import type { OrderType, PaymentMethod, PaymentStatus, SaleInvoice } from "@/types/salesInvoice";
 
@@ -120,26 +121,47 @@ const SalesInterface = ({
       return;
     }
 
-    if (product.hasSizes) {
-      setSelectedProduct(product);
-      setShowSizeDialog(true);
-    } else {
-      addToCart(product);
-    }
+    addProductToCart(product);
   };
 
-  const handleProductClick = (product: any) => {
-    if (product.hasSizes) {
+  const addProductToCart = (product: Parameters<typeof addToCart>[0]) => {
+    const sizeOptions = getProductSizeOptions(product);
+
+    if (sizeOptions.length === 1) {
+      addToCart(product, sizeOptions[0].key, sizeOptions[0].price);
+      return;
+    }
+
+    if (sizeOptions.length > 1) {
       setSelectedProduct(product);
       setShowSizeDialog(true);
-    } else {
-      addToCart(product);
+      return;
     }
+
+    if (product.hasSizes) {
+      const fallbackPrice = Number(product.price ?? 0);
+      if (fallbackPrice > 0) {
+        addToCart(product, null, fallbackPrice);
+        return;
+      }
+
+      setSelectedProduct(product);
+      setShowSizeDialog(true);
+      return;
+    }
+
+    addToCart(product);
   };
 
-  const handleSelectSize = (size: "s" | "m" | "l") => {
+  const handleProductClick = (product: Parameters<typeof addToCart>[0]) => {
+    addProductToCart(product);
+  };
+
+  const handleSelectSize = (size: ProductSize) => {
     if (!selectedProduct) return;
-    const price = size === "s" ? selectedProduct.s_price : size === "m" ? selectedProduct.m_price : selectedProduct.l_price;
+    const price = getProductSizePrice(selectedProduct, size);
+    if (!price) return;
+
     addToCart(selectedProduct, size, price);
     setShowSizeDialog(false);
     setSelectedProduct(null);

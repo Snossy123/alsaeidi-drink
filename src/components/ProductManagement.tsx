@@ -73,6 +73,21 @@ const ProductManagement = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
+    if (formData.hasSizes) {
+      const hasAnySizePrice = [formData.prices.small, formData.prices.medium, formData.prices.large]
+        .some((value) => parseFloat(value) > 0);
+
+      if (!hasAnySizePrice) {
+        toast({
+          title: "أسعار الأحجام مطلوبة",
+          description: "يرجى إدخال سعر واحد على الأقل عند تفعيل الأحجام المختلفة",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     const newProduct = {
       id: editingProduct ? editingProduct.id : Date.now().toString(),
       name: formData.name,
