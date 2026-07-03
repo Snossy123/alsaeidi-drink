@@ -131,7 +131,7 @@ export const CheckoutDialog = ({
   return (
     <Dialog open={showEmployeeDialog} onOpenChange={setShowEmployeeDialog}>
       <DialogContent
-        className="w-[96vw] max-w-xl sm:max-w-2xl overflow-hidden overflow-x-hidden rounded-2xl border-none bg-white dark:bg-slate-900 shadow-2xl p-0 gap-0"
+        className="!w-[96vw] !max-w-4xl !p-0 !gap-0 !rounded-2xl overflow-hidden overflow-x-hidden border-none bg-white dark:bg-slate-900 shadow-2xl"
         dir="rtl"
       >
         <div className="bg-slate-900 px-4 py-4 sm:px-5 sm:py-5 text-white">
