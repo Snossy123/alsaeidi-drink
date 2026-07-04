@@ -32,9 +32,6 @@ const escapeHtml = (value: unknown) =>
     .replace(/"/g, "&quot;");
 
 export const printInvoice = (data: InvoiceData, isKitchenCopy = false) => {
-  const printWindow = window.open("", "_blank", "width=400,height=600");
-  if (!printWindow) return;
-
   const total = Number(data.total) || 0;
   const orderLabel = data.order_type ? orderTypeLabels[data.order_type] : "تيك اوي";
   const paymentLabel = data.payment_status ? paymentStatusLabels[data.payment_status] : "مدفوع";
@@ -64,11 +61,19 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false) => {
     <html lang="ar" dir="rtl">
       <head>
         <meta charset="UTF-8">
-        <title>${escapeHtml(data.invoiceNumber)}</title>
+        <title> </title>
         <style>
           @page {
             size: 80mm auto;
             margin: 0;
+          }
+
+          @media print {
+            html, body {
+              width: 80mm;
+              margin: 0 !important;
+              padding: 0 !important;
+            }
           }
 
           * {
@@ -302,23 +307,52 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false) => {
                 ? "--- نسخة المطبخ ---"
                 : "شكراً لزيارتكم<br/>نرجو رؤيتكم قريباً"
             }
-            <br />
-            ${new Date().toLocaleString("ar-EG")}
             <div class="brand">${SOFTWARE_BRAND}</div>
           </div>
         </div>
 
         <script>
           window.onload = function() {
+            window.focus();
             window.print();
-            setTimeout(function() { window.close(); }, 500);
           };
         </script>
       </body>
     </html>
   `;
 
-  printWindow.document.open();
-  printWindow.document.write(html);
-  printWindow.document.close();
+  const iframe = document.createElement("iframe");
+  iframe.setAttribute("aria-hidden", "true");
+  iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;";
+  document.body.appendChild(iframe);
+
+  const frameWindow = iframe.contentWindow;
+  const frameDoc = frameWindow?.document;
+  if (!frameWindow || !frameDoc) {
+    document.body.removeChild(iframe);
+    return;
+  }
+
+  frameDoc.open();
+  frameDoc.write(html);
+  frameDoc.close();
+
+  const cleanup = () => {
+    if (iframe.parentNode) {
+      iframe.parentNode.removeChild(iframe);
+    }
+  };
+
+  const triggerPrint = () => {
+    frameWindow.focus();
+    frameWindow.print();
+    frameWindow.addEventListener("afterprint", cleanup, { once: true });
+    setTimeout(cleanup, 2000);
+  };
+
+  if (frameDoc.readyState === "complete") {
+    triggerPrint();
+  } else {
+    iframe.onload = triggerPrint;
+  }
 };
