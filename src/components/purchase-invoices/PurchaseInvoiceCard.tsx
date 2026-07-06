@@ -1,8 +1,7 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Building, Calendar, Clock, Package, ChevronLeft } from "lucide-react";
 import { PurchaseInvoice, getPurchaseInvoiceType, purchaseInvoiceTypeLabels } from "@/types/invoices";
+import { cn } from "@/lib/utils";
 
 interface PurchaseInvoiceCardProps {
   invoice: PurchaseInvoice;
@@ -14,69 +13,52 @@ const PurchaseInvoiceCard = ({ invoice, onClick }: PurchaseInvoiceCardProps) => 
   const isGeneral = type === "general";
 
   return (
-    <Card
-      className="group relative bg-white dark:bg-slate-900/50 backdrop-blur-xl border-none shadow-xl hover:shadow-2xl transition-all duration-500 cursor-pointer overflow-hidden rounded-[2.5rem] active:scale-[0.98]"
+    <button
+      type="button"
+      className={cn(
+        "w-full text-right rounded-xl border bg-white dark:bg-slate-900 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:shadow-md transition-all active:scale-[0.995]",
+        isGeneral
+          ? "border-slate-200 dark:border-slate-800 hover:border-purple-200 dark:hover:border-purple-800"
+          : "border-slate-200 dark:border-slate-800 hover:border-amber-200 dark:hover:border-amber-800"
+      )}
       onClick={() => onClick(invoice)}
     >
-      <div
-        className={`absolute top-0 right-0 w-full h-1 bg-gradient-to-l opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${
-          isGeneral ? "from-purple-600 to-blue-600" : "from-amber-500 to-orange-600"
-        }`}
-      />
-
-      <CardContent className="p-7">
-        <div className="flex justify-between items-start mb-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge className="bg-purple-600/10 text-purple-600 dark:text-purple-400 hover:bg-purple-600/20 border-none font-black text-xs px-3 py-1 rounded-lg">
-                {invoice.invoice_number}
-              </Badge>
-              <Badge
-                className={`border-none font-black text-xs px-3 py-1 rounded-lg ${
-                  isGeneral
-                    ? "bg-purple-600/10 text-purple-600 dark:text-purple-400"
-                    : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                }`}
-              >
-                {purchaseInvoiceTypeLabels[type]}
-              </Badge>
-            </div>
-            <div className="flex items-center gap-2 text-slate-400 font-bold text-[10px] uppercase tracking-wider">
-              <Building className="w-3 h-3 text-purple-500" />
-              {invoice.supplier}
-            </div>
-          </div>
-          <div className="text-left">
-            <div className="text-2xl font-black text-slate-800 dark:text-white group-hover:text-purple-600 transition-colors">
-              {Number(invoice.total).toFixed(2)}
-              <span className="text-xs mr-1 text-slate-400">ج</span>
-            </div>
-          </div>
+      <div className="flex-1 min-w-0 space-y-2">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <Badge
+            className={cn(
+              "text-[10px] font-black h-5 px-2 border-none",
+              isGeneral
+                ? "bg-purple-600/10 text-purple-600 dark:text-purple-400"
+                : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+            )}
+          >
+            {purchaseInvoiceTypeLabels[type]}
+          </Badge>
+          <Badge variant="outline" className="text-[10px] font-black h-5 px-2">
+            {invoice.items.length} {isGeneral ? "منتج" : "مصروف"}
+          </Badge>
         </div>
-
-        <div className="space-y-4">
-          <div className="flex items-center gap-4 text-xs font-bold text-slate-500 bg-slate-50 dark:bg-slate-950/50 p-3 rounded-2xl border border-slate-100 dark:border-slate-800/50">
-            <div className="flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-emerald-500" />
-              {invoice.date}
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-orange-500" />
-              {invoice.time}
-            </div>
-            <div className="flex items-center gap-1.5 mr-auto">
-              <Package className="w-3.5 h-3.5 text-purple-500" />
-              {invoice.items.length} {isGeneral ? "منتج" : "مصروف"}
-            </div>
-          </div>
-
-          <Button variant="ghost" className="w-full h-11 rounded-2xl font-black text-xs gap-2 group-hover:bg-purple-600/5 group-hover:text-purple-600">
-            عرض التفاصيل
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
+        <h3 className="font-black text-base text-slate-800 dark:text-slate-100 truncate">{invoice.invoice_number}</h3>
+        <div className="flex gap-3 text-xs text-slate-500 dark:text-slate-400 flex-wrap">
+          <span className="flex items-center gap-1"><Building className="w-3.5 h-3.5" />{invoice.supplier}</span>
+          <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{invoice.date}</span>
+          <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{invoice.time}</span>
+          <span className="flex items-center gap-1"><Package className="w-3.5 h-3.5" />{invoice.items.length}</span>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+      <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 shrink-0">
+        <p className={cn(
+          "text-xl font-black tabular-nums",
+          isGeneral ? "text-purple-600 dark:text-purple-400" : "text-amber-600 dark:text-amber-400"
+        )}>
+          {Number(invoice.total).toFixed(2)} <span className="text-xs">ج</span>
+        </p>
+        <span className="flex items-center gap-1 text-xs font-bold text-slate-400">
+          التفاصيل <ChevronLeft className="w-3.5 h-3.5" />
+        </span>
+      </div>
+    </button>
   );
 };
 

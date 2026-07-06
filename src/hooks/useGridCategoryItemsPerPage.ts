@@ -8,7 +8,7 @@ function getGridCols(width: number): number {
   return 6;
 }
 
-const CARD_HEIGHT = 100;
+const CARD_HEIGHT = 120;
 const CARD_GAP = 12;
 const PAGINATION_HEIGHT = 56;
 const MIN_ITEMS = 8;

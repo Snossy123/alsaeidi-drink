@@ -8,7 +8,7 @@ import ProductDialog from "./product-management/ProductDialog";
 import ProductFilters from "./product-management/ProductFilters";
 import ProductCard from "./product-management/ProductCard";
 import ProductPagination from "./product-management/ProductPagination";
-import { Package } from "lucide-react";
+import { Package, AlertTriangle, Layers, Boxes } from "lucide-react";
 import { useProductGridItemsPerPage } from "@/hooks/useProductGridItemsPerPage";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -172,42 +172,51 @@ const ProductManagement = () => {
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0 gap-2">
-      <div className="relative overflow-hidden rounded-2xl bg-slate-900 px-4 py-3 shadow-xl shrink-0">
-        <div className="relative flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
-          <div>
-            <h2 className="text-lg font-black text-white tracking-tight">إدارة المنتجات</h2>
-            <p className="text-slate-400 text-xs">تحكم في المخزون والفئات</p>
+    <div className="flex flex-col h-full min-h-0 gap-3">
+      {/* Header */}
+      <div className="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
+        <div>
+          <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">إدارة المنتجات</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-xs font-bold">تحكم في المخزون والفئات</p>
+        </div>
+        <div className="flex gap-2">
+          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 min-w-[88px]">
+            <Boxes className="w-4 h-4 text-blue-600 shrink-0" />
+            <div>
+              <p className="text-[9px] font-bold text-slate-400 leading-none">المنتجات</p>
+              <p className="text-sm font-black text-slate-800 dark:text-white leading-tight">{products.length}</p>
+            </div>
           </div>
-
-          <div className="grid grid-cols-3 gap-2 w-full lg:w-auto">
-            <div className="bg-white/5 border border-white/10 p-2 rounded-xl min-w-0">
-              <p className="text-white/50 text-[9px] font-bold uppercase mb-0.5">المنتجات</p>
-              <p className="text-base font-black text-white">{products.length}</p>
+          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 min-w-[88px]">
+            <Layers className="w-4 h-4 text-violet-600 shrink-0" />
+            <div>
+              <p className="text-[9px] font-bold text-slate-400 leading-none">الفئات</p>
+              <p className="text-sm font-black text-slate-800 dark:text-white leading-tight">{categories.length}</p>
             </div>
-            <div className="bg-white/5 border border-white/10 p-2 rounded-xl min-w-0">
-              <p className="text-white/50 text-[9px] font-bold uppercase mb-0.5">الفئات</p>
-              <p className="text-base font-black text-white">{categories.length}</p>
-            </div>
-            <div className="bg-blue-600/20 border border-blue-500/30 p-2 rounded-xl min-w-0">
-              <p className="text-blue-400 text-[9px] font-bold uppercase mb-0.5">نقص المخزون</p>
-              <p className="text-base font-black text-blue-400">{products.filter(p => p.stock < 5).length}</p>
+          </div>
+          <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-xl px-3 py-2 min-w-[88px]">
+            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+            <div>
+              <p className="text-[9px] font-bold text-amber-600/80 leading-none">نقص</p>
+              <p className="text-sm font-black text-amber-700 dark:text-amber-400 leading-tight">
+                {products.filter((p) => p.stock < 5).length}
+              </p>
             </div>
           </div>
         </div>
       </div>
 
       <Tabs defaultValue="products" dir="rtl" className="flex flex-col flex-1 min-h-0 w-full">
-        <TabsList className="w-full h-10 rounded-xl bg-slate-100 dark:bg-slate-900 p-1 shrink-0">
-          <TabsTrigger value="products" className="flex-1 rounded-lg font-bold text-sm">
+        <TabsList className="w-full sm:w-auto h-10 rounded-xl bg-slate-100 dark:bg-slate-900 p-1 shrink-0 self-start">
+          <TabsTrigger value="products" className="rounded-lg font-bold text-sm px-4">
             المنتجات ({products.length})
           </TabsTrigger>
-          <TabsTrigger value="categories" className="flex-1 rounded-lg font-bold text-sm">
+          <TabsTrigger value="categories" className="rounded-lg font-bold text-sm px-4">
             الفئات ({categories.length})
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="categories" className="flex-1 min-h-0 mt-2 data-[state=inactive]:hidden">
+        <TabsContent value="categories" className="flex flex-col flex-1 min-h-0 mt-3 data-[state=inactive]:hidden">
           <CategoryManagement
             categories={categories}
             onCategoriesUpdate={setCategories}
@@ -215,9 +224,9 @@ const ProductManagement = () => {
           />
         </TabsContent>
 
-        <TabsContent value="products" className="flex flex-col flex-1 min-h-0 mt-2 data-[state=inactive]:hidden">
-          <div className="flex flex-col md:flex-row gap-2 items-center justify-between bg-white dark:bg-slate-900 p-2 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm shrink-0">
-            <div className="flex-1 w-full">
+        <TabsContent value="products" className="flex flex-col flex-1 min-h-0 mt-3 data-[state=inactive]:hidden">
+          <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center shrink-0">
+            <div className="flex-1 min-w-0">
               <ProductFilters searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
             </div>
             <ProductDialog
@@ -232,14 +241,14 @@ const ProductManagement = () => {
             />
           </div>
 
-          <div ref={gridRef} className="flex-1 min-h-0 mt-2">
+          <div ref={gridRef} className="flex-1 min-h-0 mt-3 overflow-y-auto overscroll-y-contain rounded-xl">
             {paginatedProducts.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
+              <div className="h-full min-h-[200px] flex flex-col items-center justify-center text-center bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
                 <Package className="w-10 h-10 mb-2 text-slate-300" />
                 <h3 className="text-sm font-bold text-slate-400">لا توجد منتجات مطابقة للبحث</h3>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2 h-full content-start">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 pb-2">
                 {paginatedProducts.map((product) => (
                   <ProductCard
                     key={product.id}
@@ -255,7 +264,7 @@ const ProductManagement = () => {
             )}
           </div>
 
-          <div className="shrink-0">
+          <div className="shrink-0 pt-1">
             <ProductPagination
               currentPage={currentPage}
               totalPages={totalPages}

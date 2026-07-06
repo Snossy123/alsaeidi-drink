@@ -1,11 +1,10 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FileText, RotateCcw } from "lucide-react";
+import { FileText, RotateCcw, Search } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/apiClient";
@@ -18,7 +17,7 @@ import PurchaseInvoiceCard from "./purchase-invoices/PurchaseInvoiceCard";
 import PurchaseInvoiceDetails from "./purchase-invoices/PurchaseInvoiceDetails";
 import AddPurchaseInvoiceForm from "./purchase-invoices/AddPurchaseInvoiceForm";
 
-const PAGE_SIZE = 9;
+const PAGE_SIZE = 10;
 
 const saveInvoice = async (invoiceData: any) => {
   return apiClient<{ invoice?: PurchaseInvoice }>('/purchase-invoices', {
@@ -56,7 +55,7 @@ const PurchaseInvoices = () => {
       try {
         const categoriesData = await apiClient<{ categories: Category[] }>('/categories');
         setCategories(categoriesData.categories || []);
-      } catch (error) {
+      } catch {
         toast({
           title: "خطأ في الاتصال",
           description: "تعذر تحميل البيانات من الخادم",
@@ -151,104 +150,99 @@ const PurchaseInvoices = () => {
   };
 
   return (
-    <div className="space-y-6 antialiased" dir="rtl">
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <PurchaseInvoiceHeader invoiceCount={filteredInvoices.length} />
+    <div className="flex flex-col h-full min-h-0 gap-3 antialiased" dir="rtl">
+      <PurchaseInvoiceHeader
+        invoiceCount={filteredInvoices.length}
+        onAddClick={() => setIsAddDialogOpen(true)}
+      />
 
-        <DialogContent className="max-w-6xl max-h-[90dvh] p-0 overflow-y-auto rounded-[3rem] border-none bg-white dark:bg-slate-900 shadow-[0_30px_100px_rgba(0,0,0,0.3)]" dir="rtl">
-          {isAddDialogOpen && (
-            <AddPurchaseInvoiceForm
-              categories={categories}
-              onSubmit={handleInvoiceSubmit}
-              onCancel={() => setIsAddDialogOpen(false)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      <div className="sticky top-0 z-40 shrink-0 isolate rounded-xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md shadow-sm p-3 sm:p-4 space-y-3">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-xs font-black text-slate-500 dark:text-slate-400">فلاتر البحث</h3>
+          <Button variant="ghost" size="sm" onClick={resetFilters} className="h-8 gap-1.5 text-xs font-bold text-slate-500 hover:text-red-500">
+            <RotateCcw className="w-3.5 h-3.5" />
+            مسح الفلاتر
+          </Button>
+        </div>
 
-      <Card>
-        <CardContent className="p-4 space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-black text-sm text-muted-foreground">فلاتر البحث</h2>
-            <Button variant="ghost" size="sm" onClick={resetFilters} className="gap-2">
-              <RotateCcw className="w-4 h-4" />
-              مسح الفلاتر
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+          <div className="relative sm:col-span-2 lg:col-span-1">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
             <Input
               placeholder="بحث برقم الفاتورة أو المورد..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              className="h-10 pr-10 rounded-xl text-sm font-bold"
             />
-            <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as PurchaseInvoiceType | "all")}>
-              <SelectTrigger>
-                <SelectValue placeholder="نوع الفاتورة" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">كل الأنواع</SelectItem>
-                <SelectItem value="general">{purchaseInvoiceTypeLabels.general}</SelectItem>
-                <SelectItem value="operation">{purchaseInvoiceTypeLabels.operation}</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-muted-foreground">من تاريخ</Label>
-              <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-muted-foreground">إلى تاريخ</Label>
-              <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
-            </div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-muted-foreground">من وقت</Label>
-              <Input type="time" value={timeFrom} onChange={(e) => setTimeFrom(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-muted-foreground">إلى وقت</Label>
-              <Input type="time" value={timeTo} onChange={(e) => setTimeTo(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-muted-foreground">من مبلغ</Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                value={minAmount}
-                onChange={(e) => setMinAmount(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-muted-foreground">إلى مبلغ</Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                value={maxAmount}
-                onChange={(e) => setMaxAmount(e.target.value)}
-              />
-            </div>
+          <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as PurchaseInvoiceType | "all")}>
+            <SelectTrigger className="h-10 rounded-xl text-sm font-bold">
+              <SelectValue placeholder="نوع الفاتورة" />
+            </SelectTrigger>
+            <SelectContent className="z-[200]">
+              <SelectItem value="all">كل الأنواع</SelectItem>
+              <SelectItem value="general">{purchaseInvoiceTypeLabels.general}</SelectItem>
+              <SelectItem value="operation">{purchaseInvoiceTypeLabels.operation}</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="space-y-1">
+            <Label className="text-[10px] font-bold text-slate-400">من تاريخ</Label>
+            <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-9 rounded-lg text-sm" />
           </div>
-        </CardContent>
-      </Card>
+          <div className="space-y-1">
+            <Label className="text-[10px] font-bold text-slate-400">إلى تاريخ</Label>
+            <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="h-9 rounded-lg text-sm" />
+          </div>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+          <div className="space-y-1">
+            <Label className="text-[10px] font-bold text-slate-400">من وقت</Label>
+            <Input type="time" value={timeFrom} onChange={(e) => setTimeFrom(e.target.value)} className="h-9 rounded-lg text-sm" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[10px] font-bold text-slate-400">إلى وقت</Label>
+            <Input type="time" value={timeTo} onChange={(e) => setTimeTo(e.target.value)} className="h-9 rounded-lg text-sm" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[10px] font-bold text-slate-400">من مبلغ</Label>
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              value={minAmount}
+              onChange={(e) => setMinAmount(e.target.value)}
+              className="h-9 rounded-lg text-sm"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[10px] font-bold text-slate-400">إلى مبلغ</Label>
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              value={maxAmount}
+              onChange={(e) => setMaxAmount(e.target.value)}
+              className="h-9 rounded-lg text-sm"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain space-y-2 relative z-0 pb-1">
         {invoices.length === 0 ? (
-          <div className="col-span-full h-64 flex flex-col items-center justify-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-md rounded-[3rem] border border-dashed border-slate-200 dark:border-slate-800">
-            <FileText className="w-16 h-16 text-slate-300 mb-4 opacity-50" />
-            <p className="text-lg font-black text-slate-400">لا توجد سجلات مشتريات حتى الآن</p>
+          <div className="min-h-[200px] flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+            <FileText className="w-10 h-10 mb-2 text-slate-300" />
+            <p className="text-sm font-bold text-slate-400">لا توجد سجلات مشتريات حتى الآن</p>
           </div>
         ) : filteredInvoices.length === 0 ? (
-          <div className="col-span-full h-64 flex flex-col items-center justify-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-md rounded-[3rem] border border-dashed border-slate-200 dark:border-slate-800">
-            <FileText className="w-16 h-16 text-slate-300 mb-4 opacity-50" />
-            <p className="text-lg font-black text-slate-400">لا توجد نتائج مطابقة للفلاتر</p>
+          <div className="min-h-[200px] flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+            <FileText className="w-10 h-10 mb-2 text-slate-300" />
+            <p className="text-sm font-bold text-slate-400">لا توجد نتائج مطابقة للفلاتر</p>
             {hasActiveFilters && (
-              <Button variant="link" onClick={resetFilters} className="mt-2">
+              <Button variant="link" onClick={resetFilters} className="mt-2 text-xs">
                 مسح الفلاتر
               </Button>
             )}
@@ -267,36 +261,45 @@ const PurchaseInvoices = () => {
         )}
       </div>
 
-      <ProductPagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-      />
+      <div className="shrink-0 pt-1">
+        <ProductPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      </div>
+
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="max-w-6xl max-h-[90dvh] p-0 overflow-y-auto rounded-2xl border-none bg-white dark:bg-slate-900 shadow-2xl" dir="rtl">
+          {isAddDialogOpen && (
+            <AddPurchaseInvoiceForm
+              categories={categories}
+              onSubmit={handleInvoiceSubmit}
+              onCancel={() => setIsAddDialogOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isInvoiceDialogOpen} onOpenChange={setIsInvoiceDialogOpen}>
-        <DialogContent className="max-w-5xl max-h-[90dvh] p-0 overflow-y-auto rounded-[3rem] border-none bg-white dark:bg-slate-900 shadow-[0_30px_100px_rgba(0,0,0,0.3)]" dir="rtl">
-          <div className="bg-slate-900 p-8 text-white relative">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/20 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2" />
-            <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-              <div className="flex flex-col">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="bg-purple-600 p-2.5 rounded-2xl shadow-lg">
-                    <FileText className="w-6 h-6" />
-                  </div>
-                  <span className={`border px-3 py-1 font-black text-xs rounded-full ${
-                    selectedInvoice && getPurchaseInvoiceType(selectedInvoice) === "general"
-                      ? "bg-purple-600/10 text-purple-400 border-purple-400/30"
-                      : "bg-amber-500/10 text-amber-400 border-amber-400/30"
-                  }`}>
-                    {selectedInvoice ? purchaseInvoiceTypeLabels[getPurchaseInvoiceType(selectedInvoice)] : ""}
-                  </span>
-                </div>
-                <h2 className="text-3xl font-black tracking-tight">تفاصيل فاتورة المشتريات {selectedInvoice?.invoice_number}</h2>
+        <DialogContent className="max-w-5xl max-h-[90dvh] p-0 overflow-y-auto rounded-2xl border-none bg-white dark:bg-slate-900 shadow-2xl" dir="rtl">
+          <div className="bg-slate-900 p-6 text-white relative shrink-0">
+            <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="flex flex-col min-w-0">
+                <span className={`self-start border px-2.5 py-0.5 font-black text-[10px] rounded-full mb-1 ${
+                  selectedInvoice && getPurchaseInvoiceType(selectedInvoice) === "general"
+                    ? "bg-purple-600/10 text-purple-400 border-purple-400/30"
+                    : "bg-amber-500/10 text-amber-400 border-amber-400/30"
+                }`}>
+                  {selectedInvoice ? purchaseInvoiceTypeLabels[getPurchaseInvoiceType(selectedInvoice)] : ""}
+                </span>
+                <h2 className="text-lg sm:text-xl font-black tracking-tight truncate">
+                  تفاصيل فاتورة {selectedInvoice?.invoice_number}
+                </h2>
               </div>
-
-              <div className="text-left bg-white/5 backdrop-blur-xl p-4 rounded-3xl border border-white/10 min-w-0 flex-1">
-                <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest mb-1">إجمالي مشتريات الفاتورة</p>
-                <div className="text-3xl font-black text-white">{Number(selectedInvoice?.total).toFixed(2)} <span className="text-sm">جنية</span></div>
+              <div className="text-left bg-white/10 rounded-xl px-4 py-2 shrink-0">
+                <p className="text-[10px] font-bold text-slate-400 mb-0.5">إجمالي الفاتورة</p>
+                <div className="text-xl font-black">{Number(selectedInvoice?.total).toFixed(2)} <span className="text-xs">ج</span></div>
               </div>
             </div>
           </div>
