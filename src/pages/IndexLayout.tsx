@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
-import { Calculator, Moon, Sun, LogOut } from "lucide-react";
+import { Moon, Sun, LogOut } from "lucide-react";
 
 import SalesInterface from "@/components/SalesInterface";
 import ProductManagement from "@/components/ProductManagement";
@@ -11,6 +11,7 @@ import SalesInvoices from "@/components/SalesInvoices";
 import Employees from "@/components/Employees";
 import ShiftReport from "@/components/shifts/ShiftReport";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { SystemLogo } from "@/components/SystemLogo";
 import { getMenuItemsForRole } from "./menu.config";
 import { useAuth } from "@/contexts/AuthContext";
 import { InvoiceEditProvider } from "@/contexts/InvoiceEditContext";
@@ -46,17 +47,17 @@ const useDarkMode = () => {
     return { dark, toggle };
 };
 
-const CalculatorIconButton = () => {
+const SidebarLogoButton = () => {
     const { toggleSidebar } = useSidebar();
 
     return (
         <button
             onClick={toggleSidebar}
-            className="h-10 w-10 rounded-xl bg-sidebar-primary text-sidebar-primary-foreground
-                 flex items-center justify-center touch-manipulation
-                 active:scale-95 transition-all mx-auto"
+            className="h-10 w-10 rounded-xl bg-white flex items-center justify-center touch-manipulation
+                 active:scale-95 transition-all mx-auto overflow-hidden shrink-0"
+            aria-label="فتح وإغلاق القائمة"
         >
-            <Calculator className="w-5 h-5" />
+            <SystemLogo variant="icon" className="h-10 w-10 rounded-xl" imageClassName="h-9 w-9" />
         </button>
     );
 };
@@ -116,10 +117,9 @@ export function IndexLayout() {
                 >
                     <SidebarHeader className="p-2 group-data-[collapsible=icon]:p-2 flex flex-row items-center justify-center group-data-[collapsible=icon]:justify-center gap-3">
                         <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
-                            <CalculatorIconButton />
-                            <div className="group-data-[collapsible=icon]:hidden">
-                                <h2 className="text-lg font-display font-black tracking-tighter">سنسو POS</h2>
-                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">Smart Operations</p>
+                            <SidebarLogoButton />
+                            <div className="group-data-[collapsible=icon]:hidden min-w-0">
+                                <SystemLogo />
                                 {user && (
                                     <p className="text-[10px] text-muted-foreground mt-1">{user.name} — {user.role}</p>
                                 )}
@@ -181,7 +181,7 @@ export function IndexLayout() {
                     {!isSalesTab && (
                         <div className="lg:hidden sticky top-0 z-20 flex items-center gap-3 p-3 bg-background/80 backdrop-blur-md border-b border-border/50">
                             <SidebarTrigger className="h-10 w-10 shrink-0" />
-                            <span className="font-display font-black text-sm">سنسو POS</span>
+                            <SystemLogo variant="compact" className="min-w-0" />
                         </div>
                     )}
                     {!isSalesTab && (

@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
-import { Calculator, Lock, Mail } from "lucide-react";
+import { Lock, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SystemLogo } from "@/components/SystemLogo";
+import { DEV_NAME, DEV_PHONE } from "@/lib/branding";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import type { AuthUserType } from "@/types/auth";
@@ -42,10 +44,7 @@ const Login = () => {
     <div className="min-h-svh mesh-bg flex items-center justify-center p-4" dir="rtl">
       <div className="w-full max-w-md bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-[2rem] border border-white/10 shadow-2xl p-8 space-y-6">
         <div className="text-center space-y-2">
-          <div className="mx-auto w-14 h-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center">
-            <Calculator className="w-7 h-7" />
-          </div>
-          <h1 className="text-2xl font-black">سنسو POS</h1>
+          <SystemLogo variant="full" />
           <p className="text-sm text-muted-foreground">تسجيل الدخول للمتابعة</p>
         </div>
 
@@ -91,6 +90,10 @@ const Login = () => {
             </form>
           </TabsContent>
         </Tabs>
+
+        <p className="text-center text-[10px] text-muted-foreground [direction:ltr]">
+          {DEV_NAME} · {DEV_PHONE}
+        </p>
       </div>
     </div>
   );

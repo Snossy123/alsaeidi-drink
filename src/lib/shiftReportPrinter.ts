@@ -1,4 +1,4 @@
-import { SHOP_NAME } from "@/lib/invoicePrinter";
+import { APP_NAME } from "@/lib/branding";
 import type { ShiftReportData } from "@/types/shift";
 
 const fmt = (n: number | null | undefined) => Number(n ?? 0).toFixed(2);
@@ -49,7 +49,7 @@ export function printShiftReport(report: ShiftReportData) {
   </style>
 </head>
 <body>
-  <h1>${escapeHtml(SHOP_NAME)} — تقرير وردية</h1>
+  <h1>${escapeHtml(APP_NAME)} — تقرير وردية</h1>
   <div class="meta">
     الموظف: ${escapeHtml(employeeName)} |
     الافتتاح: ${escapeHtml(new Date(shift.opened_at).toLocaleString("ar-EG"))}

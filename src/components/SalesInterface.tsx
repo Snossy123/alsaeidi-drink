@@ -11,7 +11,8 @@ import CategoriesSidebar from "./CategoriesSidebar";
 
 import { useSalesData } from "@/hooks/useSalesData";
 import { useCart, mergeCartItems } from "@/hooks/useCart";
-import { printInvoice } from "@/lib/invoicePrinter";
+import { printInvoiceCopies } from "@/lib/invoicePrinter";
+import { localDateString, nextLocalDailyInvoiceNumber } from "@/lib/dailyInvoiceNumber";
 import { getProductSizeOptions, getProductSizePrice, ProductSize } from "@/lib/productSizes";
 import { Button } from "@/components/ui/button";
 import type { OrderType, PaymentMethod, PaymentStatus, SaleInvoice } from "@/types/salesInvoice";
@@ -210,7 +211,7 @@ const SalesInterface = ({
 
         if (result.status === "success") {
           const updated = result.invoice;
-          printInvoice({
+          void printInvoiceCopies({
             invoiceNumber: updated.invoiceNumber,
             date: updated.date,
             time: updated.time,
@@ -220,18 +221,11 @@ const SalesInterface = ({
             kitchen_note: updated.kitchen_note,
             order_type: updated.order_type,
             payment_status: updated.payment_status,
-          }, false);
-          printInvoice({
-            invoiceNumber: updated.invoiceNumber,
-            date: updated.date,
-            time: updated.time,
-            employeeName: updated.cashier || "",
-            total: updated.total,
-            items: updated.items,
-            kitchen_note: updated.kitchen_note,
-            order_type: updated.order_type,
-            payment_status: updated.payment_status,
-          }, true);
+            payment_method: updated.payment_method,
+            amount_paid: updated.amount_paid,
+            change_given: updated.change_given,
+            shift_id: shift?.id,
+          });
           toast({ title: "تم تحديث الفاتورة", description: updated.invoiceNumber });
           handleCancelEdit();
           setShowEmployeeDialog(false);
@@ -259,14 +253,11 @@ const SalesInterface = ({
 
     const now = new Date();
     const clientId = crypto.randomUUID();
-    const invoiceNumber = navigator.onLine
-      ? `INV-${now.toISOString().slice(0, 10).replace(/-/g, "")}-${now.getTime().toString().slice(-4)}`
-      : `OFFLINE-${now.getTime()}`;
     const employee = employees.find((e) => e.id === Number(selectedEmployee));
 
     const invoiceData = {
-      invoiceNumber,
-      date: now.toISOString().slice(0, 10),
+      invoiceNumber: "",
+      date: localDateString(now),
       time: now.toTimeString().slice(0, 8),
       employeeName: employee?.name || user?.name || "غير محدد",
       total: checkoutTotal,
@@ -284,9 +275,9 @@ const SalesInterface = ({
       order_type: orderType,
     };
 
-    const finishSuccess = () => {
-      printInvoice(invoiceData, false);
-      printInvoice(invoiceData, true);
+    const finishSuccess = (invoiceNumber: string) => {
+      const printable = { ...invoiceData, invoiceNumber };
+      void printInvoiceCopies(printable);
       toast({ title: "تمت العملية بنجاح ✅", description: `رقم الفاتورة: ${invoiceNumber}` });
       clearCart();
       if (user?.type !== "employee") setSelectedEmployee("");
@@ -297,30 +288,42 @@ const SalesInterface = ({
       setPaymentMethod("cash");
     };
 
+    const saveOffline = async () => {
+      const invoiceNumber = nextLocalDailyInvoiceNumber(now);
+      const offlinePayload = { ...invoiceData, invoiceNumber };
+      await enqueueSale(offlinePayload, clientId);
+      finishSuccess(invoiceNumber);
+      toast({ title: "حُفظت محلياً", description: "ستُزامَن عند عودة الإنترنت" });
+    };
+
     try {
       if (!navigator.onLine) {
-        await enqueueSale(invoiceData, clientId);
-        finishSuccess();
-        toast({ title: "حُفظت محلياً", description: "ستُزامَن عند عودة الإنترنت" });
+        await saveOffline();
         return;
       }
 
-      const result = await apiClient<{ status: string; message?: string }>("/sales-invoices", {
-        method: "POST",
-        headers: { "X-Client-Id": clientId },
-        body: JSON.stringify(invoiceData),
-      });
+      const result = await apiClient<{ status: string; invoice?: SaleInvoice; message?: string }>(
+        "/sales-invoices",
+        {
+          method: "POST",
+          headers: { "X-Client-Id": clientId },
+          body: JSON.stringify(invoiceData),
+        }
+      );
 
       if (result.status === "success") {
-        finishSuccess();
+        const invoiceNumber = result.invoice?.invoiceNumber;
+        if (!invoiceNumber) {
+          toast({ title: "فشل الحفظ", description: "لم يُرجع السيرفر رقم الفاتورة", variant: "destructive" });
+          return;
+        }
+        finishSuccess(invoiceNumber);
       } else {
         toast({ title: "فشل الحفظ", description: result.message, variant: "destructive" });
       }
     } catch (error: any) {
       if (!navigator.onLine || error?.status === undefined) {
-        await enqueueSale(invoiceData, clientId);
-        finishSuccess();
-        toast({ title: "حُفظت محلياً", description: "ستُزامَن عند عودة الإنترنت" });
+        await saveOffline();
         return;
       }
 

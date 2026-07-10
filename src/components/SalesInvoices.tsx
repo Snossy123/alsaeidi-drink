@@ -201,6 +201,9 @@ const SalesInvoices = ({ onNavigate }: SalesInvoicesProps) => {
         kitchen_note: selectedInvoice.kitchen_note,
         order_type: selectedInvoice.order_type,
         payment_status: selectedInvoice.payment_status,
+        payment_method: selectedInvoice.payment_method,
+        amount_paid: selectedInvoice.amount_paid,
+        change_given: selectedInvoice.change_given,
       }, false);
       toast({ title: "تمت الطباعة" });
     } catch (error: any) {

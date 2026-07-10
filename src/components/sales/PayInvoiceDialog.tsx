@@ -70,6 +70,9 @@ export const PayInvoiceDialog = ({ open, onOpenChange, invoice, onPaid }: PayInv
             kitchen_note: data.invoice.kitchen_note,
             order_type: data.invoice.order_type,
             payment_status: "paid",
+            payment_method: paymentMethod,
+            amount_paid: paymentMethod === "cash" ? paid : Number(data.invoice.total),
+            change_given: paymentMethod === "cash" ? Math.max(0, paid - Number(data.invoice.total)) : 0,
           }, false);
         } catch {
           // Payment succeeded; printing is optional

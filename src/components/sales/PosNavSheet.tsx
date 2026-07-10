@@ -1,4 +1,4 @@
-import { Moon, Sun, LogOut, Calculator } from "lucide-react";
+import { Moon, Sun, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Sheet,
@@ -6,6 +6,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { SystemLogo } from "@/components/SystemLogo";
+import { APP_NAME } from "@/lib/branding";
 import { getMenuItemsForRole } from "@/pages/menu.config";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -45,12 +47,10 @@ export const PosNavSheet = ({
       <SheetContent side="right" className="w-72 p-0 flex flex-col" dir="rtl">
         <SheetHeader className="p-5 border-b border-border/50">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-primary text-white flex items-center justify-center">
-              <Calculator className="w-5 h-5" />
-            </div>
-            <div className="text-right">
-              <SheetTitle className="text-base font-black">سنسو POS</SheetTitle>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+            <SystemLogo variant="icon" />
+            <div className="text-right min-w-0">
+              <SheetTitle className="text-base font-black truncate">{APP_NAME}</SheetTitle>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest truncate">
                 {user?.name}
               </p>
             </div>

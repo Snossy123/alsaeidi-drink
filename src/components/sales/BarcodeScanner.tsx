@@ -1,6 +1,7 @@
-import { Barcode, Calculator, Menu } from "lucide-react";
+import { Barcode, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SystemLogo } from "@/components/SystemLogo";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface BarcodeScannerProps {
@@ -27,9 +28,7 @@ export const BarcodeScanner = ({ barcode, setBarcode, handleBarcodeSubmit, onOpe
               <Menu className="w-4 h-4 text-white" />
             </button>
           )}
-          <div className="bg-blue-600/20 p-1.5 rounded-lg">
-            <Calculator className="w-4 h-4 text-blue-400" />
-          </div>
+          <SystemLogo variant="icon" className="h-8 w-8" imageClassName="h-7 w-7 rounded-lg" />
           <h1 className="text-sm font-black text-white leading-tight">نقطة البيع</h1>
         </div>
       </div>
