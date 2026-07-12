@@ -6,6 +6,7 @@ import {
   DEV_NAME,
   DEV_PHONE,
   SHOP_ADDRESS,
+  SHOP_DELIVERY_PHONE,
   SHOP_SLOGAN,
   getShopLogoUrl,
 } from "@/lib/branding";
@@ -42,6 +43,14 @@ const escapeHtml = (value: unknown) =>
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+
+const boldLastNameHtml = (fullName: string) => {
+  const parts = String(fullName ?? "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "";
+  if (parts.length === 1) return `<strong>${escapeHtml(parts[0])}</strong>`;
+  const last = parts.pop()!;
+  return `${escapeHtml(parts.join(" "))} <strong>${escapeHtml(last)}</strong>`;
+};
 
 const formatReceiptDateTime = (date: string, time: string) => {
   const parts = date.split("-");
@@ -128,13 +137,22 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
                 height: auto !important;
                 min-height: 0 !important;
                 margin: 0 auto !important;
+                margin-top: 0 !important;
                 padding: 0 !important;
+                padding-top: 0 !important;
                 overflow: hidden !important;
               }
 
               .receipt {
+                margin-top: 0 !important;
+                padding-top: 0 !important;
                 page-break-after: avoid;
                 page-break-inside: avoid;
+              }
+
+              .header-row {
+                padding-top: 0 !important;
+                margin-top: 0 !important;
               }
             }
 
@@ -148,8 +166,8 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
 
             body {
               font-family: Arial, Tahoma, "Segoe UI", sans-serif;
-              font-size: 18px;
-              line-height: 1.35;
+              font-size: 16px;
+              line-height: 1.3;
               color: #000;
               background: #fff;
               direction: rtl;
@@ -165,19 +183,25 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
               padding: 0;
             }
 
-            .shop-logo-wrap {
-              text-align: center;
-              padding: 4px 1mm 2px;
+            .header-row {
+              display: flex;
+              direction: ltr;
+              align-items: center;
+              justify-content: space-between;
+              gap: 2mm;
+              padding: 0 1mm;
+              margin: 0;
             }
 
             .shop-logo {
               display: block;
-              width: 100%;
-              max-width: 100%;
-              max-height: 28mm;
+              width: auto;
+              max-width: 42mm;
+              max-height: 16mm;
               height: auto;
-              margin: 0 auto;
+              margin: 0;
               object-fit: contain;
+              flex-shrink: 1;
             }
 
             .bar {
@@ -185,32 +209,33 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
               color: #fff;
               text-align: center;
               font-weight: 700;
-              padding: 6px 3px;
+              padding: 5px 3px;
             }
 
             .order-no-box {
-              margin: 8px auto 4px;
+              margin: 0;
               width: fit-content;
-              min-width: 48px;
-              padding: 4px 14px;
+              min-width: 36px;
+              padding: 2px 8px;
               border: 2px solid #000;
               text-align: center;
-              font-size: 42px;
+              font-size: 30px;
               font-weight: 700;
               direction: ltr;
               letter-spacing: 1px;
+              flex-shrink: 0;
             }
 
             .order-type {
               text-align: center;
-              font-size: 16px;
+              font-size: 14px;
               font-weight: 700;
-              margin-bottom: 6px;
+              margin: 3px 0;
             }
 
             .meta-block {
-              padding: 0 1mm 4px;
-              font-size: 15px;
+              padding: 0 1mm 2px;
+              font-size: 13px;
             }
 
             .meta-row {
@@ -218,7 +243,7 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
               justify-content: space-between;
               align-items: center;
               gap: 4px;
-              margin-bottom: 3px;
+              margin-bottom: 1px;
             }
 
             .meta-label {
@@ -240,25 +265,25 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
             .rule {
               border: none;
               border-top: 1px solid #000;
-              margin: 4px 0;
+              margin: 3px 0;
             }
 
             .kitchen-note {
               background: #000;
               color: #fff;
-              padding: 5px 5px;
-              margin: 4px 1mm;
+              padding: 4px 5px;
+              margin: 3px 1mm;
               text-align: center;
-              font-size: 16px;
+              font-size: 14px;
               font-weight: 700;
             }
 
             .items {
-              padding: 2px 1mm 0;
+              padding: 1px 1mm 0;
             }
 
             .item {
-              padding: 5px 0;
+              padding: 3px 0;
               border-bottom: 1px dashed #999;
             }
 
@@ -267,10 +292,10 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
             }
 
             .item-name {
-              font-size: 27px;
+              font-size: 22px;
               font-weight: 700;
-              line-height: 1.35;
-              margin-bottom: 3px;
+              line-height: 1.25;
+              margin-bottom: 2px;
               word-break: break-word;
             }
 
@@ -279,7 +304,7 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
               justify-content: space-between;
               align-items: center;
               gap: 6px;
-              font-size: 17px;
+              font-size: 15px;
             }
 
             .item-qty-price {
@@ -297,13 +322,13 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
               display: flex;
               align-items: flex-start;
               gap: 8px;
-              padding: 6px 0;
+              padding: 3px 0;
             }
 
             .kitchen-qty {
               flex-shrink: 0;
-              min-width: 32px;
-              font-size: 28px;
+              min-width: 28px;
+              font-size: 24px;
               font-weight: 700;
               line-height: 1.2;
               text-align: center;
@@ -312,22 +337,22 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
 
             .kitchen-name {
               flex: 1;
-              font-size: 26px;
+              font-size: 22px;
               font-weight: 700;
-              line-height: 1.35;
+              line-height: 1.25;
               word-break: break-word;
             }
 
             .totals {
-              padding: 4px 1mm 0;
-              font-size: 17px;
+              padding: 2px 1mm 0;
+              font-size: 15px;
             }
 
             .total-row {
               display: flex;
               justify-content: space-between;
               align-items: center;
-              margin-bottom: 3px;
+              margin-bottom: 2px;
             }
 
             .total-row .val {
@@ -341,9 +366,9 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
               align-items: center;
               background: #000;
               color: #fff;
-              padding: 7px 1mm;
-              margin: 4px 0;
-              font-size: 24px;
+              padding: 5px 1mm;
+              margin: 3px 0;
+              font-size: 20px;
               font-weight: 700;
             }
 
@@ -353,32 +378,45 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
 
             .footer {
               text-align: center;
-              padding: 6px 1mm 2mm;
+              padding: 4px 1mm 1mm;
               font-size: 11px;
-              line-height: 1.4;
+              line-height: 1.35;
             }
 
             .slogan {
               font-weight: 700;
-              margin-bottom: 3px;
+              margin-bottom: 2px;
               font-size: 12px;
             }
 
             .address-bar {
               font-size: 11px;
-              padding: 4px;
-              margin-top: 4px;
+              padding: 3px;
+              margin-top: 3px;
+            }
+
+            .delivery-bar {
+              font-size: 12px;
+              font-weight: 700;
+              padding: 3px;
+              margin-top: 2px;
+              direction: ltr;
+              unicode-bidi: isolate;
             }
 
             .brand {
-              margin-top: 4px;
-              padding-top: 3px;
+              margin-top: 3px;
+              padding-top: 2px;
               border-top: 0.5px dashed #999;
               font-size: 7px;
               color: #444;
               direction: ltr;
               line-height: 1.35;
               text-align: center;
+            }
+
+            .brand strong {
+              font-weight: 700;
             }
 
             .brand-company {
@@ -390,19 +428,18 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
               text-align: center;
               font-size: 12px;
               font-weight: 700;
-              padding: 6px 1mm 2mm;
+              padding: 4px 1mm 1mm;
               border-top: 1px dashed #000;
-              margin-top: 6px;
+              margin-top: 4px;
             }
           </style>
         </head>
         <body>
           <div class="receipt">
-            <div class="shop-logo-wrap">
+            <div class="header-row">
               <img src="${escapeHtml(shopLogoUrl)}" alt="${escapeHtml(APP_NAME)}" class="shop-logo" />
+              <div class="order-no-box">${escapeHtml(shortNo)}</div>
             </div>
-
-            <div class="order-no-box">${escapeHtml(shortNo)}</div>
             <div class="order-type">${escapeHtml(isKitchenCopy ? "طلب مطبخ" : orderLabel)}</div>
 
             <div class="meta-block">
@@ -472,9 +509,10 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
                      <div class="slogan">${escapeHtml(SHOP_SLOGAN)}</div>
                      <div>شكراً لزيارتكم</div>
                      <div class="bar address-bar">${escapeHtml(SHOP_ADDRESS)}</div>
+                     <div class="bar delivery-bar">دليفري: ${escapeHtml(SHOP_DELIVERY_PHONE)}</div>
                      <div class="brand">
                        <div>Powered by <span class="brand-company">${escapeHtml(DEV_COMPANY)}</span></div>
-                       <div>${escapeHtml(DEV_NAME)} · ${escapeHtml(DEV_PHONE)}</div>
+                       <div>${boldLastNameHtml(DEV_NAME)} · ${escapeHtml(DEV_PHONE)}</div>
                      </div>
                    </div>`
             }

@@ -2,6 +2,7 @@ export const APP_NAME = "الصعيدي درينك";
 export const APP_TAGLINE = "نقطة البيع";
 export const SHOP_SLOGAN = "آصل المشروبات الفريش";
 export const SHOP_ADDRESS = "شارع الترعة - الشارع الجديد - مسطرد";
+export const SHOP_DELIVERY_PHONE = "01152435155";
 export const DEV_COMPANY = "CTS Creative Technology Solutions";
 export const DEV_COMPANY_SHORT = "CTS";
 export const DEV_TAGLINE = "Software House";
