@@ -146,7 +146,7 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
 
             body {
               font-family: Arial, Tahoma, "Segoe UI", sans-serif;
-              font-size: 14px;
+              font-size: 18px;
               line-height: 1.35;
               color: #000;
               background: #fff;
@@ -172,7 +172,7 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
             }
 
             .shop-bar {
-              font-size: 18px;
+              font-size: 22px;
               letter-spacing: 0.3px;
             }
 
@@ -183,7 +183,7 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
               padding: 4px 14px;
               border: 2px solid #000;
               text-align: center;
-              font-size: 32px;
+              font-size: 42px;
               font-weight: 700;
               direction: ltr;
               letter-spacing: 1px;
@@ -191,14 +191,14 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
 
             .order-type {
               text-align: center;
-              font-size: 14px;
+              font-size: 16px;
               font-weight: 700;
               margin-bottom: 6px;
             }
 
             .meta-block {
-              padding: 0 2.5mm 4px;
-              font-size: 13px;
+              padding: 0 1mm 4px;
+              font-size: 15px;
             }
 
             .meta-row {
@@ -235,14 +235,14 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
               background: #000;
               color: #fff;
               padding: 5px 5px;
-              margin: 4px 2.5mm;
+              margin: 4px 1mm;
               text-align: center;
-              font-size: 13px;
+              font-size: 16px;
               font-weight: 700;
             }
 
             .items {
-              padding: 2px 2.5mm 0;
+              padding: 2px 1mm 0;
             }
 
             .item {
@@ -255,7 +255,7 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
             }
 
             .item-name {
-              font-size: 16px;
+              font-size: 26px;
               font-weight: 700;
               line-height: 1.35;
               margin-bottom: 3px;
@@ -267,7 +267,7 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
               justify-content: space-between;
               align-items: center;
               gap: 6px;
-              font-size: 14px;
+              font-size: 17px;
             }
 
             .item-qty-price {
@@ -290,8 +290,8 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
 
             .kitchen-qty {
               flex-shrink: 0;
-              min-width: 28px;
-              font-size: 22px;
+              min-width: 32px;
+              font-size: 28px;
               font-weight: 700;
               line-height: 1.2;
               text-align: center;
@@ -300,15 +300,15 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
 
             .kitchen-name {
               flex: 1;
-              font-size: 17px;
+              font-size: 26px;
               font-weight: 700;
               line-height: 1.35;
               word-break: break-word;
             }
 
             .totals {
-              padding: 4px 2.5mm 0;
-              font-size: 14px;
+              padding: 4px 1mm 0;
+              font-size: 17px;
             }
 
             .total-row {
@@ -329,9 +329,9 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
               align-items: center;
               background: #000;
               color: #fff;
-              padding: 7px 2.5mm;
+              padding: 7px 1mm;
               margin: 4px 0;
-              font-size: 18px;
+              font-size: 24px;
               font-weight: 700;
             }
 
@@ -341,7 +341,7 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
 
             .footer {
               text-align: center;
-              padding: 6px 2.5mm 2mm;
+              padding: 6px 1mm 2mm;
               font-size: 11px;
               line-height: 1.4;
             }
@@ -378,7 +378,7 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
               text-align: center;
               font-size: 12px;
               font-weight: 700;
-              padding: 6px 2.5mm 2mm;
+              padding: 6px 1mm 2mm;
               border-top: 1px dashed #000;
               margin-top: 6px;
             }
