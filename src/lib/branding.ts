@@ -9,9 +9,13 @@ export const DEV_NAME = "Solieman Snossy";
 export const DEV_PHONE = "01125833982";
 
 export const LOGO_FILE = "cts_logo_concept_hexagon_circuit.png";
+export const SHOP_LOGO_FILE = "logo.jpeg";
 
 export const getLogoUrl = () =>
   new URL(`${import.meta.env.BASE_URL}${LOGO_FILE}`, window.location.origin).href;
+
+export const getShopLogoUrl = () =>
+  new URL(`${import.meta.env.BASE_URL}${SHOP_LOGO_FILE}`, window.location.origin).href;
 
 /** @deprecated use APP_NAME */
 export const SHOP_NAME = APP_NAME;

@@ -7,6 +7,7 @@ import {
   DEV_PHONE,
   SHOP_ADDRESS,
   SHOP_SLOGAN,
+  getShopLogoUrl,
 } from "@/lib/branding";
 
 export { APP_NAME as SHOP_NAME } from "@/lib/branding";
@@ -78,6 +79,7 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
     const changeGiven = Number(data.change_given ?? Math.max(0, paidAmount - total));
     const shortNo = displayInvoiceNo(data.invoiceNumber);
     const dateTime = formatReceiptDateTime(data.date, data.time);
+    const shopLogoUrl = getShopLogoUrl();
 
     const itemBlocks = data.items
       .map((item: any) => {
@@ -163,17 +165,27 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
               padding: 0;
             }
 
+            .shop-logo-wrap {
+              text-align: center;
+              padding: 4px 1mm 2px;
+            }
+
+            .shop-logo {
+              display: block;
+              width: 100%;
+              max-width: 100%;
+              max-height: 28mm;
+              height: auto;
+              margin: 0 auto;
+              object-fit: contain;
+            }
+
             .bar {
               background: #000;
               color: #fff;
               text-align: center;
               font-weight: 700;
               padding: 6px 3px;
-            }
-
-            .shop-bar {
-              font-size: 22px;
-              letter-spacing: 0.3px;
             }
 
             .order-no-box {
@@ -386,7 +398,9 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
         </head>
         <body>
           <div class="receipt">
-            <div class="bar shop-bar">${escapeHtml(APP_NAME)}</div>
+            <div class="shop-logo-wrap">
+              <img src="${escapeHtml(shopLogoUrl)}" alt="${escapeHtml(APP_NAME)}" class="shop-logo" />
+            </div>
 
             <div class="order-no-box">${escapeHtml(shortNo)}</div>
             <div class="order-type">${escapeHtml(isKitchenCopy ? "طلب مطبخ" : orderLabel)}</div>
@@ -498,10 +512,21 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
     };
 
     const triggerPrint = () => {
-      frameWindow.focus();
-      frameWindow.print();
-      frameWindow.addEventListener("afterprint", finish, { once: true });
-      setTimeout(finish, 5000);
+      const doPrint = () => {
+        frameWindow.focus();
+        frameWindow.print();
+        frameWindow.addEventListener("afterprint", finish, { once: true });
+        setTimeout(finish, 5000);
+      };
+
+      const logo = frameDoc.querySelector(".shop-logo") as HTMLImageElement | null;
+      if (logo && !logo.complete) {
+        logo.addEventListener("load", doPrint, { once: true });
+        logo.addEventListener("error", doPrint, { once: true });
+        return;
+      }
+
+      doPrint();
     };
 
     if (frameDoc.readyState === "complete") {
