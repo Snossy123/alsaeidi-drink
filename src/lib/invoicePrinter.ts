@@ -255,7 +255,7 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
             }
 
             .item-name {
-              font-size: 26px;
+              font-size: 30px;
               font-weight: 700;
               line-height: 1.35;
               margin-bottom: 3px;
