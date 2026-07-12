@@ -79,48 +79,34 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
     const shortNo = displayInvoiceNo(data.invoiceNumber);
     const dateTime = formatReceiptDateTime(data.date, data.time);
 
-    const itemRows = data.items
+    const itemBlocks = data.items
       .map((item: any) => {
         const price = Number(item.price) || 0;
         const quantity = Number(item.quantity) || 0;
         const lineTotal = price * quantity;
         const sizeLabel = item.size ? ` (${sizeMap[item.size] || item.size})` : "";
+        const name = `${escapeHtml(item.name)}${escapeHtml(sizeLabel)}`;
 
         if (isKitchenCopy) {
           return `
-            <tr>
-              <td class="col-qty kitchen-qty">${quantity}</td>
-              <td class="col-name kitchen-name">${escapeHtml(item.name)}${escapeHtml(sizeLabel)}</td>
-            </tr>
+            <div class="item kitchen-item">
+              <div class="kitchen-qty">${quantity}</div>
+              <div class="kitchen-name">${name}</div>
+            </div>
           `;
         }
 
         return `
-          <tr>
-            <td class="col-qty">${quantity}</td>
-            <td class="col-name">${escapeHtml(item.name)}${escapeHtml(sizeLabel)}</td>
-            <td class="col-price">${price.toFixed(2)}</td>
-            <td class="col-total">${lineTotal.toFixed(2)}</td>
-          </tr>
+          <div class="item">
+            <div class="item-name">${name}</div>
+            <div class="item-line">
+              <span class="item-qty-price">${quantity} × ${price.toFixed(2)}</span>
+              <span class="item-total">${lineTotal.toFixed(2)}</span>
+            </div>
+          </div>
         `;
       })
       .join("");
-
-    const tableHead = isKitchenCopy
-      ? `<thead>
-           <tr>
-             <th class="col-qty">الكمية</th>
-             <th class="col-name">الصنف</th>
-           </tr>
-         </thead>`
-      : `<thead>
-           <tr>
-             <th class="col-qty">الكمية</th>
-             <th class="col-name">الصنف</th>
-             <th class="col-price">السعر</th>
-             <th class="col-total">الإجمالي</th>
-           </tr>
-         </thead>`;
 
     const html = `
       <!DOCTYPE html>
@@ -160,8 +146,8 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
 
             body {
               font-family: Arial, Tahoma, "Segoe UI", sans-serif;
-              font-size: 11px;
-              line-height: 1.3;
+              font-size: 14px;
+              line-height: 1.35;
               color: #000;
               background: #fff;
               direction: rtl;
@@ -182,22 +168,22 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
               color: #fff;
               text-align: center;
               font-weight: 700;
-              padding: 5px 3px;
+              padding: 6px 3px;
             }
 
             .shop-bar {
-              font-size: 15px;
+              font-size: 18px;
               letter-spacing: 0.3px;
             }
 
             .order-no-box {
-              margin: 6px auto 3px;
+              margin: 8px auto 4px;
               width: fit-content;
-              min-width: 40px;
-              padding: 3px 12px;
+              min-width: 48px;
+              padding: 4px 14px;
               border: 2px solid #000;
               text-align: center;
-              font-size: 22px;
+              font-size: 32px;
               font-weight: 700;
               direction: ltr;
               letter-spacing: 1px;
@@ -205,14 +191,14 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
 
             .order-type {
               text-align: center;
-              font-size: 12px;
+              font-size: 14px;
               font-weight: 700;
-              margin-bottom: 4px;
+              margin-bottom: 6px;
             }
 
             .meta-block {
-              padding: 0 2.5mm 3px;
-              font-size: 10px;
+              padding: 0 2.5mm 4px;
+              font-size: 13px;
             }
 
             .meta-row {
@@ -220,7 +206,7 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
               justify-content: space-between;
               align-items: center;
               gap: 4px;
-              margin-bottom: 2px;
+              margin-bottom: 3px;
             }
 
             .meta-label {
@@ -242,63 +228,94 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
             .rule {
               border: none;
               border-top: 1px solid #000;
-              margin: 3px 0;
+              margin: 4px 0;
             }
 
             .kitchen-note {
               background: #000;
               color: #fff;
-              padding: 4px 5px;
-              margin: 3px 2.5mm;
+              padding: 5px 5px;
+              margin: 4px 2.5mm;
               text-align: center;
-              font-size: 11px;
+              font-size: 13px;
               font-weight: 700;
             }
 
-            .items-table {
-              width: 100%;
-              table-layout: fixed;
-              border-collapse: collapse;
-              font-size: 9.5px;
-              margin: 0;
+            .items {
+              padding: 2px 2.5mm 0;
             }
 
-            .items-table th {
-              padding: 3px 1px;
+            .item {
+              padding: 5px 0;
+              border-bottom: 1px dashed #999;
+            }
+
+            .item:last-child {
+              border-bottom: none;
+            }
+
+            .item-name {
+              font-size: 16px;
               font-weight: 700;
-              border-bottom: 1px solid #000;
-              vertical-align: bottom;
+              line-height: 1.35;
+              margin-bottom: 3px;
+              word-break: break-word;
             }
 
-            .items-table td {
-              padding: 3px 1px;
-              vertical-align: top;
+            .item-line {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              gap: 6px;
+              font-size: 14px;
             }
 
-            .items-table tbody tr + tr td {
-              border-top: 0.5px solid #ccc;
+            .item-qty-price {
+              direction: ltr;
+              unicode-bidi: isolate;
             }
 
-            .col-qty { width: 14%; text-align: center; font-weight: 700; }
-            .col-name { width: 40%; word-break: break-word; text-align: right; }
-            .col-price { width: 22%; text-align: center; direction: ltr; }
-            .col-total { width: 24%; text-align: left; direction: ltr; font-weight: 700; }
+            .item-total {
+              direction: ltr;
+              font-weight: 700;
+              unicode-bidi: isolate;
+            }
 
-            .kitchen-table .col-qty { width: 18%; }
-            .kitchen-table .col-name { width: 82%; }
-            .kitchen-qty { font-size: 15px; }
-            .kitchen-name { font-size: 12px; font-weight: 700; line-height: 1.35; }
+            .kitchen-item {
+              display: flex;
+              align-items: flex-start;
+              gap: 8px;
+              padding: 6px 0;
+            }
+
+            .kitchen-qty {
+              flex-shrink: 0;
+              min-width: 28px;
+              font-size: 22px;
+              font-weight: 700;
+              line-height: 1.2;
+              text-align: center;
+              direction: ltr;
+            }
+
+            .kitchen-name {
+              flex: 1;
+              font-size: 17px;
+              font-weight: 700;
+              line-height: 1.35;
+              word-break: break-word;
+            }
 
             .totals {
-              padding: 3px 2.5mm 0;
-              font-size: 11px;
+              padding: 4px 2.5mm 0;
+              font-size: 14px;
             }
 
             .total-row {
               display: flex;
               justify-content: space-between;
               align-items: center;
-              margin-bottom: 2px;
+              margin-bottom: 3px;
             }
 
             .total-row .val {
@@ -312,9 +329,9 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
               align-items: center;
               background: #000;
               color: #fff;
-              padding: 5px 2.5mm;
-              margin: 3px 0;
-              font-size: 12px;
+              padding: 7px 2.5mm;
+              margin: 4px 0;
+              font-size: 18px;
               font-weight: 700;
             }
 
@@ -324,20 +341,21 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
 
             .footer {
               text-align: center;
-              padding: 5px 2.5mm 2mm;
-              font-size: 10px;
+              padding: 6px 2.5mm 2mm;
+              font-size: 11px;
               line-height: 1.4;
             }
 
             .slogan {
               font-weight: 700;
               margin-bottom: 3px;
+              font-size: 12px;
             }
 
             .address-bar {
-              font-size: 10px;
-              padding: 3px;
-              margin-top: 3px;
+              font-size: 11px;
+              padding: 4px;
+              margin-top: 4px;
             }
 
             .brand {
@@ -358,11 +376,11 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
 
             .kitchen-footer {
               text-align: center;
-              font-size: 11px;
+              font-size: 12px;
               font-weight: 700;
-              padding: 5px 2.5mm 2mm;
+              padding: 6px 2.5mm 2mm;
               border-top: 1px dashed #000;
-              margin-top: 5px;
+              margin-top: 6px;
             }
           </style>
         </head>
@@ -408,10 +426,7 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
                 : ""
             }
 
-            <table class="items-table${isKitchenCopy ? " kitchen-table" : ""}">
-              ${tableHead}
-              <tbody>${itemRows}</tbody>
-            </table>
+            <div class="items">${itemBlocks}</div>
 
             ${
               isKitchenCopy
