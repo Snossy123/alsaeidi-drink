@@ -84,15 +84,22 @@ const ProductCard = ({ product, onClick }: { product: Product; onClick: () => vo
       onClick={onClick}
     >
       {/* Image Section */}
-      <div className="aspect-[4/3] w-full bg-slate-50 dark:bg-slate-950/30 p-1 flex items-center justify-center relative overflow-hidden shrink-0">
+      <div className="aspect-[4/3] w-full min-h-0 flex-1 bg-slate-50 dark:bg-slate-950/30 p-1 flex items-center justify-center relative overflow-hidden">
         {showImage ? (
-          <img
-            src={imageUrl}
-            alt={product.name}
-            loading="lazy"
-            onError={() => setImgError(true)}
-            className="w-full h-full object-contain"
-          />
+          <>
+            <img
+              src={imageUrl}
+              alt={product.name}
+              loading="lazy"
+              onError={() => setImgError(true)}
+              className="w-full h-full object-contain"
+            />
+            <div className="absolute inset-x-0 bottom-0 z-10 bg-black/70 pt-1.5 pb-1.5 px-1.5 pointer-events-none">
+              <span className="block text-right text-white font-black text-xs leading-snug line-clamp-2">
+                {product.name}
+              </span>
+            </div>
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center gap-1.5 w-full h-full p-2 text-center">
             <Package className="w-5 h-5 text-slate-300 dark:text-slate-600 shrink-0" />
@@ -103,7 +110,7 @@ const ProductCard = ({ product, onClick }: { product: Product; onClick: () => vo
         )}
 
         {/* Availability Badge */}
-        <div className="absolute top-1 left-1 flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800">
+        <div className="absolute top-1 left-1 z-10 flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800">
           <div className={cn(
             "w-1.5 h-1.5 rounded-full",
             isOutOfStock ? "bg-red-500" : "bg-green-500"
@@ -115,11 +122,7 @@ const ProductCard = ({ product, onClick }: { product: Product; onClick: () => vo
       </div>
 
       {/* Content Section */}
-      <div className="p-1 flex flex-col gap-1 flex-1 min-h-0">
-        <h3 className="font-black text-slate-800 dark:text-slate-100 text-[11px] leading-snug truncate">
-          {product.name}
-        </h3>
-
+      <div className="p-1 flex flex-col gap-1 shrink-0">
         {showSizePrices ? (
           <div className={cn(
             "grid gap-0.5",
