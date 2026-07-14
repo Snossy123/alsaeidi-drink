@@ -1,4 +1,4 @@
-import { FormEvent, ChangeEvent, useState, useEffect } from "react";
+import { FormEvent, ChangeEvent, MouseEvent, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,7 +57,9 @@ const ProductDialog = ({
     }
   };
 
-  const removeImage = () => {
+  const removeImage = (e?: MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     setImageError(false);
     setFormData({ ...formData, image: null });
   };
@@ -100,26 +102,39 @@ const ProductDialog = ({
                       type="button"
                       variant="destructive"
                       size="icon"
-                      className="absolute top-1 start-1 h-7 w-7 rounded-full shadow-sm"
+                      className="absolute top-1 start-1 z-10 h-7 w-7 rounded-full shadow-sm"
                       onClick={removeImage}
                     >
                       <X className="w-3.5 h-3.5" />
                     </Button>
                   </div>
                 ) : (
-                  <label className="w-full sm:w-28 h-28 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500/50 flex flex-col items-center justify-center cursor-pointer transition-colors dark:bg-slate-800/50 group">
-                    <ImageIcon className="w-7 h-7 text-slate-400 group-hover:text-blue-500" />
-                    <span className="text-[10px] text-slate-400 group-hover:text-blue-500 mt-1 text-center px-1">
-                      {compressing ? "جاري المعالجة..." : imageError ? "فشل التحميل — ارفع صورة" : "رفع صورة"}
-                    </span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleImageChange}
-                      disabled={compressing}
-                    />
-                  </label>
+                  <div className="relative w-full sm:w-28 h-28">
+                    <label className="w-full h-full rounded-xl border border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500/50 flex flex-col items-center justify-center cursor-pointer transition-colors dark:bg-slate-800/50 group">
+                      <ImageIcon className="w-7 h-7 text-slate-400 group-hover:text-blue-500" />
+                      <span className="text-[10px] text-slate-400 group-hover:text-blue-500 mt-1 text-center px-1">
+                        {compressing ? "جاري المعالجة..." : imageError ? "فشل التحميل — ارفع صورة" : "رفع صورة"}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageChange}
+                        disabled={compressing}
+                      />
+                    </label>
+                    {formData.image ? (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-1 start-1 z-10 h-7 w-7 rounded-full shadow-sm"
+                        onClick={removeImage}
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </Button>
+                    ) : null}
+                  </div>
                 )}
               </div>
 

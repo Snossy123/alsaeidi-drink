@@ -77,10 +77,7 @@ const ProductCard = ({ product, onClick }: { product: Product; onClick: () => vo
 
   return (
     <div
-      className={cn(
-        "group relative bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/40 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 cursor-pointer active:scale-[0.98] h-full flex flex-col",
-        isOutOfStock && "opacity-75 grayscale-[0.5]"
-      )}
+      className="group relative bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/40 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 cursor-pointer active:scale-[0.98] h-full flex flex-col"
       onClick={onClick}
     >
       {/* Image Section */}

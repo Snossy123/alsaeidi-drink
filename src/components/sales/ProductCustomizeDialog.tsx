@@ -88,24 +88,24 @@ export const ProductCustomizeDialog = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-md max-h-[90vh] overflow-hidden text-center rounded-2xl p-0 border-none bg-white dark:bg-slate-900 shadow-2xl flex flex-col"
+        className="max-w-xl max-h-[90vh] overflow-hidden text-center rounded-2xl p-0 border-none bg-white dark:bg-slate-900 shadow-2xl flex flex-col"
         dir="rtl"
       >
-        <div className="bg-slate-900 p-5 text-white shrink-0">
+        <div className="bg-slate-900 p-3 text-white shrink-0">
           <DialogHeader>
-            <DialogTitle className="text-xl font-black tracking-tight">تخصيص المنتج</DialogTitle>
+            <DialogTitle className="text-lg font-black tracking-tight">تخصيص المنتج</DialogTitle>
             <p className="text-slate-400 font-bold text-xs mt-1">
               {needsSize ? "اختر الحجم والإضافات" : "اختر الإضافات المطلوبة"}
             </p>
           </DialogHeader>
         </div>
 
-        <div className="p-5 overflow-y-auto flex-1 min-h-0 space-y-5">
+        <div className="p-3 overflow-y-auto flex-1 min-h-0">
           {product && (
-            <>
-              <div className="flex flex-col items-center gap-3">
+            <div className="flex flex-row gap-4 items-stretch">
+              <div className="flex flex-col items-center justify-center gap-2 shrink-0 w-[120px]">
                 {getProductImageUrl(product.image) ? (
-                  <div className="w-28 h-24 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-800 p-2 border border-slate-100 dark:border-slate-800">
+                  <div className="w-24 h-20 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-800 p-2 border border-slate-100 dark:border-slate-800">
                     <img
                       src={getProductImageUrl(product.image)!}
                       alt={product.name}
@@ -113,99 +113,103 @@ export const ProductCustomizeDialog = ({
                     />
                   </div>
                 ) : (
-                  <div className="w-16 h-16 rounded-full bg-blue-600/10 flex items-center justify-center">
-                    <Package className="w-8 h-8 text-blue-600" />
+                  <div className="w-14 h-14 rounded-full bg-blue-600/10 flex items-center justify-center">
+                    <Package className="w-7 h-7 text-blue-600" />
                   </div>
                 )}
-                <h2 className="font-black text-lg text-slate-800 dark:text-white">{product.name}</h2>
+                <h2 className="font-black text-sm text-slate-800 dark:text-white leading-tight">
+                  {product.name}
+                </h2>
               </div>
 
-              {needsSize && (
-                <div className="space-y-2 text-right">
-                  <p className="text-xs font-black text-slate-500">الحجم</p>
-                  {sizeOptions.length > 0 ? (
-                    <div
-                      className={cn(
-                        "grid gap-3",
-                        sizeOptions.length === 1 && "grid-cols-1 max-w-[200px] mx-auto",
-                        sizeOptions.length === 2 && "grid-cols-2",
-                        sizeOptions.length === 3 && "grid-cols-3"
-                      )}
-                    >
-                      {sizeOptions.map((size) => {
-                        const selected = selectedSize === size.key;
+              <div className="flex-1 min-w-0 space-y-3">
+                {needsSize && (
+                  <div className="space-y-2 text-right">
+                    <p className="text-xs font-black text-slate-500">الحجم</p>
+                    {sizeOptions.length > 0 ? (
+                      <div
+                        className={cn(
+                          "grid gap-2",
+                          sizeOptions.length === 1 && "grid-cols-1 max-w-[200px]",
+                          sizeOptions.length === 2 && "grid-cols-2",
+                          sizeOptions.length === 3 && "grid-cols-3"
+                        )}
+                      >
+                        {sizeOptions.map((size) => {
+                          const selected = selectedSize === size.key;
+                          return (
+                            <button
+                              key={size.key}
+                              type="button"
+                              data-compact
+                              onClick={() => setSelectedSize(size.key)}
+                              className={cn(
+                                "h-14 flex flex-col items-center justify-center gap-0.5 rounded-xl border-2 shadow-sm",
+                                "transition-transform active:scale-95",
+                                size.bg,
+                                selected ? "ring-2 ring-blue-600 border-blue-600" : size.border
+                              )}
+                            >
+                              <span className={cn("text-[11px] font-black uppercase tracking-wide", size.labelColor)}>
+                                {size.label}
+                              </span>
+                              <span className={cn("text-sm font-black tabular-nums", size.priceColor)}>
+                                {size.price} ج
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 flex flex-col items-center gap-1.5">
+                        <AlertCircle className="w-6 h-6 text-amber-600" />
+                        <p className="font-black text-sm text-amber-900">لا توجد أحجام متاحة</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {modifiers.length > 0 && (
+                  <div className="space-y-2 text-right">
+                    <p className="text-xs font-black text-slate-500">إضافات / تفاصيل</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {modifiers.map((mod) => {
+                        const id = Number(mod.id);
+                        const selected = selectedModifierIds.includes(id);
+                        const price = Number(mod.price || 0);
                         return (
                           <button
-                            key={size.key}
+                            key={id}
                             type="button"
-                            data-compact
-                            onClick={() => setSelectedSize(size.key)}
+                            onClick={() => toggleModifier(id)}
                             className={cn(
-                              "h-20 flex flex-col items-center justify-center gap-1 rounded-xl border-2 shadow-sm",
-                              "transition-transform active:scale-95",
-                              size.bg,
-                              selected ? "ring-2 ring-blue-600 border-blue-600" : size.border
+                              "min-h-[44px] rounded-xl border-2 px-3 py-1.5 text-sm font-black transition-all active:scale-[0.97]",
+                              selected
+                                ? "border-blue-600 bg-blue-600 text-white"
+                                : "border-slate-200 bg-slate-50 text-slate-700 hover:border-blue-300 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200"
                             )}
                           >
-                            <span className={cn("text-xs font-black uppercase tracking-wide", size.labelColor)}>
-                              {size.label}
-                            </span>
-                            <span className={cn("text-base font-black tabular-nums", size.priceColor)}>
-                              {size.price} ج
+                            <span className="block leading-tight">{mod.name}</span>
+                            <span
+                              className={cn(
+                                "block text-[11px] mt-0.5 tabular-nums",
+                                selected ? "text-blue-100" : "text-slate-400"
+                              )}
+                            >
+                              {price > 0 ? `+${price.toFixed(0)} ج` : "مجاني"}
                             </span>
                           </button>
                         );
                       })}
                     </div>
-                  ) : (
-                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 flex flex-col items-center gap-2">
-                      <AlertCircle className="w-8 h-8 text-amber-600" />
-                      <p className="font-black text-sm text-amber-900">لا توجد أحجام متاحة</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {modifiers.length > 0 && (
-                <div className="space-y-2 text-right">
-                  <p className="text-xs font-black text-slate-500">إضافات / تفاصيل</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {modifiers.map((mod) => {
-                      const id = Number(mod.id);
-                      const selected = selectedModifierIds.includes(id);
-                      const price = Number(mod.price || 0);
-                      return (
-                        <button
-                          key={id}
-                          type="button"
-                          onClick={() => toggleModifier(id)}
-                          className={cn(
-                            "min-h-[56px] rounded-xl border-2 px-3 py-2 text-sm font-black transition-all active:scale-[0.97]",
-                            selected
-                              ? "border-blue-600 bg-blue-600 text-white"
-                              : "border-slate-200 bg-slate-50 text-slate-700 hover:border-blue-300 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200"
-                          )}
-                        >
-                          <span className="block leading-tight">{mod.name}</span>
-                          <span
-                            className={cn(
-                              "block text-[11px] mt-0.5 tabular-nums",
-                              selected ? "text-blue-100" : "text-slate-400"
-                            )}
-                          >
-                            {price > 0 ? `+${price.toFixed(0)} ج` : "مجاني"}
-                          </span>
-                        </button>
-                      );
-                    })}
                   </div>
-                </div>
-              )}
-            </>
+                )}
+              </div>
+            </div>
           )}
         </div>
 
-        <div className="shrink-0 border-t border-slate-100 dark:border-slate-800 p-4 space-y-2">
+        <div className="shrink-0 border-t border-slate-100 dark:border-slate-800 p-3 space-y-2">
           <div className="flex items-center justify-between text-sm font-black text-slate-700 dark:text-slate-200 px-1">
             <span>الإجمالي</span>
             <span className="tabular-nums text-blue-600">{lineTotal.toFixed(2)} ج.م</span>
@@ -214,7 +218,7 @@ export const ProductCustomizeDialog = ({
             type="button"
             disabled={!canConfirm}
             onClick={handleConfirm}
-            className="w-full h-12 rounded-xl font-black text-base"
+            className="w-full h-10 rounded-xl font-black text-base"
           >
             إضافة للسلة
           </Button>

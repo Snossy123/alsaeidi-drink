@@ -48,7 +48,7 @@ function OptionButtonGroup<T extends string>({
   options,
 }: OptionButtonGroupProps<T>) {
   return (
-    <div className="flex rounded-xl border-2 border-slate-200 dark:border-slate-700 overflow-hidden p-0.5 gap-0.5 bg-slate-50 dark:bg-slate-800/40">
+    <div className="flex h-full min-h-[52px] rounded-xl border-2 border-slate-200 dark:border-slate-700 overflow-hidden p-0.5 gap-0.5 bg-slate-50 dark:bg-slate-800/40">
       {options.map((opt) => {
         const selected = value === opt.value;
         return (
@@ -57,7 +57,7 @@ function OptionButtonGroup<T extends string>({
             type="button"
             onClick={() => onChange(opt.value)}
             className={cn(
-              "flex flex-1 items-center justify-center gap-1.5 min-h-[44px] rounded-lg px-2 py-1.5 text-sm font-black transition-all active:scale-[0.98]",
+              "flex flex-1 items-center justify-center gap-1.5 min-h-[52px] h-full rounded-lg px-2 py-2 text-sm font-black transition-all active:scale-[0.98]",
               selected
                 ? "bg-blue-600 text-white shadow-sm shadow-blue-600/20"
                 : "text-slate-700 hover:bg-white dark:text-slate-200 dark:hover:bg-slate-700/60"
@@ -89,7 +89,7 @@ function FieldSection({
 }) {
   return (
     <div className={cn("space-y-1.5", className)}>
-      <div className="flex items-baseline justify-between gap-2">
+      <div className="flex items-baseline justify-between gap-2 shrink-0">
         <Label className="text-xs sm:text-sm font-black text-slate-600 dark:text-slate-300">
           {label}
         </Label>
@@ -139,13 +139,13 @@ export const CheckoutDialog = ({
   return (
     <Dialog open={showEmployeeDialog} onOpenChange={setShowEmployeeDialog}>
       <DialogContent
-        className="!w-[min(96vw,760px)] !max-w-[760px] !p-0 !gap-0 !rounded-2xl !max-h-[90dvh] !overflow-hidden border-none bg-white dark:bg-slate-900 shadow-2xl"
+        className="!w-[min(96vw,900px)] !max-w-[900px] !p-0 !gap-0 !rounded-2xl !max-h-[90dvh] !overflow-hidden border-none bg-white dark:bg-slate-900 shadow-2xl"
         dir="rtl"
       >
-        <div className="flex flex-row max-h-[85dvh] overflow-hidden">
+        <div className="flex flex-row min-h-[400px] max-h-[90dvh] overflow-hidden">
           {/* Sidebar — title + total + submit (right in RTL) */}
           <div className="shrink-0 w-[160px] sm:w-[200px] bg-slate-900 text-white flex flex-col px-3 py-4 sm:px-4 sm:py-5 border-l border-slate-800">
-            <DialogHeader className="text-right space-y-1">
+            <DialogHeader className="text-right space-y-1 shrink-0">
               <DialogTitle className="text-sm sm:text-base font-black leading-snug">
                 {editMode ? "حفظ تعديلات الفاتورة" : "تأكيد العملية"}
               </DialogTitle>
@@ -153,15 +153,16 @@ export const CheckoutDialog = ({
                 {editMode ? editInvoiceNumber : "خطوات نهائية لإصدار الفاتورة"}
               </p>
             </DialogHeader>
-            <div className="flex-1 min-h-[16px]" />
-            <div className="rounded-xl bg-white/10 px-3 py-3 text-center space-y-1 mb-3">
-              <span className="block text-[10px] sm:text-xs font-bold text-slate-400">إجمالي الفاتورة</span>
-              <span className="block text-xl sm:text-2xl font-black leading-none">{total.toFixed(2)} ج</span>
+            <div className="flex-1 flex flex-col justify-center min-h-[16px]">
+              <div className="rounded-xl bg-white/10 px-3 py-3 text-center space-y-1">
+                <span className="block text-[10px] sm:text-xs font-bold text-slate-400">إجمالي الفاتورة</span>
+                <span className="block text-xl sm:text-2xl font-black leading-none">{total.toFixed(2)} ج</span>
+              </div>
             </div>
             <Button
               data-compact
               onClick={() => handleCheckout(amountPaid)}
-              className="w-full h-auto min-h-[48px] py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-black text-white text-[10px] sm:text-xs leading-snug whitespace-normal shadow-lg shadow-blue-600/20"
+              className="w-full h-auto min-h-[48px] py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-black text-white text-[10px] sm:text-xs leading-snug whitespace-normal shadow-lg shadow-blue-600/20 shrink-0"
             >
               {editMode
                 ? `حفظ التعديلات`
@@ -170,44 +171,16 @@ export const CheckoutDialog = ({
           </div>
 
           {/* Main — form */}
-          <div className="flex-1 min-w-0 min-h-0 overflow-y-auto overscroll-y-contain px-4 py-3 sm:px-5 space-y-3">
-            {!editMode && (
-              <FieldSection label="الموظف المسؤول" hint="اختياري">
-                <div className="flex gap-2">
-                  {employees.map((emp) => {
-                    const selected = selectedEmployee === emp.id.toString();
-                    return (
-                      <button
-                        key={emp.id}
-                        type="button"
-                        onClick={() =>
-                          setSelectedEmployee(selected ? "" : emp.id.toString())
-                        }
-                        className={cn(
-                          "flex flex-1 min-w-0 items-center justify-center gap-2 min-h-[48px] rounded-xl border-2 px-3 py-2 text-sm font-black transition-all active:scale-[0.97]",
-                          selected
-                            ? "border-blue-600 bg-blue-600 text-white shadow-md shadow-blue-600/20"
-                            : "border-slate-200 bg-slate-50 text-slate-700 hover:border-blue-300 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200"
-                        )}
-                      >
-                        <User className={cn("w-4 h-4 shrink-0", selected ? "text-white" : "text-slate-400")} />
-                        <span className="break-words text-center leading-tight">{emp.name}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </FieldSection>
-            )}
-
-            {/* Order type + Payment status + Payment method — 3 columns */}
+          <div className="flex-1 min-w-0 min-h-0 overflow-y-auto overscroll-y-contain px-4 py-4 sm:px-5 flex flex-col gap-4 h-full">
+            {/* Order / payment options — stretch to share vertical space */}
             {!editMode ? (
               <div
                 className={cn(
-                  "grid gap-3",
+                  "grid gap-3 flex-[1.2] min-h-0 content-stretch",
                   isPaid ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2"
                 )}
               >
-                <FieldSection label="نوع الطلب">
+                <FieldSection label="نوع الطلب" className="flex flex-col min-h-0 h-full [&>:last-child]:flex-1">
                   <OptionButtonGroup
                     value={orderType}
                     onChange={(v) => setOrderType(v as OrderType)}
@@ -218,7 +191,7 @@ export const CheckoutDialog = ({
                   />
                 </FieldSection>
 
-                <FieldSection label="حالة الدفع">
+                <FieldSection label="حالة الدفع" className="flex flex-col min-h-0 h-full [&>:last-child]:flex-1">
                   <OptionButtonGroup
                     value={paymentStatus}
                     onChange={(v) => setPaymentStatus(v as PaymentStatus)}
@@ -230,7 +203,7 @@ export const CheckoutDialog = ({
                 </FieldSection>
 
                 {isPaid && (
-                  <FieldSection label="طريقة الدفع">
+                  <FieldSection label="طريقة الدفع" className="flex flex-col min-h-0 h-full [&>:last-child]:flex-1">
                     <OptionButtonGroup
                       value={paymentMethod}
                       onChange={(v) => setPaymentMethod(v as PaymentMethod)}
@@ -243,7 +216,7 @@ export const CheckoutDialog = ({
                 )}
               </div>
             ) : (
-              <FieldSection label="نوع الطلب">
+              <FieldSection label="نوع الطلب" className="flex flex-col flex-1 min-h-0 [&>:last-child]:flex-1">
                 <OptionButtonGroup
                   value={orderType}
                   onChange={(v) => setOrderType(v as OrderType)}
@@ -255,60 +228,120 @@ export const CheckoutDialog = ({
               </FieldSection>
             )}
 
-            {/* Cash amount + change — inline row */}
+            {/* Cash amount + change */}
             {!editMode && isPaid && paymentMethod === "cash" && (
-              <FieldSection label="المبلغ المدفوع">
-                <div className="flex gap-2 items-stretch">
-                  <Input
-                    type="text"
-                    inputMode="decimal"
-                    dir="ltr"
-                    value={amountPaid}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (value === "" || /^\d*\.?\d*$/.test(value)) {
-                        setAmountPaid(value);
-                      }
-                    }}
-                    className="h-10 flex-[3] min-w-0 text-left text-base font-black border-2 rounded-xl"
-                  />
-                  <div
-                    className={cn(
-                      "flex-[2] min-w-0 flex items-center justify-center rounded-xl px-3 text-sm font-black text-center",
-                      paid >= total
-                        ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
-                        : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
-                    )}
-                  >
-                    {paid >= total
-                      ? `الباقي: ${change.toFixed(2)} ج`
-                      : `المتبقي: ${remaining.toFixed(2)} ج`}
+              <FieldSection label="المبلغ المدفوع" className="shrink-0">
+                <div className="space-y-2">
+                  <div className="flex gap-2 items-stretch">
+                    <Input
+                      type="text"
+                      inputMode="decimal"
+                      dir="ltr"
+                      value={amountPaid}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                          setAmountPaid(value);
+                        }
+                      }}
+                      className="h-14 flex-[3] min-w-0 text-left text-lg font-black border-2 rounded-xl"
+                    />
+                    <div
+                      className={cn(
+                        "flex-[2] min-w-0 flex items-center justify-center rounded-xl px-3 text-sm font-black text-center h-14",
+                        paid >= total
+                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                          : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
+                      )}
+                    >
+                      {paid >= total
+                        ? `الباقي: ${change.toFixed(2)} ج`
+                        : `المتبقي: ${remaining.toFixed(2)} ج`}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-5 gap-2">
+                    {[20, 50, 100, 150, 200].map((amount) => {
+                      const selected = paid === amount;
+                      return (
+                        <button
+                          key={amount}
+                          type="button"
+                          onClick={() => setAmountPaid(amount.toFixed(2))}
+                          className={cn(
+                            "min-h-[44px] rounded-xl border-2 text-sm font-black transition-all active:scale-[0.97]",
+                            selected
+                              ? "border-blue-600 bg-blue-600 text-white shadow-sm shadow-blue-600/20"
+                              : "border-slate-200 bg-slate-50 text-slate-700 hover:border-blue-300 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200"
+                          )}
+                        >
+                          {amount} ج
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </FieldSection>
             )}
 
             {!editMode && isPaid && paymentMethod === "card" && (
-              <div className="rounded-xl bg-slate-50 dark:bg-slate-800/40 border-2 border-slate-200 dark:border-slate-700 px-4 py-2.5 text-center">
+              <div className="rounded-xl bg-slate-50 dark:bg-slate-800/40 border-2 border-slate-200 dark:border-slate-700 px-4 py-3 text-center shrink-0">
                 <p className="text-sm font-bold text-slate-500 dark:text-slate-400">
                   دفع بالبطاقة — {total.toFixed(2)} ج
                 </p>
               </div>
             )}
 
-            <FieldSection label="ملاحظات التحضير">
-              <div className="relative">
-                <Receipt className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <FieldSection
+              label="ملاحظات التحضير"
+              className="flex flex-col flex-1 min-h-0 [&>:last-child]:flex-1 [&>:last-child]:flex [&>:last-child]:flex-col"
+            >
+              <div className="relative flex-1 flex flex-col min-h-[56px]">
+                <Receipt className="absolute right-3 top-3.5 w-4 h-4 text-slate-400 z-10" />
                 <Input
                   type="text"
                   placeholder="مثال: بدون سكر - زيادة ثلج..."
                   value={kitchenNote}
                   onChange={(e) => setKitchenNote(e.target.value)}
-                  className="h-10 pr-10 bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold"
+                  className="flex-1 min-h-[56px] h-full pr-10 bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold"
                 />
               </div>
             </FieldSection>
           </div>
+
+          {/* Employees sidebar — left in RTL */}
+          {!editMode && (
+            <div className="shrink-0 w-[140px] sm:w-[160px] bg-slate-50 dark:bg-slate-800/50 border-r border-slate-200 dark:border-slate-700 flex flex-col px-2.5 py-3 sm:px-3 min-h-0">
+              <div className="flex items-baseline justify-between gap-1 mb-2 shrink-0 px-0.5">
+                <Label className="text-xs font-black text-slate-600 dark:text-slate-300">
+                  الموظف المسؤول
+                </Label>
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">اختياري</span>
+              </div>
+              <div className="flex flex-col gap-2 overflow-y-auto overscroll-y-contain min-h-0 flex-1">
+                {employees.map((emp) => {
+                  const selected = selectedEmployee === emp.id.toString();
+                  return (
+                    <button
+                      key={emp.id}
+                      type="button"
+                      onClick={() =>
+                        setSelectedEmployee(selected ? "" : emp.id.toString())
+                      }
+                      className={cn(
+                        "flex w-full flex-1 items-center justify-center gap-1.5 min-h-[44px] rounded-xl border-2 px-2 py-2 text-xs sm:text-sm font-black transition-all active:scale-[0.97]",
+                        selected
+                          ? "border-blue-600 bg-blue-600 text-white shadow-md shadow-blue-600/20"
+                          : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200"
+                      )}
+                    >
+                      <User className={cn("w-3.5 h-3.5 shrink-0", selected ? "text-white" : "text-slate-400")} />
+                      <span className="break-words text-center leading-tight">{emp.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
