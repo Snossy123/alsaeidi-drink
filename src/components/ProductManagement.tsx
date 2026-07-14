@@ -4,11 +4,12 @@ import { apiClient } from "@/lib/apiClient";
 import { Category, Product } from "@/types";
 
 import CategoryManagement from "./CategoryManagement";
+import ModifiersManagement from "./ModifiersManagement";
 import ProductDialog from "./product-management/ProductDialog";
 import ProductFilters from "./product-management/ProductFilters";
 import ProductCard from "./product-management/ProductCard";
 import ProductPagination from "./product-management/ProductPagination";
-import { Package, AlertTriangle, Layers, Boxes } from "lucide-react";
+import { Package, AlertTriangle, Layers, Boxes, Sparkles } from "lucide-react";
 import { useProductGridItemsPerPage } from "@/hooks/useProductGridItemsPerPage";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -33,20 +34,22 @@ const ProductManagement = () => {
   });
 
   const { toast } = useToast();
+
+  const fetchData = async () => {
+    try {
+      const [productsData, categoriesData] = await Promise.all([
+        apiClient<{ products: Product[] }>("/products"),
+        apiClient<{ categories: Category[] }>("/categories"),
+      ]);
+      setProducts(productsData.products || []);
+      setCategories(categoriesData.categories || []);
+    } catch (error) {
+      toast({ title: "خطأ في الاتصال", variant: "destructive" });
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [productsData, categoriesData] = await Promise.all([
-          apiClient<{ products: Product[] }>("/products"),
-          apiClient<{ categories: Category[] }>("/categories"),
-        ]);
-        setProducts(productsData.products || []);
-        setCategories(categoriesData.categories || []);
-      } catch (error) {
-        toast({ title: "خطأ في الاتصال", variant: "destructive" });
-      }
-    };
-    fetchData();
+    void fetchData();
   }, []);
 
   const filteredProducts = products.filter((product) => {
@@ -214,6 +217,10 @@ const ProductManagement = () => {
           <TabsTrigger value="categories" className="rounded-lg font-bold text-sm px-4">
             الفئات ({categories.length})
           </TabsTrigger>
+          <TabsTrigger value="modifiers" className="rounded-lg font-bold text-sm px-4 gap-1">
+            <Sparkles className="w-3.5 h-3.5" />
+            الإضافات
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="categories" className="flex flex-col flex-1 min-h-0 mt-3 data-[state=inactive]:hidden">
@@ -222,6 +229,10 @@ const ProductManagement = () => {
             onCategoriesUpdate={setCategories}
             embedded
           />
+        </TabsContent>
+
+        <TabsContent value="modifiers" className="flex flex-col flex-1 min-h-0 mt-3 data-[state=inactive]:hidden">
+          <ModifiersManagement categories={categories} onCategoriesRefresh={fetchData} />
         </TabsContent>
 
         <TabsContent value="products" className="flex flex-col flex-1 min-h-0 mt-3 data-[state=inactive]:hidden">

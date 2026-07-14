@@ -13,14 +13,14 @@ import { useSalesData } from "@/hooks/useSalesData";
 import { useCart, mergeCartItems } from "@/hooks/useCart";
 import { printInvoiceCopies } from "@/lib/invoicePrinter";
 import { localDateString, nextLocalDailyInvoiceNumber } from "@/lib/dailyInvoiceNumber";
-import { getProductSizeOptions, getProductSizePrice, ProductSize } from "@/lib/productSizes";
+import { getProductSizeOptions } from "@/lib/productSizes";
 import { Button } from "@/components/ui/button";
 import type { OrderType, PaymentMethod, PaymentStatus, SaleInvoice } from "@/types/salesInvoice";
 
 import { BarcodeScanner } from "./sales/BarcodeScanner";
 import { ProductGrid } from "./sales/ProductGrid";
 import { CartSection } from "./sales/CartSection";
-import { SizeSelectionDialog } from "./sales/SizeSelectionDialog";
+import { ProductCustomizeDialog } from "./sales/ProductCustomizeDialog";
 import { CheckoutDialog } from "./sales/CheckoutDialog";
 import { PosNavSheet } from "./sales/PosNavSheet";
 import { OpenShiftDialog } from "./shifts/OpenShiftDialog";
@@ -62,7 +62,7 @@ const SalesInterface = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
-  const [showSizeDialog, setShowSizeDialog] = useState(false);
+  const [showCustomizeDialog, setShowCustomizeDialog] = useState(false);
   const [showEmployeeDialog, setShowEmployeeDialog] = useState(false);
   const [showCloseShiftDialog, setShowCloseShiftDialog] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
@@ -95,6 +95,12 @@ const SalesInterface = ({
         price: Number(item.price),
         quantity: Number(item.quantity),
         barcode: item.barcode,
+        size: (item.size as "s" | "m" | "l" | null | undefined) ?? null,
+        modifiers: (item.modifiers || []).map((m) => ({
+          id: Number(m.id),
+          name: m.name,
+          price: Number(m.price || 0),
+        })),
       }))
     );
     setOrderType(editingInvoice.order_type || "takeaway");
@@ -127,44 +133,50 @@ const SalesInterface = ({
 
   const addProductToCart = (product: Parameters<typeof addToCart>[0]) => {
     const sizeOptions = getProductSizeOptions(product);
+    const hasModifiers = Array.isArray(product.modifiers) && product.modifiers.length > 0;
 
-    if (sizeOptions.length === 1) {
-      addToCart(product, sizeOptions[0].key, sizeOptions[0].price);
+    if (hasModifiers || sizeOptions.length > 1) {
+      setSelectedProduct(product);
+      setShowCustomizeDialog(true);
       return;
     }
 
-    if (sizeOptions.length > 1) {
-      setSelectedProduct(product);
-      setShowSizeDialog(true);
+    if (sizeOptions.length === 1) {
+      addToCart(product, sizeOptions[0].key, sizeOptions[0].price, []);
       return;
     }
 
     if (product.hasSizes) {
       const fallbackPrice = Number(product.price ?? 0);
       if (fallbackPrice > 0) {
-        addToCart(product, null, fallbackPrice);
+        addToCart(product, null, fallbackPrice, []);
         return;
       }
 
       setSelectedProduct(product);
-      setShowSizeDialog(true);
+      setShowCustomizeDialog(true);
       return;
     }
 
-    addToCart(product);
+    addToCart(product, null, undefined, []);
   };
 
   const handleProductClick = (product: Parameters<typeof addToCart>[0]) => {
     addProductToCart(product);
   };
 
-  const handleSelectSize = (size: ProductSize) => {
+  const handleCustomizeConfirm = ({
+    size,
+    basePrice,
+    modifiers,
+  }: {
+    size: "s" | "m" | "l" | null;
+    basePrice: number;
+    modifiers: { id: number; name: string; price: number }[];
+  }) => {
     if (!selectedProduct) return;
-    const price = getProductSizePrice(selectedProduct, size);
-    if (!price) return;
-
-    addToCart(selectedProduct, size, price);
-    setShowSizeDialog(false);
+    addToCart(selectedProduct, size, basePrice, modifiers);
+    setShowCustomizeDialog(false);
     setSelectedProduct(null);
   };
 
@@ -190,6 +202,8 @@ const SalesInterface = ({
           price: item.price,
           quantity: item.quantity,
           barcode: item.barcode || "",
+          size: item.size ?? null,
+          modifiers: item.modifiers || [],
         })),
         kitchen_note: kitchenNote,
         total,
@@ -259,6 +273,8 @@ const SalesInterface = ({
       items: cartItems.map((item) => ({
         ...item,
         product_id: item.id,
+        size: item.size ?? null,
+        modifiers: item.modifiers || [],
       })),
       kitchen_note: kitchenNote,
       employee_id: selectedEmployee || null,
@@ -443,11 +459,14 @@ const SalesInterface = ({
         />
       </div>
 
-      <SizeSelectionDialog
-        showSizeDialog={showSizeDialog}
-        setShowSizeDialog={setShowSizeDialog}
-        selectedProduct={selectedProduct}
-        handleSelectSize={handleSelectSize}
+      <ProductCustomizeDialog
+        open={showCustomizeDialog}
+        onOpenChange={(open) => {
+          setShowCustomizeDialog(open);
+          if (!open) setSelectedProduct(null);
+        }}
+        product={selectedProduct}
+        onConfirm={handleCustomizeConfirm}
       />
 
       <CheckoutDialog

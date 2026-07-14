@@ -97,19 +97,26 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
         const lineTotal = price * quantity;
         const sizeLabel = item.size ? ` (${sizeMap[item.size] || item.size})` : "";
         const name = `${escapeHtml(item.name)}${escapeHtml(sizeLabel)}`;
+        const modifiers = Array.isArray(item.modifiers) ? item.modifiers : [];
+        const modsHtml =
+          modifiers.length > 0
+            ? `<div class="item-mods">${modifiers
+                .map((m: any) => escapeHtml(m.name))
+                .join(" · ")}</div>`
+            : "";
 
         if (isKitchenCopy) {
           return `
             <div class="item kitchen-item">
               <div class="kitchen-qty">${quantity}</div>
-              <div class="kitchen-name">${name}</div>
+              <div class="kitchen-name">${name}${modsHtml}</div>
             </div>
           `;
         }
 
         return `
           <div class="item">
-            <div class="item-name">${name}</div>
+            <div class="item-name">${name}${modsHtml}</div>
             <div class="item-line">
               <span class="item-qty-price">${quantity} × ${price.toFixed(2)}</span>
               <span class="item-total">${lineTotal.toFixed(2)}</span>
@@ -341,6 +348,14 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
               font-weight: 700;
               line-height: 1.25;
               word-break: break-word;
+            }
+
+            .item-mods {
+              font-size: 14px;
+              font-weight: 700;
+              color: #222;
+              margin-top: 2px;
+              line-height: 1.3;
             }
 
             .totals {

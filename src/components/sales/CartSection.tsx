@@ -4,12 +4,23 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { useScrollTouchGuard } from "@/hooks/useScrollTouchGuard";
 
-import { CartItem } from "@/hooks/useCart";
+import { CartItem, CartModifier } from "@/hooks/useCart";
 
 interface CartSectionProps {
   cart: CartItem[];
-  removeFromCart: (id: string | number, price: number) => void;
-  updateQuantity: (id: string | number, newQuantity: number, price: number) => void;
+  removeFromCart: (
+    id: string | number,
+    price: number,
+    size?: "s" | "m" | "l" | null,
+    modifiers?: CartModifier[]
+  ) => void;
+  updateQuantity: (
+    id: string | number,
+    newQuantity: number,
+    price: number,
+    size?: "s" | "m" | "l" | null,
+    modifiers?: CartModifier[]
+  ) => void;
   calculateTotal: () => number;
   openEmployeeDialog: () => void;
   editMode?: boolean;
@@ -27,7 +38,6 @@ export const CartSection = ({
 
   return (
     <Card className="h-full flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-lg rounded-xl overflow-hidden relative z-10">
-
       <CardHeader className="py-2 px-3 border-b border-slate-100 dark:border-slate-800/50 shrink-0">
         <div className="flex items-center gap-2">
           <div className="bg-blue-600 p-1.5 rounded-lg">
@@ -58,7 +68,7 @@ export const CartSection = ({
         ) : (
           cart.map((item) => (
             <div
-              key={`${item.id}-${item.price}`}
+              key={`${item.id}-${item.price}-${item.size ?? ""}-${(item.modifiers || []).map((m) => m.id).join(",")}`}
               className="bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800/50 rounded-xl p-2"
             >
               <div className="flex justify-between items-start gap-1">
@@ -66,18 +76,35 @@ export const CartSection = ({
                   <h4 className="font-black text-xs text-slate-700 dark:text-slate-200 leading-tight truncate">
                     {item.name}
                   </h4>
-                  {item.size && (
-                    <Badge variant="outline" className="text-[8px] font-black h-3.5 px-1 mt-0.5 border-blue-200 text-blue-600 bg-blue-50/50">
-                      {item.size === 's' ? 'صغير' : item.size === 'm' ? 'وسط' : 'كبير'}
-                    </Badge>
-                  )}
+                  <div className="flex flex-wrap gap-0.5 mt-0.5">
+                    {item.size && (
+                      <Badge
+                        variant="outline"
+                        className="text-[8px] font-black h-3.5 px-1 border-blue-200 text-blue-600 bg-blue-50/50"
+                      >
+                        {item.size === "s" ? "صغير" : item.size === "m" ? "وسط" : "كبير"}
+                      </Badge>
+                    )}
+                    {(item.modifiers || []).map((mod) => (
+                      <Badge
+                        key={mod.id}
+                        variant="outline"
+                        className="text-[8px] font-black h-3.5 px-1 border-emerald-200 text-emerald-700 bg-emerald-50/50"
+                      >
+                        {mod.name}
+                        {mod.price > 0 ? ` +${mod.price}` : ""}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
                 <Button
                   variant="ghost"
                   size="icon"
                   data-compact
                   className="h-7 w-7 rounded-lg text-slate-300 hover:text-red-500 shrink-0 touch-manipulation"
-                  onClick={guardAction(() => removeFromCart(item.id, item.price))}
+                  onClick={guardAction(() =>
+                    removeFromCart(item.id, item.price, item.size ?? null, item.modifiers || [])
+                  )}
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </Button>
@@ -90,7 +117,15 @@ export const CartSection = ({
                     data-compact
                     variant="ghost"
                     className="h-6 w-6 rounded text-slate-500"
-                    onClick={guardAction(() => updateQuantity(item.id, item.quantity - 1, item.price))}
+                    onClick={guardAction(() =>
+                      updateQuantity(
+                        item.id,
+                        item.quantity - 1,
+                        item.price,
+                        item.size ?? null,
+                        item.modifiers || []
+                      )
+                    )}
                   >
                     <Minus className="w-3 h-3" />
                   </Button>
@@ -102,7 +137,15 @@ export const CartSection = ({
                     data-compact
                     variant="ghost"
                     className="h-6 w-6 rounded text-slate-500"
-                    onClick={guardAction(() => updateQuantity(item.id, item.quantity + 1, item.price))}
+                    onClick={guardAction(() =>
+                      updateQuantity(
+                        item.id,
+                        item.quantity + 1,
+                        item.price,
+                        item.size ?? null,
+                        item.modifiers || []
+                      )
+                    )}
                   >
                     <Plus className="w-3 h-3" />
                   </Button>

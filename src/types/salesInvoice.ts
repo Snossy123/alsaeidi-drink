@@ -10,6 +10,8 @@ export interface SaleInvoiceItem {
   price: number;
   quantity: number;
   barcode?: string;
+  size?: string | null;
+  modifiers?: { id?: number; name: string; price?: number }[];
 }
 
 export interface SaleInvoice {

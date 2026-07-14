@@ -13,8 +13,9 @@ export interface Product {
   m_price?: number;
   l_price?: number;
   hasSizes: boolean;
-  category_id?: string;
+  category_id?: string | number;
   barcode?: string;
+  modifiers?: { id: number; name: string; price: number }[];
 }
 
 export interface Category {
