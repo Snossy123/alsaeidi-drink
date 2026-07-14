@@ -554,7 +554,8 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
         frameWindow.focus();
         frameWindow.print();
         frameWindow.addEventListener("afterprint", finish, { once: true });
-        setTimeout(finish, 5000);
+        // Fallback if afterprint doesn't fire; keep short for fast back-to-back copies
+        setTimeout(finish, 1200);
       };
 
       const logo = frameDoc.querySelector(".shop-logo") as HTMLImageElement | null;
@@ -575,6 +576,7 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
   });
 
 export const printInvoiceCopies = async (data: InvoiceData) => {
-  await printInvoice(data, false);
+  // Kitchen first — prep starts ASAP, then customer receipt
   await printInvoice(data, true);
+  await printInvoice(data, false);
 };

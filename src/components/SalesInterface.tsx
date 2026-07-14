@@ -169,11 +169,6 @@ const SalesInterface = ({
   };
 
   const handleCheckout = async (cashAmountPaid = "") => {
-    if (!selectedEmployee && !editingInvoice) {
-      toast({ title: "لم يتم اختيار الموظف", variant: "destructive" });
-      return;
-    }
-
     if (requiresShift && !shift && !editingInvoice) {
       toast({ title: "يجب فتح وردية أولاً", variant: "destructive" });
       return;
@@ -266,7 +261,7 @@ const SalesInterface = ({
         product_id: item.id,
       })),
       kitchen_note: kitchenNote,
-      employee_id: selectedEmployee,
+      employee_id: selectedEmployee || null,
       shift_id: shift?.id,
       payment_method: paymentMethod,
       amount_paid: paid,

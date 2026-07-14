@@ -76,12 +76,27 @@ function OptionButtonGroup<T extends string>({
   );
 }
 
-function FieldSection({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
+function FieldSection({
+  label,
+  hint,
+  children,
+  className,
+}: {
+  label: string;
+  hint?: string;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
     <div className={cn("space-y-1.5", className)}>
-      <Label className="text-xs sm:text-sm font-black text-slate-600 dark:text-slate-300">
-        {label}
-      </Label>
+      <div className="flex items-baseline justify-between gap-2">
+        <Label className="text-xs sm:text-sm font-black text-slate-600 dark:text-slate-300">
+          {label}
+        </Label>
+        {hint ? (
+          <span className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-slate-500">{hint}</span>
+        ) : null}
+      </div>
       {children}
     </div>
   );
@@ -157,7 +172,7 @@ export const CheckoutDialog = ({
           {/* Main — form */}
           <div className="flex-1 min-w-0 min-h-0 overflow-y-auto overscroll-y-contain px-4 py-3 sm:px-5 space-y-3">
             {!editMode && (
-              <FieldSection label="الموظف المسؤول">
+              <FieldSection label="الموظف المسؤول" hint="اختياري">
                 <div className="flex gap-2">
                   {employees.map((emp) => {
                     const selected = selectedEmployee === emp.id.toString();
@@ -165,7 +180,9 @@ export const CheckoutDialog = ({
                       <button
                         key={emp.id}
                         type="button"
-                        onClick={() => setSelectedEmployee(emp.id.toString())}
+                        onClick={() =>
+                          setSelectedEmployee(selected ? "" : emp.id.toString())
+                        }
                         className={cn(
                           "flex flex-1 min-w-0 items-center justify-center gap-2 min-h-[48px] rounded-xl border-2 px-3 py-2 text-sm font-black transition-all active:scale-[0.97]",
                           selected
