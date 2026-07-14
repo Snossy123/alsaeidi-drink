@@ -21,6 +21,7 @@ export interface SaleInvoice {
   time: string;
   items: SaleInvoiceItem[];
   total: number;
+  employee_id?: string | number;
   cashier?: string;
   status?: InvoiceStatus;
   payment_status?: PaymentStatus;

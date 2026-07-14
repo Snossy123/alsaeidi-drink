@@ -30,8 +30,8 @@ export default function CategoriesSidebar({
             ref={asideRef}
             className="
                 w-full h-full
-                bg-white dark:bg-slate-900 
-                border border-slate-100 dark:border-slate-800 
+                bg-slate-100 dark:bg-slate-900 
+                border border-slate-300 dark:border-slate-800 
                 rounded-xl 
                 p-2 
                 flex lg:flex-col items-center lg:items-stretch gap-1.5 
@@ -43,16 +43,16 @@ export default function CategoriesSidebar({
         >
             <div className="hidden lg:flex items-center gap-2 px-2 shrink-0">
                 <div className="w-1 h-4 bg-blue-600 rounded-full" />
-                <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">الأقسام</span>
+                <span className="text-base font-black text-slate-600 dark:text-slate-300 uppercase tracking-widest">الأقسام</span>
             </div>
 
             <Button
                 className={`
-                    h-8 w-auto px-3 whitespace-nowrap lg:h-8 lg:w-full lg:whitespace-normal
-                    text-xs font-black rounded-xl touch-manipulation active:scale-95 transition-all duration-300 relative overflow-hidden group shrink-0
+                    h-10 w-auto px-3 whitespace-nowrap lg:h-10 lg:w-full lg:whitespace-normal
+                    text-base font-black rounded-xl touch-manipulation active:scale-95 transition-all duration-300 relative overflow-hidden group shrink-0
                     ${selectedCategory === null
                         ? "bg-slate-900 text-white shadow-lg shadow-slate-900/20"
-                        : "bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border-none hover:bg-white dark:hover:bg-slate-900"
+                        : "bg-slate-200 dark:bg-slate-950 text-slate-800 dark:text-slate-300 border-none hover:bg-slate-50 dark:hover:bg-slate-900"
                     }
                 `}
                 variant={selectedCategory === null ? "default" : "ghost"}
@@ -86,31 +86,29 @@ export default function CategoriesSidebar({
             </div>
 
             {totalPages > 1 && (
-                <div className="hidden lg:flex justify-between items-center px-1 shrink-0">
+                <div className="hidden lg:flex justify-between items-center px-1 shrink-0 gap-1">
                     <Button
-                        variant="ghost"
+                        variant="default"
                         size="icon"
-                        data-compact
                         disabled={page === 0}
                         onClick={() => setPage(p => p - 1)}
-                        className="h-7 w-7 rounded-full border border-gray-100 dark:border-slate-800 dark:text-slate-400 shadow-sm disabled:opacity-30"
+                        className="h-9 w-9 rounded-full bg-blue-600 hover:bg-blue-500 text-white border-2 border-blue-700 shadow-md disabled:opacity-40"
                     >
-                        <ChevronRight className="h-4 w-4" />
+                        <ChevronRight className="h-5 w-5" />
                     </Button>
 
-                    <span className="text-[10px] text-gray-400 dark:text-slate-500 font-medium">
+                    <span className="text-base font-black text-slate-700 dark:text-slate-300">
                         {page + 1} / {totalPages}
                     </span>
 
                     <Button
-                        variant="ghost"
+                        variant="default"
                         size="icon"
-                        data-compact
                         disabled={page === totalPages - 1}
                         onClick={() => setPage(p => p + 1)}
-                        className="h-7 w-7 rounded-full border border-gray-100 dark:border-slate-800 dark:text-slate-400 shadow-sm disabled:opacity-30"
+                        className="h-9 w-9 rounded-full bg-blue-600 hover:bg-blue-500 text-white border-2 border-blue-700 shadow-md disabled:opacity-40"
                     >
-                        <ChevronLeft className="h-4 w-4" />
+                        <ChevronLeft className="h-5 w-5" />
                     </Button>
                 </div>
             )}
@@ -123,14 +121,14 @@ function CategoryButton({ cat, selectedCategory, setSelectedCategory }: any) {
         <Button
             onClick={() => setSelectedCategory(cat.id)}
             className={`
-                h-8
-                text-xs font-black rounded-xl 
+                h-10
+                text-base font-black rounded-xl 
                 justify-start gap-2 px-3 
                 touch-manipulation active:scale-95 transition-all duration-300 relative overflow-hidden border-none 
                 shrink-0 whitespace-nowrap
                 ${selectedCategory === cat.id
                     ? "text-white shadow-lg"
-                    : "bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-900"
+                    : "bg-slate-200 dark:bg-slate-950 text-slate-800 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900"
                 }
             `}
             style={{
@@ -139,7 +137,7 @@ function CategoryButton({ cat, selectedCategory, setSelectedCategory }: any) {
             }}
             variant="ghost"
         >
-            <div className="relative w-2 h-2 shrink-0 flex items-center justify-center">
+            <div className="relative w-2.5 h-2.5 shrink-0 flex items-center justify-center">
                 <div
                     className={`w-full h-full rounded-full ${selectedCategory === cat.id ? 'scale-125' : ''}`}
                     style={{ backgroundColor: selectedCategory === cat.id ? '#fff' : cat.color }}

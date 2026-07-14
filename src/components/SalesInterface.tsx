@@ -23,6 +23,7 @@ import { CartSection } from "./sales/CartSection";
 import { ProductCustomizeDialog } from "./sales/ProductCustomizeDialog";
 import { CheckoutDialog } from "./sales/CheckoutDialog";
 import { PosNavSheet } from "./sales/PosNavSheet";
+import { UnpaidInvoicesDialog } from "./sales/UnpaidInvoicesDialog";
 import { OpenShiftDialog } from "./shifts/OpenShiftDialog";
 import { CloseShiftDialog } from "./shifts/CloseShiftDialog";
 import { ShiftBanner } from "./shifts/ShiftBanner";
@@ -72,6 +73,7 @@ const SalesInterface = ({
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [currentPage, setCurrentPage] = useState(1);
   const [navOpen, setNavOpen] = useState(false);
+  const [unpaidDialogOpen, setUnpaidDialogOpen] = useState(false);
   const loadedEditIdRef = useRef<string | number | null>(null);
 
   useEffect(() => {
@@ -363,7 +365,7 @@ const SalesInterface = ({
   const showOpenShift = requiresShift && !shiftLoading && !shift;
 
   return (
-    <div className="flex flex-col lg:flex-row h-full w-full antialiased bg-slate-50/50 dark:bg-slate-950/50 p-1.5 lg:p-2 gap-2 overflow-hidden" dir="rtl">
+    <div className="flex flex-col lg:flex-row h-full w-full antialiased bg-slate-200/80 dark:bg-slate-950/50 p-1.5 lg:p-2 gap-2 overflow-hidden" dir="rtl">
       <OpenShiftDialog
         open={showOpenShift}
         offline={isOffline}
@@ -428,6 +430,13 @@ const SalesInterface = ({
           setBarcode={setBarcode}
           handleBarcodeSubmit={handleBarcodeSubmit}
           onOpenNav={() => setNavOpen(true)}
+          onOpenUnpaidInvoices={() => setUnpaidDialogOpen(true)}
+        />
+
+        <UnpaidInvoicesDialog
+          open={unpaidDialogOpen}
+          onOpenChange={setUnpaidDialogOpen}
+          employees={employees}
         />
 
         <div ref={gridContainerRef} className="flex-1 min-h-0 overflow-hidden">
