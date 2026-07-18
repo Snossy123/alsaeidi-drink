@@ -6,6 +6,7 @@ import {
   Receipt,
   Users,
   Clock,
+  UserRound,
 } from "lucide-react";
 import type { UserRole } from "@/types/auth";
 
@@ -20,6 +21,7 @@ export const MENU_ITEMS: MenuItem[] = [
   { value: "sales", label: "نقطة البيع", icon: ShoppingCart },
   { value: "products", label: "المنتجات", icon: Package, roles: ["admin", "manager"] },
   { value: "sales-invoices", label: "فواتير المبيعات", icon: Receipt },
+  { value: "customers", label: "العملاء", icon: UserRound },
   { value: "invoices", label: "فواتير الشراء", icon: FileText, roles: ["admin", "manager"] },
   { value: "employees", label: "الموظفين", icon: Users, roles: ["admin"] },
   { value: "shifts", label: "الورديات", icon: Clock, roles: ["admin", "manager"] },

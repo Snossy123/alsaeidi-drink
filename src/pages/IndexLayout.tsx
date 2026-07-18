@@ -9,6 +9,7 @@ import PurchaseInvoices from "@/components/PurchaseInvoices";
 import ReportsSection from "@/components/ReportsSection";
 import SalesInvoices from "@/components/SalesInvoices";
 import Employees from "@/components/Employees";
+import Customers from "@/components/Customers";
 import ShiftReport from "@/components/shifts/ShiftReport";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { SystemLogo } from "@/components/SystemLogo";
@@ -93,6 +94,7 @@ export function IndexLayout() {
             />,
             "products": <ProductManagement />,
             "sales-invoices": <SalesInvoices onNavigate={setActiveTab} />,
+            "customers": <Customers />,
             "invoices": <PurchaseInvoices />,
             "employees": <Employees />,
             "shifts": <ShiftReport />,

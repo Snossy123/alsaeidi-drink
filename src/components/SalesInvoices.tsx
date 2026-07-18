@@ -204,6 +204,9 @@ const SalesInvoices = ({ onNavigate }: SalesInvoicesProps) => {
         payment_method: selectedInvoice.payment_method,
         amount_paid: selectedInvoice.amount_paid,
         change_given: selectedInvoice.change_given,
+        customer_name: selectedInvoice.customer_name,
+        customer_phone: selectedInvoice.customer_phone,
+        customer_address: selectedInvoice.customer_address,
       }, false);
       toast({ title: "تمت الطباعة" });
     } catch (error: any) {
@@ -286,6 +289,7 @@ const SalesInvoices = ({ onNavigate }: SalesInvoicesProps) => {
               <SelectItem value="all">كل أنواع الطلب</SelectItem>
               <SelectItem value="takeaway">تيك اوي</SelectItem>
               <SelectItem value="table">طربيزة</SelectItem>
+              <SelectItem value="delivery">دليفري</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -385,6 +389,23 @@ const SalesInvoices = ({ onNavigate }: SalesInvoicesProps) => {
                   <div><p className="text-muted-foreground">البائع</p><p className="font-bold">{selectedInvoice.cashier}</p></div>
                   <div><p className="text-muted-foreground">الإجمالي</p><p className="font-bold">{Number(selectedInvoice.total).toFixed(2)} ج</p></div>
                 </div>
+
+                {selectedInvoice.order_type === "delivery" && (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50/80 dark:border-amber-800 dark:bg-amber-950/30 p-3 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                    <div>
+                      <p className="text-muted-foreground text-xs font-bold">اسم العميل</p>
+                      <p className="font-black">{selectedInvoice.customer_name || "—"}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs font-bold">التليفون</p>
+                      <p className="font-black dir-ltr text-left" dir="ltr">{selectedInvoice.customer_phone || "—"}</p>
+                    </div>
+                    <div className="sm:col-span-1">
+                      <p className="text-muted-foreground text-xs font-bold">العنوان</p>
+                      <p className="font-black">{selectedInvoice.customer_address || "—"}</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex-1 min-h-0 overflow-y-auto px-6">

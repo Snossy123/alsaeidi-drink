@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { X } from "lucide-react";
 import { useGridLayout } from "@/hooks/useGridLayout";
 import { useToast } from "@/hooks/use-toast";
@@ -7,8 +7,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useInvoiceEdit } from "@/contexts/InvoiceEditContext";
 import { useShift } from "@/hooks/useShift";
 import { enqueueSale } from "@/lib/offline/syncQueue";
-import CategoriesSidebar from "./CategoriesSidebar";
-
 import { useSalesData } from "@/hooks/useSalesData";
 import { useCart, mergeCartItems } from "@/hooks/useCart";
 import { printInvoiceCopies } from "@/lib/invoicePrinter";
@@ -18,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import type { OrderType, PaymentMethod, PaymentStatus, SaleInvoice } from "@/types/salesInvoice";
 
 import { BarcodeScanner } from "./sales/BarcodeScanner";
-import { ProductGrid } from "./sales/ProductGrid";
+import { ProductGrid, type ProductBrowseStep } from "./sales/ProductGrid";
 import { CartSection } from "./sales/CartSection";
 import { ProductCustomizeDialog } from "./sales/ProductCustomizeDialog";
 import { CheckoutDialog } from "./sales/CheckoutDialog";
@@ -71,9 +69,13 @@ const SalesInterface = ({
   const [orderType, setOrderType] = useState<OrderType>("takeaway");
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("paid");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [navOpen, setNavOpen] = useState(false);
   const [unpaidDialogOpen, setUnpaidDialogOpen] = useState(false);
+  const [browseStep, setBrowseStep] = useState<ProductBrowseStep>("categories");
   const loadedEditIdRef = useRef<string | number | null>(null);
 
   useEffect(() => {
@@ -107,8 +109,18 @@ const SalesInterface = ({
     );
     setOrderType(editingInvoice.order_type || "takeaway");
     setKitchenNote(editingInvoice.kitchen_note || "");
+    setCustomerName(editingInvoice.customer_name || "");
+    setCustomerPhone(editingInvoice.customer_phone || "");
+    setCustomerAddress(editingInvoice.customer_address || "");
     setPaymentStatus("unpaid");
   }, [editingInvoice, loadCart]);
+
+  const resetToCategories = () => {
+    setBrowseStep("categories");
+    setSelectedCategory(null);
+    setSearchTerm("");
+    setCurrentPage(1);
+  };
 
   const handleCancelEdit = () => {
     loadedEditIdRef.current = null;
@@ -118,6 +130,10 @@ const SalesInterface = ({
     setOrderType("takeaway");
     setPaymentStatus("paid");
     setPaymentMethod("cash");
+    setCustomerName("");
+    setCustomerPhone("");
+    setCustomerAddress("");
+    resetToCategories();
   };
 
   const handleBarcodeSubmit = (e: React.FormEvent) => {
@@ -262,6 +278,15 @@ const SalesInterface = ({
       return;
     }
 
+    if (orderType === "delivery" && (!customerName.trim() || !customerPhone.trim())) {
+      toast({
+        title: "بيانات الدليفري ناقصة",
+        description: "أدخل اسم العميل ورقم التليفون",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const now = new Date();
     const clientId = crypto.randomUUID();
     const employee = employees.find((e) => e.id === Number(selectedEmployee));
@@ -286,6 +311,9 @@ const SalesInterface = ({
       change_given: isPaid ? Math.max(0, paid - checkoutTotal) : 0,
       payment_status: paymentStatus,
       order_type: orderType,
+      customer_name: orderType === "delivery" ? customerName.trim() : null,
+      customer_phone: orderType === "delivery" ? customerPhone.trim() : null,
+      customer_address: orderType === "delivery" ? customerAddress.trim() || null : null,
     };
 
     const finishSuccess = (invoiceNumber: string) => {
@@ -299,6 +327,10 @@ const SalesInterface = ({
       setOrderType("takeaway");
       setPaymentStatus("paid");
       setPaymentMethod("cash");
+      setCustomerName("");
+      setCustomerPhone("");
+      setCustomerAddress("");
+      resetToCategories();
     };
 
     const saveOffline = async () => {
@@ -355,6 +387,14 @@ const SalesInterface = ({
       (!selectedCategory || product.category_id === selectedCategory)
   );
 
+  const categoryColorMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const cat of categories) {
+      if (cat.color) map[String(cat.id)] = cat.color;
+    }
+    return map;
+  }, [categories]);
+
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage) || 1;
   const paginatedProducts = filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
@@ -392,17 +432,6 @@ const SalesInterface = ({
           }
         }}
       />
-
-      <div className="w-full lg:w-44 xl:w-48 2xl:w-56 shrink-0 h-auto lg:h-full overflow-hidden">
-        <CategoriesSidebar
-          categories={categories}
-          selectedCategory={selectedCategory}
-          setSelectedCategory={(id) => {
-            setSelectedCategory(id);
-            setCurrentPage(1);
-          }}
-        />
-      </div>
 
       <div className="flex-1 min-w-0 flex flex-col gap-2 overflow-hidden">
         {editingInvoice && (
@@ -451,6 +480,21 @@ const SalesInterface = ({
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
             totalPages={totalPages}
+            categoryColorMap={categoryColorMap}
+            categories={categories}
+            browseStep={browseStep}
+            selectedCategoryName={
+              selectedCategory
+                ? categories.find((c) => String(c.id) === selectedCategory)?.name
+                : "كل المنتجات"
+            }
+            onSelectCategory={(id) => {
+              setSelectedCategory(id);
+              setBrowseStep("products");
+              setSearchTerm("");
+              setCurrentPage(1);
+            }}
+            onBackToCategories={resetToCategories}
           />
         </div>
       </div>
@@ -492,6 +536,12 @@ const SalesInterface = ({
         setPaymentStatus={setPaymentStatus}
         paymentMethod={paymentMethod}
         setPaymentMethod={setPaymentMethod}
+        customerName={customerName}
+        setCustomerName={setCustomerName}
+        customerPhone={customerPhone}
+        setCustomerPhone={setCustomerPhone}
+        customerAddress={customerAddress}
+        setCustomerAddress={setCustomerAddress}
         total={calculateTotal()}
         handleCheckout={handleCheckout}
         editMode={!!editingInvoice}

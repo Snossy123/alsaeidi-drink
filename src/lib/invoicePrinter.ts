@@ -27,6 +27,9 @@ export interface InvoiceData {
   amount_paid?: number;
   change_given?: number;
   shift_id?: number | string;
+  customer_name?: string | null;
+  customer_phone?: string | null;
+  customer_address?: string | null;
 }
 
 const paymentStatusLabels: Record<string, string> = {
@@ -89,6 +92,24 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
     const shortNo = displayInvoiceNo(data.invoiceNumber);
     const dateTime = formatReceiptDateTime(data.date, data.time);
     const shopLogoUrl = getShopLogoUrl();
+    const hasDeliveryCustomer =
+      data.order_type === "delivery" &&
+      (data.customer_name || data.customer_phone || data.customer_address);
+    const customerBlock =
+      hasDeliveryCustomer && !isKitchenCopy
+        ? `<div class="customer-block">
+             <div class="customer-title">بيانات التوصيل</div>
+             ${data.customer_name ? `<div class="customer-row"><span>الاسم:</span> <strong>${escapeHtml(data.customer_name)}</strong></div>` : ""}
+             ${data.customer_phone ? `<div class="customer-row"><span>التليفون:</span> <strong dir="ltr">${escapeHtml(data.customer_phone)}</strong></div>` : ""}
+             ${data.customer_address ? `<div class="customer-row"><span>العنوان:</span> <strong>${escapeHtml(data.customer_address)}</strong></div>` : ""}
+           </div>`
+        : hasDeliveryCustomer && isKitchenCopy
+          ? `<div class="customer-block">
+               ${data.customer_name ? `<div class="customer-row"><span>العميل:</span> <strong>${escapeHtml(data.customer_name)}</strong></div>` : ""}
+               ${data.customer_phone ? `<div class="customer-row"><span>تليفون:</span> <strong dir="ltr">${escapeHtml(data.customer_phone)}</strong></div>` : ""}
+               ${data.customer_address ? `<div class="customer-row"><span>عنوان:</span> <strong>${escapeHtml(data.customer_address)}</strong></div>` : ""}
+             </div>`
+          : "";
 
     const itemBlocks = data.items
       .map((item: any) => {
@@ -283,6 +304,27 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
               text-align: center;
               font-size: 14px;
               font-weight: 700;
+            }
+
+            .customer-block {
+              margin: 3px 1mm;
+              padding: 4px 5px;
+              border: 1px solid #000;
+              text-align: right;
+              font-size: 13px;
+            }
+
+            .customer-title {
+              font-weight: 800;
+              font-size: 14px;
+              margin-bottom: 2px;
+              border-bottom: 1px dashed #666;
+              padding-bottom: 2px;
+            }
+
+            .customer-row {
+              margin-top: 2px;
+              line-height: 1.35;
             }
 
             .items {
@@ -483,6 +525,8 @@ export const printInvoice = (data: InvoiceData, isKitchenCopy = false): Promise<
                   : ""
               }
             </div>
+
+            ${customerBlock}
 
             <hr class="rule" />
 

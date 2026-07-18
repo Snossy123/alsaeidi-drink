@@ -1,32 +1,32 @@
 import { useState, useEffect, useCallback } from "react";
 
 export interface GridLayoutConfig {
-  cols: 1 | 2 | 3 | 4 | 5;
+  cols: 3 | 4 | 5 | 6 | 8;
   rows: number;
   itemsPerPage: number;
 }
 
 function getCols(width: number): GridLayoutConfig["cols"] {
-  if (width < 640) return 1;
-  if (width < 1024) return 2;
-  if (width < 1536) return 3;
-  if (width < 1920) return 4;
-  return 5;
+  if (width < 640) return 3;
+  if (width < 1024) return 4;
+  if (width < 1536) return 5;
+  if (width < 1920) return 6;
+  return 8;
 }
 
 function estimateCardHeight(width: number): number {
   const cols = getCols(width);
-  if (cols === 1) return 200;
-  if (cols === 2) return 190;
-  return 175;
+  if (cols <= 3) return 155;
+  if (cols <= 5) return 145;
+  return 140;
 }
 
 function computeLayout(width: number, containerHeight: number): GridLayoutConfig {
   const cols = getCols(width);
   const cardHeight = estimateCardHeight(width);
-  const gap = cols <= 2 ? 12 : 16;
+  const gap = 6;
   const rows = Math.max(1, Math.floor((containerHeight + gap) / (cardHeight + gap)));
-  const itemsPerPage = Math.min(Math.max(cols * rows, 4), 20);
+  const itemsPerPage = Math.min(Math.max(cols * rows, 9), 40);
 
   return { cols, rows, itemsPerPage };
 }

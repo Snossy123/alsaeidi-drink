@@ -73,6 +73,9 @@ export const PayInvoiceDialog = ({ open, onOpenChange, invoice, onPaid }: PayInv
             payment_method: paymentMethod,
             amount_paid: paymentMethod === "cash" ? paid : Number(data.invoice.total),
             change_given: paymentMethod === "cash" ? Math.max(0, paid - Number(data.invoice.total)) : 0,
+            customer_name: data.invoice.customer_name,
+            customer_phone: data.invoice.customer_phone,
+            customer_address: data.invoice.customer_address,
           }, false);
         } catch {
           // Payment succeeded; printing is optional

@@ -21,12 +21,22 @@ export interface Product {
 export interface Category {
   id: string;
   name: string;
+  color?: string;
 }
 
 export interface Employee {
   id: number;
   name: string;
 }
+
+// اللون الموف اتشال من النظام؛ الفئات القديمة المخزنة بيه تتعرض بالبديل الوردي
+const REMOVED_PURPLE = "#8b5cf6";
+const PURPLE_REPLACEMENT = "#EC4899";
+
+const replacePurple = (cats: Category[]): Category[] =>
+  cats.map((cat) =>
+    cat.color?.toLowerCase() === REMOVED_PURPLE ? { ...cat, color: PURPLE_REPLACEMENT } : cat
+  );
 
 export const useSalesData = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -50,7 +60,7 @@ export const useSalesData = () => {
           await cacheProducts(productsData.products);
         }
         if (categoriesData.status === "success") {
-          setCategories(categoriesData.categories);
+          setCategories(replacePurple(categoriesData.categories));
           await cacheCategories(categoriesData.categories);
         }
         if (employeesData.status === "success") setEmployees(employeesData.employees);
@@ -59,7 +69,7 @@ export const useSalesData = () => {
         const cachedCategories = await getCachedCategories<Category[]>();
 
         if (cachedProducts?.length) setProducts(cachedProducts);
-        if (cachedCategories?.length) setCategories(cachedCategories);
+        if (cachedCategories?.length) setCategories(replacePurple(cachedCategories));
 
         toast({
           title: cachedProducts?.length ? "وضع أوفلاين" : "فشل التحميل",
