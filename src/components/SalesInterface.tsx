@@ -384,7 +384,7 @@ const SalesInterface = ({
   const filteredProducts = products.filter(
     (product) =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (!selectedCategory || product.category_id === selectedCategory)
+      (!selectedCategory || String(product.category_id) === selectedCategory)
   );
 
   const categoryColorMap = useMemo(() => {
